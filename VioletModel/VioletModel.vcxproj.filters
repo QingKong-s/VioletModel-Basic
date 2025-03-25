@@ -63,6 +63,12 @@
     <ClInclude Include="CMiniCover.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="CPageEffect.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="CPageOptions.h">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Entry.cpp">
@@ -99,6 +105,12 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="CMiniCover.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="CPageEffect.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="CPageOptions.cpp">
       <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>

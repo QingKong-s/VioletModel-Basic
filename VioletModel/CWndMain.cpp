@@ -15,12 +15,18 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	const MARGINS mg{ -1 };
 	DwmExtendFrameIntoClientArea(hWnd, &mg);
 
+	BlurInit();
+	BlurSetUseLayer(TRUE);
+
 	m_pTfLeft = eck::CreateDefTextFormatWithSize(15);
 	m_pTfLeft->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 
 	m_pTfCenter = eck::CreateDefTextFormatWithSize(15);
 	m_pTfCenter->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 	m_pTfCenter->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+
+	m_pTfRight = eck::CreateDefTextFormatWithSize(15);
+	m_pTfRight->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_JUSTIFIED);
 
 	LOGFONTW lf;
 	eck::GetDefFontInfo(lf, 96);
@@ -35,31 +41,40 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 		L"zh-cn",
 		&pTextFormat);
 
+	// 左侧选择夹
 	m_TabPanel.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
-
+	// 标题
 	m_LAPageTitle.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
 	m_LAPageTitle.SetTextFormat(pTextFormat);
 	pTextFormat->Release();
-
+	// 页 主页
 	m_PageMain.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
 	m_PageMain.SetTextFormat(m_pTfCenter);
-
+	// 页 列表
 	m_PageList.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
 	m_PageList.SetTextFormat(m_pTfLeft);
-
+	// 页 效果
+	m_PageEffect.Create(nullptr, Dui::DES_VISIBLE, 0,
+		0, 0, 0, 0, nullptr, this);
+	m_PageEffect.SetTextFormat(m_pTfLeft);
+	// 页 设置
+	m_PageOptions.Create(nullptr, Dui::DES_VISIBLE, 0,
+		0, 0, 0, 0, nullptr, this);
+	m_PageOptions.SetTextFormat(m_pTfLeft);
+	// 底部播放控制栏
 	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE/* | Dui::DES_BLURBKG*/, 0,
 		0, 0, 0, 0, nullptr, this);
-
+	// 进度条（保证Z序）
 	m_TBProgress.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
 	m_TBProgress.SetRange(0, 100);
 	m_TBProgress.SetPos(50);
 	m_TBProgress.SetTrackSize(CyProgressTrack);
-
+	// 标题栏（保证Z序）
 	m_TitleBar.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
 
@@ -88,7 +103,7 @@ void CWndMain::ShowPage(Page ePage, BOOL bAnimate)
 	if (bAnimate)
 	{
 		if (bAlreadyVisible)
-			return;
+			return;// 已经显示，不需要动画
 		m_pAnPage = m_vPage[idxShow];
 		if (!m_pecPage)
 		{
@@ -100,8 +115,9 @@ void CWndMain::ShowPage(Page ePage, BOOL bAnimate)
 			m_pecPage->SetCallBack([](float fCurrValue, float fOldValue, LPARAM lParam)
 				{
 					auto p = (CWndMain*)lParam;
-					const auto x = p->m_pAnPage->GetRectF().left;
-					p->m_pAnPage->SetPos(x, CyPageTitle + 12 + 40 - fCurrValue);
+					const auto x = p->m_pAnPage->GetRect().left;
+					p->m_pAnPage->SetPos(x, CyPageTitle + DTopPageTitle + CxPageIntPadding
+						+ 40 - (int)fCurrValue);
 				});
 		}
 		m_pecPage->SetRange(0, 40);
@@ -139,7 +155,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_PlayPanel.SetRect({ 0,cyClient - CyPalyPanel,cxClient,cyClient });
 
 		const auto dTrackSpacing = m_TBProgress.GetTrackSpacing();
-		m_TBProgress.SetRect({ 
+		m_TBProgress.SetRect({
 			-(int)dTrackSpacing,
 			yPlayPanel - CyProgress / 2,
 			cxClient + (int)dTrackSpacing,
@@ -147,13 +163,13 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		m_LAPageTitle.SetRect({
 			CxTabPanel + CxTabToPagePadding,
-			12,
-			cxClient,
-			CyPageTitle });
+			DTopPageTitle,
+			CxTabPanel + CxTabToPagePadding + CxPageTitle,
+			DTopPageTitle + CyPageTitle });
 		for (auto& e : m_vPage)
 			e->SetRect({
 				CxTabPanel + CxTabToPagePadding,
-				CyPageTitle + 12,
+				CyPageTitle + DTopPageTitle + CxPageIntPadding,
 				cxClient,
 				cyClient - CxTabToPagePadding });
 	}
@@ -211,4 +227,9 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 	return 0;
 	}
 	return __super::OnElemEvent(pElem, uMsg, wParam, lParam);
+}
+
+IDWriteTextFormat* CWndMain::TfClone()
+{
+	return eck::CreateDefTextFormatWithSize(15);
 }

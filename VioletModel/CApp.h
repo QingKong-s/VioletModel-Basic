@@ -1,12 +1,4 @@
 ﻿#pragma once
-enum class GPal
-{
-	TabPanelBk,
-	PlayPanelBk,
-
-	Max
-};
-
 enum class GImg
 {
 	About,
@@ -50,6 +42,15 @@ enum class GImg
 	SmallLogo,
 	Test,
 	WindowLogo,
+	ArrowCross,
+	ArrowRight3,
+	Circle,
+	Next,
+	Prev,
+	Triangle,
+	CircleOne,
+	ArrowRight1,
+	Lrc,
 
 	Max
 };
@@ -97,6 +98,15 @@ constexpr inline PCWSTR ImgFile[]
 	LR"(SmallLogo.png)",
 	LR"(Test.jpg)",
 	LR"(WindowLogo.png)",
+	LR"(ArrowCross.png)",
+	LR"(ArrowRight3.png)",
+	LR"(Circle.png)",
+	LR"(Next.png)",
+	LR"(Prev.png)",
+	LR"(Triangle.png)",
+	LR"(CircleOne.png)",
+	LR"(ArrowRight1.png)",
+	LR"(Lrc.png)",
 };
 
 static_assert(ARRAYSIZE(ImgFile) == (size_t)GImg::Max, "ImgFile size error.");
@@ -105,7 +115,7 @@ constexpr PCWSTR MainWndPageName[]
 {
 	L"主页",
 	L"列表",
-	L"插件",
+	L"效果",
 	L"设置",
 };
 
@@ -115,12 +125,41 @@ enum :int
 	CyPalyPanel = 100,
 	CxyWndLogo = 18,
 	CyTitleBar = 40,
-	CyPageTitle = 60,
+	DTopPageTitle = 12,
+	CxPageTitle = 120,
+	CyPageTitle = 34,
 	CxPageIntPadding = 10,
 	CxTabToPagePadding = 14,
 	CxListFileList = 140,
 	CyProgress = 20,
 	CyProgressTrack = 12,
+	DLeftMiniCover = 50,
+	DTopMiniCover = 12,
+	CxyMiniCover = 80,
+	CxyPlayPageArrow = 30,
+	CxPaddingPlayPanelText = 20,
+	DTopTitle = 24,
+	CyPlayPanelText = 20,
+	CyPaddingTitleAndArtist = 14,
+	CxMaxTitleAndArtist = 100,
+	DTopTime = 40,
+	CxMaxTime = 110,
+	CxyCircleButton = 34,
+	CxyCircleButtonBig = 44,
+	CxPaddingCircleButton = 24,
+	CxPaddingCircleButtonRightEdge = 32,
+	CxyCircleButtonImage = 18,
+};
+
+enum class GPal
+{
+	TabPanelBk,
+	PlayPanelBk,
+	PlayPanelWatermark,
+	CkBtnHot,
+	CkBtnPushed,
+
+	Max
 };
 
 class CApp
@@ -133,12 +172,18 @@ private:
 	constexpr static D2D1_COLOR_F m_cr[]
 	{
 		{ 1.f,1.f,1.f,0.6f },
-		{ 1.f,1.f,1.f,0.6f },
+		{ 1.f,1.f,1.f,0.8f },
+		{ 0.f,0.f,0.f,0.5f },
+		{ 0.f,0.f,0.f,0.1f },
+		{ 0.f,0.f,0.f,0.3f },
 	};
 	constexpr static D2D1_COLOR_F crDark[]
 	{
 		{ 0.2f,0.2f,0.99f,1.f },
 		{ 0.2f,0.2f,0.4f,1.f },
+		{ 0.f,0.f,0.f,0.5f },
+		{ 0.f,0.f,0.f,0.1f },
+		{ 0.f,0.f,0.f,0.3f },
 	};
 	BOOL m_bDarkMode{};
 public:

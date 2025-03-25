@@ -197,8 +197,10 @@
     <ClInclude Include="CApp.h" />
     <ClInclude Include="CMiniCover.h" />
     <ClInclude Include="CPage.h" />
+    <ClInclude Include="CPageEffect.h" />
     <ClInclude Include="CPageList.h" />
     <ClInclude Include="CPageMain.h" />
+    <ClInclude Include="CPageOptions.h" />
     <ClInclude Include="CPlayer.h" />
     <ClInclude Include="CPlayPanel.h" />
     <ClInclude Include="CTabPanel.h" />
@@ -211,8 +213,10 @@
     <ClCompile Include="CApp.cpp" />
     <ClCompile Include="CMiniCover.cpp" />
     <ClCompile Include="CPage.cpp" />
+    <ClCompile Include="CPageEffect.cpp" />
     <ClCompile Include="CPageList.cpp" />
     <ClCompile Include="CPageMain.cpp" />
+    <ClCompile Include="CPageOptions.cpp" />
     <ClCompile Include="CPlayer.cpp" />
     <ClCompile Include="CPlayPanel.cpp" />
     <ClCompile Include="CTabPanel.cpp" />

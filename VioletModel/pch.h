@@ -1,4 +1,8 @@
 ﻿#pragma once
+#define ECK_OPT_NO_YYJSON 1
+#define ECK_OPT_NO_PUGIXML 1
+
+
 #include "eck\PchInc.h"
 #include "eck\SystemHelper.h"
 #include "eck\CCommDlg.h"
@@ -17,6 +21,7 @@
 using eck::PCVOID;
 using eck::PCBYTE;
 using eck::SafeRelease;
+using eck::ComPtr;
 
 namespace Dui = eck::Dui;
 

@@ -28,7 +28,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					p->pImage = pWnd->RealizeImg(GImg::List);
 					break;
 				case 2:
-					p->pszText = L"插件";
+					p->pszText = L"效果";
 					p->cchText = 2;
 					p->pImage = pWnd->RealizeImg(GImg::Plugin);
 					break;
@@ -91,7 +91,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_TAB.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, 0, 0, this, GetWnd());
 
-		m_TAB.SetItemCount(8);
+		m_TAB.SetItemCount(4);
 		break;
 
 	case WM_DESTROY:

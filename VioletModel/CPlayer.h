@@ -1,5 +1,5 @@
 #pragma once
-enum class PlEvt
+enum class PlayEvt
 {
 
 };
@@ -7,5 +7,5 @@ enum class PlEvt
 class CPlayer
 {
 private:
-	eck::CSignal<eck::NoIntercept_T, void, PlEvt, void*> m_Sig{};
+	eck::CSignal<eck::NoIntercept_T, void, PlayEvt, void*> m_Sig{};
 };
