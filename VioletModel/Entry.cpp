@@ -4,6 +4,18 @@
 
 #include "eck\Env.h"
 
+#include "CPlayList.h"
+
+#if defined _WIN64
+#pragma comment(lib, R"(Bass\bass_x64.lib)")
+#pragma comment(lib, R"(Bass\bass_fx_x64.lib)")
+#pragma comment(lib, R"(Bass\bassmidi_x64.lib)")
+#elif defined _WIN32
+#pragma comment(lib, R"(Bass\bass.lib)")
+#pragma comment(lib, R"(Bass\bass_fx.lib)")
+#pragma comment(lib, R"(Bass\bassmidi.lib)")
+#endif
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	_In_ PWSTR pszCmdLine, _In_ int nCmdShow)
 {
@@ -43,6 +55,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX, 0,
 		pt.x, pt.y, size.cx, size.cy, nullptr, 0);
 	pWnd->Visible = TRUE;
+
+	CPlayList pl{};
+	App->GetPlayer().SetList(&pl);
 
 	MSG msg;
 	while (GetMessageW(&msg, nullptr, 0, 0))

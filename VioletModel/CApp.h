@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include "CPlayer.h"
+
 enum class GImg
 {
 	About,
@@ -149,6 +151,7 @@ enum :int
 	CxPaddingCircleButton = 24,
 	CxPaddingCircleButtonRightEdge = 32,
 	CxyCircleButtonImage = 18,
+	CyPageSwitchAnDelta = 60,
 };
 
 enum class GPal
@@ -186,6 +189,8 @@ private:
 		{ 0.f,0.f,0.f,0.3f },
 	};
 	BOOL m_bDarkMode{};
+
+	CPlayer m_Player{};
 public:
 	CApp();
 
@@ -202,6 +207,8 @@ public:
 	}
 
 	EckInlineCe void SetDarkMode(BOOL bDarkMode) { m_bDarkMode = bDarkMode; }
+
+	EckInlineNdCe auto& GetPlayer() { return m_Player; }
 };
 
 extern CApp* App;

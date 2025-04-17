@@ -69,6 +69,21 @@
     <ClInclude Include="CPageOptions.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="CPagePlaying.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="CVeCover.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="CVeLrc.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="CBass.h">
+      <Filter>逻辑</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayList.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Entry.cpp">
@@ -113,10 +128,30 @@
     <ClCompile Include="CPageOptions.cpp">
       <Filter>UI</Filter>
     </ClCompile>
+    <ClCompile Include="CPagePlaying.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="CVeCover.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="CVeLrc.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="CBass.cpp">
+      <Filter>逻辑</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayList.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Skin\App.ico">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

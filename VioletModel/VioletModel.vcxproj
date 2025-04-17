@@ -195,15 +195,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CApp.h" />
+    <ClInclude Include="CBass.h" />
     <ClInclude Include="CMiniCover.h" />
     <ClInclude Include="CPage.h" />
     <ClInclude Include="CPageEffect.h" />
     <ClInclude Include="CPageList.h" />
     <ClInclude Include="CPageMain.h" />
     <ClInclude Include="CPageOptions.h" />
+    <ClInclude Include="CPagePlaying.h" />
     <ClInclude Include="CPlayer.h" />
+    <ClInclude Include="CPlayList.h" />
     <ClInclude Include="CPlayPanel.h" />
     <ClInclude Include="CTabPanel.h" />
+    <ClInclude Include="CVeCover.h" />
+    <ClInclude Include="CVeLrc.h" />
     <ClInclude Include="CWndMain.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
@@ -211,15 +216,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CApp.cpp" />
+    <ClCompile Include="CBass.cpp" />
     <ClCompile Include="CMiniCover.cpp" />
     <ClCompile Include="CPage.cpp" />
     <ClCompile Include="CPageEffect.cpp" />
     <ClCompile Include="CPageList.cpp" />
     <ClCompile Include="CPageMain.cpp" />
     <ClCompile Include="CPageOptions.cpp" />
+    <ClCompile Include="CPagePlaying.cpp" />
     <ClCompile Include="CPlayer.cpp" />
+    <ClCompile Include="CPlayList.cpp" />
     <ClCompile Include="CPlayPanel.cpp" />
     <ClCompile Include="CTabPanel.cpp" />
+    <ClCompile Include="CVeCover.cpp" />
+    <ClCompile Include="CVeLrc.cpp" />
     <ClCompile Include="CWndMain.cpp" />
     <ClCompile Include="Entry.cpp" />
     <ClCompile Include="MyEck.cpp" />
@@ -232,6 +242,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Skin\App.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

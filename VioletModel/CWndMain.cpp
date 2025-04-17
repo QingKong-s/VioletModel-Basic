@@ -10,6 +10,8 @@ void CWndMain::ClearRes()
 
 BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 {
+	CBass::Init();
+	App->GetPlayer().GetSignal().Connect(this, &CWndMain::OnPlayEvent);
 	eck::GetThreadCtx()->UpdateDefColor();
 	eck::EnableWindowMica(hWnd);
 	const MARGINS mg{ -1 };
@@ -65,8 +67,12 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	m_PageOptions.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
 	m_PageOptions.SetTextFormat(m_pTfLeft);
+	// 页 播放
+	m_PagePlaying.Create(nullptr, 0, 0,
+		0, 0, 0, 0, nullptr, this);
+	m_PagePlaying.SetTextFormat(m_pTfLeft);
 	// 底部播放控制栏
-	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE/* | Dui::DES_BLURBKG*/, 0,
+	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE /*| Dui::DES_BLURBKG*/, 0,
 		0, 0, 0, 0, nullptr, this);
 	// 进度条（保证Z序）
 	m_TBProgress.Create(nullptr, Dui::DES_VISIBLE, 0,
@@ -86,8 +92,11 @@ void CWndMain::ShowPage(Page ePage, BOOL bAnimate)
 {
 	__assume(ePage < Page::Max);
 	const int idxShow = (int)ePage;
-
+	const int idxShowLast = (int)m_eCurrPage;
 	ClearPageAnimation();
+	if (idxShow == idxShowLast)
+		return;
+	m_eCurrPage = ePage;
 
 	const auto bAlreadyVisible =
 		(m_vPage[idxShow]->GetStyle() & Dui::DES_VISIBLE);
@@ -104,6 +113,7 @@ void CWndMain::ShowPage(Page ePage, BOOL bAnimate)
 	{
 		if (bAlreadyVisible)
 			return;// 已经显示，不需要动画
+		m_bPageAnUpToDown = (idxShow < idxShowLast);
 		m_pAnPage = m_vPage[idxShow];
 		if (!m_pecPage)
 		{
@@ -116,11 +126,16 @@ void CWndMain::ShowPage(Page ePage, BOOL bAnimate)
 				{
 					auto p = (CWndMain*)lParam;
 					const auto x = p->m_pAnPage->GetRect().left;
-					p->m_pAnPage->SetPos(x, CyPageTitle + DTopPageTitle + CxPageIntPadding
-						+ 40 - (int)fCurrValue);
+					constexpr int yNormal = CyPageTitle + DTopPageTitle + CxPageIntPadding;
+					if (p->m_bPageAnUpToDown)
+						p->m_pAnPage->SetPos(x, yNormal + 
+							CyPageSwitchAnDelta - (int)fCurrValue);
+					else
+						p->m_pAnPage->SetPos(x, yNormal - 
+							CyPageSwitchAnDelta + (int)fCurrValue);
 				});
 		}
-		m_pecPage->SetRange(0, 40);
+		m_pecPage->SetRange(0, CyPageSwitchAnDelta);
 		m_pecPage->Begin();
 		WakeRenderThread();
 	}
@@ -131,8 +146,34 @@ void CWndMain::ClearPageAnimation()
 	if (!m_pAnPage)
 		return;
 	m_pecPage->End();
-	m_pAnPage->SetStyle(m_pAnPage->GetStyle() & ~Dui::DES_COMPOSITED);
+	//m_pAnPage->SetStyle(m_pAnPage->GetStyle() & ~Dui::DES_COMPOSITED);
 	m_pAnPage = nullptr;
+}
+
+void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
+{
+	switch (e.eEvent)
+	{
+	case PlayEvt::CommTick:
+		m_TBProgress.SetPos(float(App->GetPlayer().GetCurrTime() * ProgBarScale));
+		m_TBProgress.InvalidateRect();
+	break;
+	case PlayEvt::Play:
+		m_TBProgress.SetRange(0.f, float(App->GetPlayer().GetTotalTime() * ProgBarScale));
+		m_TBProgress.SetPos(0.f);
+		m_TBProgress.InvalidateRect();
+		[[fallthrough]];
+	case PlayEvt::Resume:
+		SetTimer(HWnd, IDT_COMM_TICK, TE_COMM_TICK, nullptr);
+		break;
+	case PlayEvt::Stop:
+		m_TBProgress.SetPos(0.f);
+		m_TBProgress.InvalidateRect();
+		[[fallthrough]];
+	case PlayEvt::Pause:
+		KillTimer(HWnd, IDT_COMM_TICK);
+		break;
+	}
 }
 
 CWndMain::~CWndMain()
@@ -143,6 +184,12 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+	case WM_TIMER:
+		if (wParam == IDT_COMM_TICK)
+		{
+			App->GetPlayer().GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::CommTick });
+		}
+		break;
 	case WM_SIZE:
 	{
 		ClearPageAnimation();
@@ -225,6 +272,17 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 		ShowPage((Page)p->idxItem, TRUE);
 	}
 	return 0;
+
+	case Dui::TBE_POSCHANGED:
+	{
+		if (pElem == &m_TBProgress)
+		{
+			App->GetPlayer().SetPosition(
+				m_TBProgress.GetPos() / ProgBarScale);
+			return 0;
+		}
+	}
+	break;
 	}
 	return __super::OnElemEvent(pElem, uMsg, wParam, lParam);
 }

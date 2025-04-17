@@ -8,6 +8,7 @@
 #include "eck\CCommDlg.h"
 #include "eck\CLinearLayout.h"
 #include "eck\CLayoutDummy.h"
+#include "eck\DuiStdCompositor.h"
 #include "eck\CDuiButton.h"
 #include "eck\CDuiCircleButton.h"
 #include "eck\CDuiEdit.h"
@@ -17,6 +18,10 @@
 #include "eck\CDuiTabList.h"
 #include "eck\CDuiList.h"
 #include "eck\CDuiGroupList.h"
+#include "eck\MediaTagFlac.h"
+#include "eck\MediaTagID3v1.h"
+#include "eck\MediaTagID3v2.h"
+#include "eck\Lyric.h"
 
 using eck::PCVOID;
 using eck::PCBYTE;
@@ -24,6 +29,7 @@ using eck::SafeRelease;
 using eck::ComPtr;
 
 namespace Dui = eck::Dui;
+namespace Tag = eck::MediaTag;
 
 enum
 {
@@ -32,6 +38,45 @@ enum
 
 };
 
-#include "CApp.h"
-#include "CTabPanel.h"
-#include "CPlayPanel.h"
+#include "Bass\bass.h"
+#include "Bass\bass_fx.h"
+#include "Bass\bassmidi.h"
+
+#include "CBass.h"
+
+struct PLDATA// 结构稳定，不能修改
+{
+	UINT uSecTime{};		// 【文件】时长
+	UINT uSecPlayed{};		// 【统计】播放总时间
+	UINT cPlayed{};			// 【统计】播放次数
+	UINT cLoop{};			// 【统计】循环次数
+	ULONGLONG ftLastPlayed{};	// 【统计】上次播放时间
+	ULONGLONG ftModified{};	// 【文件】修改时间
+	ULONGLONG ftCreated{};	// 【文件】创建时间
+	USHORT usYear{};		// 【元数据】年代
+	USHORT usBitrate{};		// 【元数据】比特率
+	BYTE byRating{};		// 【元数据】分级
+	BYTE bIgnore : 1{};		// 项目被忽略
+	BYTE bBookmark : 1{};	// 项目含书签
+	BYTE bNeedUpdated : 1{};// 信息需要更新
+	BYTE bMarked : 1{};		// 项目已标记
+	BYTE bFree : 1{};		// 项目空闲
+};
+
+struct PLLITEM
+{
+	eck::CRefStrW rsName{};		// 名称
+	eck::CRefStrW rsFile{};		// 文件路径
+
+	eck::CRefStrW rsTitle{};	// 标题
+	eck::CRefStrW rsArtist{};	// 艺术家
+	eck::CRefStrW rsAlbum{};	// 唱片集
+	eck::CRefStrW rsGenre{};	// 流派
+
+	PLDATA s{};
+	union
+	{
+		int idxSortMapping{ -1 };	// 【排序时用】映射到的项
+		int idxNextFree;		// 【仅当项目空闲时】下一个空闲项
+	};
+};

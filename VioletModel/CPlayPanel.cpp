@@ -29,12 +29,12 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		const auto pElem = (Dui::CElem*)wParam;
 		const auto pnm = (Dui::DUINMHDR*)lParam;
-		if (pnm->uCode == Dui::EE_CUSTOMDRAW)
+		switch (pnm->uCode)
 		{
-			if (pElem == &m_BTPrev ||
-				pElem == &m_BTNext ||
-				pElem == &m_BTVol ||
-				pElem == &m_BTLrc)
+		case Dui::EE_CUSTOMDRAW:
+		{
+			if (pElem == &m_BTPrev ||pElem == &m_BTNext ||
+				pElem == &m_BTVol ||pElem == &m_BTLrc)
 			{
 				const auto p = (Dui::CBTN_CUSTOM_DRAW*)lParam;
 				if (p->dwStage == CDDS_PREPAINT)
@@ -57,6 +57,23 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					return CDRF_SKIPDEFAULT;
 				}
 			}
+		}
+		break;
+		case Dui::EE_COMMAND:
+		{
+			if (pElem == &m_BTPlay)
+			{
+				auto& Player = App->GetPlayer();
+				if (Player.IsActive())
+					Player.PlayOrPause();
+				else
+				{
+					// TMPTMPTMP
+					Player.Play(0);
+				}
+			}
+		}
+		break;
 		}
 	}
 	break;

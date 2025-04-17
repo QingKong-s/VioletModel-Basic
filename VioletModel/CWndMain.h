@@ -1,14 +1,18 @@
 ﻿#pragma once
+#include "CApp.h"
 #include "CPage.h"
 #include "CPageMain.h"
 #include "CPageList.h"
 #include "CPageEffect.h"
 #include "CPageOptions.h"
+#include "CPagePlaying.h"
+#include "CTabPanel.h"
+#include "CPlayPanel.h"
 
 class CWndMain final : public Dui::CDuiWnd
 {
 public:
-	enum class Page
+	enum class Page : BYTE
 	{
 		Main,
 		List,
@@ -16,6 +20,15 @@ public:
 		Options,
 		Max
 	};
+
+	enum
+	{
+		// 使用普通窗口定时器驱动进度和歌词轮询即可
+		IDT_COMM_TICK = 0x514B,
+		TE_COMM_TICK = 300,
+	};
+
+	constexpr static double ProgBarScale = 100.;
 private:
 	Dui::CTitleBar m_TitleBar{};
 	Dui::CLabel m_LAPageTitle{};
@@ -27,6 +40,7 @@ private:
 	CPageList m_PageList{};
 	CPageEffect m_PageEffect{};
 	CPageOptions m_PageOptions{};
+	CPagePlaying m_PagePlaying{};
 
 	Dui::CTrackBar m_TBProgress{};
 
@@ -39,6 +53,9 @@ private:
 
 	CPage* m_pAnPage{};
 	eck::CEasingCurve* m_pecPage{};
+
+	BOOLEAN m_bPageAnUpToDown{};
+	Page m_eCurrPage{};
 private:
 	void ClearRes();
 
@@ -47,6 +64,8 @@ private:
 	void ShowPage(Page ePage, BOOL bAnimate);
 
 	void ClearPageAnimation();
+
+	void OnPlayEvent(const PLAY_EVT_PARAM& e);
 public:
 	~CWndMain();
 
@@ -60,7 +79,7 @@ public:
 	{
 		if (!m_vBmpRealization[(size_t)n])
 		{
-			GetD2D().GetDC()->CreateBitmapFromWicBitmap(App->GetImg(n),
+			GetDeviceContext()->CreateBitmapFromWicBitmap(App->GetImg(n),
 				(const D2D1_BITMAP_PROPERTIES1*)nullptr,
 				&m_vBmpRealization[(size_t)n]);
 		}
