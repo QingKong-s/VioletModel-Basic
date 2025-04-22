@@ -60,7 +60,7 @@
     <ClInclude Include="CPage.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="CMiniCover.h">
+    <ClInclude Include="CVeMiniCover.h">
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="CPageEffect.h">
@@ -83,6 +83,9 @@
     </ClInclude>
     <ClInclude Include="CPlayList.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CCompPlayPageAn.h">
+      <Filter>UI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -119,7 +122,7 @@
     <ClCompile Include="CPage.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="CMiniCover.cpp">
+    <ClCompile Include="CVeMiniCover.cpp">
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="CPageEffect.cpp">

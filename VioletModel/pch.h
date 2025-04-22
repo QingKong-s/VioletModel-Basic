@@ -1,7 +1,8 @@
 ﻿#pragma once
-#define ECK_OPT_NO_YYJSON 1
-#define ECK_OPT_NO_PUGIXML 1
-
+#define _CRTDBG_MAP_ALLOC	1
+#define ECK_OPT_NO_YYJSON	1
+#define ECK_OPT_NO_PUGIXML	1
+#define VIOLET_WINRT		0
 
 #include "eck\PchInc.h"
 #include "eck\SystemHelper.h"
@@ -23,6 +24,17 @@
 #include "eck\MediaTagID3v2.h"
 #include "eck\Lyric.h"
 
+//#if VIOLET_WINRT
+//#include "eck\WinRtDCompInterop.h"
+//#include "eck\BackdropEffectChain.h"
+//
+//#include <DispatcherQueue.h>
+//#include <winrt/Windows.Foundation.Collections.h>
+//#include <winrt/Windows.System.h>
+//#include <winrt/Windows.Graphics.Effects.h>
+//#include <winrt/Windows.UI.Composition.Effects.h>
+//#endif
+
 using eck::PCVOID;
 using eck::PCBYTE;
 using eck::SafeRelease;
@@ -35,7 +47,11 @@ enum
 {
 	ELEN_PLACEHOLDER = Dui::EE_PRIVATE_BEGIN,
 	ELEN_PAGE_CHANGE,// [CTabPanel]边栏被单击时(LTN_ITEM*)
+	ELEN_MINICOVER_CLICK,// [CMiniCover]封面被单击时
 
+
+	ELEID_BEGIN = 0x716B,
+	ELEID_PLAYPAGE_BACK,
 };
 
 #include "Bass\bass.h"
@@ -76,7 +92,7 @@ struct PLLITEM
 	PLDATA s{};
 	union
 	{
-		int idxSortMapping{ -1 };	// 【排序时用】映射到的项
+		int idxSortMapping{ -1 };// 【排序时用】映射到的项
 		int idxNextFree;		// 【仅当项目空闲时】下一个空闲项
 	};
 };

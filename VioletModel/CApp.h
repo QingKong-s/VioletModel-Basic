@@ -124,7 +124,7 @@ constexpr PCWSTR MainWndPageName[]
 enum :int
 {
 	CxTabPanel = 48,
-	CyPalyPanel = 100,
+	CyPlayPanel = 100,
 	CxyWndLogo = 18,
 	CyTitleBar = 40,
 	DTopPageTitle = 12,
@@ -152,6 +152,8 @@ enum :int
 	CxPaddingCircleButtonRightEdge = 32,
 	CxyCircleButtonImage = 18,
 	CyPageSwitchAnDelta = 60,
+	CxPaddingCtrlBtnWithPlayPage = 44,
+	CxPaddingProgBarWithPlayPage = 40,
 };
 
 enum class GPal

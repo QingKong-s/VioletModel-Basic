@@ -1,10 +1,10 @@
 ﻿#include "pch.h"
-#include "CMiniCover.h"
+#include "CVeMiniCover.h"
 #include "CWndMain.h"
 
 constexpr static float CoverAnEndValue = 6.f;
 
-LRESULT CMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -22,7 +22,9 @@ LRESULT CMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pDC->DrawBitmap(m_pBmp, rcView);
 			m_pDC->Flush();
 			GetWnd()->CacheReserveLogSize(GetWidthF(), GetHeightF());
-			GetWnd()->BlurDrawDC(GetRectInClientF(), {}, fValue);
+			auto rcInTarget{ GetRectInClientF() };
+			eck::OffsetRect(rcInTarget, ps.ox, ps.oy);
+			GetWnd()->BlurDrawDC(rcInTarget, {}, fValue);
 
 			rcView = GetViewRectF();
 			rcView.left = (rcView.right - (float)CxyPlayPageArrow) / 2;
@@ -70,6 +72,31 @@ LRESULT CMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONDBLCLK:
+	{
+		m_bLBtnDown = TRUE;
+		SetCapture();
+	}
+	break;
+	case WM_LBUTTONUP:
+	{
+		if (m_bLBtnDown)
+		{
+			m_bLBtnDown = FALSE;
+			ReleaseCapture();
+			POINT pt ECK_GET_PT_LPARAM(lParam);
+			ClientToElem(pt);
+			if (eck::PtInRect(GetViewRect(), pt))
+			{
+				VEN_MINICOVER_CLICK n{};
+				n.uCode = ELEN_MINICOVER_CLICK;
+				GenElemNotify(&n);
+			}
+		}
+	}
+	break;
+
 	case WM_CREATE:
 	{
 		m_pec = new eck::CEasingCurve{};
@@ -79,25 +106,27 @@ LRESULT CMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_pec->SetDuration(160.f);
 		m_pec->SetCallBack([](float fCurrValue, float fOldValue, LPARAM lParam)
 			{
-				const auto p = (CMiniCover*)lParam;
+				const auto p = (CVeMiniCover*)lParam;
 				p->InvalidateRect();
 			});
 
-		GetWnd()->BmpNewLogSize(GetWidthF(), GetHeightF(), m_pBmp);
-		const auto pOrg = ((CWndMain*)GetWnd())->RealizeImg(GImg::DefaultCover);
+		m_pBmp = ((CWndMain*)GetWnd())->RealizeImg(GImg::DefaultCover);
+		m_pBmp->AddRef();
+		/*GetWnd()->BmpNewLogSize(GetWidthF(), GetHeightF(), m_pBmp);
+		const auto pOrg = ((CWndMain*)GetWnd())->RealizeImg(GImg::DefaultCover);*/
 		m_pBmpCoverUp = ((CWndMain*)GetWnd())->RealizeImg(GImg::PlayPageUp);
 		m_pBmpCoverUp->AddRef();
 
-		ID2D1Image* pOldTarget;
-		m_pDC->GetTarget(&pOldTarget);
-		m_pDC->BeginDraw();
-		m_pDC->SetTarget(m_pBmp);
-		m_pDC->SetTransform(D2D1::Matrix3x2F::Identity());
-		m_pDC->DrawBitmap(pOrg, GetViewRectF());
-		m_pDC->EndDraw();
-		m_pDC->SetTarget(pOldTarget);
-		if (pOldTarget)
-			pOldTarget->Release();
+		//ID2D1Image* pOldTarget;
+		//m_pDC->GetTarget(&pOldTarget);
+		//m_pDC->BeginDraw();
+		//m_pDC->SetTarget(m_pBmp);
+		//m_pDC->SetTransform(D2D1::Matrix3x2F::Identity());
+		//m_pDC->DrawBitmap(pOrg, GetViewRectF());
+		//m_pDC->EndDraw();
+		//m_pDC->SetTarget(pOldTarget);
+		//if (pOldTarget)
+		//	pOldTarget->Release();
 	}
 	break;
 

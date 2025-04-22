@@ -15,7 +15,7 @@ LRESULT CVeCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             float f;
             const auto size = m_pBmp->GetSize();
-            const int cx0 = size.width, cy0 = size.height;
+            const float cx0 = size.width, cy0 = size.height;
             D2D1_RECT_F rcF;
 
             const float cxElem = GetWidthF();

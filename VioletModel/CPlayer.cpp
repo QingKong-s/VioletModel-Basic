@@ -37,6 +37,7 @@ PlayErr CPlayer::PlayWorker(PLLITEM& e)
 	Tag::CMediaFile mf{ e.rsFile.Data(),STGM_READ };
 	mf.DetectTag();
 	Tag::CID3v2 Id3v2{ mf };
+	Id3v2.ReadTag(0);
 	m_MusicInfo.uMask = Tag::MIM_ALL;
 	Id3v2.SimpleExtract(m_MusicInfo);
 	const auto pPic = m_MusicInfo.GetMainCover();
@@ -61,6 +62,7 @@ PlayErr CPlayer::PlayWorker(PLLITEM& e)
 		m_pBmpCover->AddRef();
 	}
 	GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::Play });
+	return PlayErr::Ok;
 }
 
 PlayErr CPlayer::Play(int idx)

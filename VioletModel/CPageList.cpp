@@ -49,7 +49,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_Lyt.Add(&m_TBLPlayList, { .cxRightWidth = CxPageIntPadding },
 			eck::LF_FIX_WIDTH | eck::LF_FILL_HEIGHT);
 		m_TBLPlayList.SetItemCount(40);
-		m_TBLPlayList.SetBottomPadding(CyPalyPanel);
+		m_TBLPlayList.SetBottomPadding(CyPlayPanel);
 		m_vList.resize(40);
 
 		m_GLList.Create(nullptr, Dui::DES_VISIBLE, 0,
