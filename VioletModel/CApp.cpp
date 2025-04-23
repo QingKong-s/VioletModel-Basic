@@ -20,6 +20,12 @@ CApp::CApp()
 	}
 }
 
+CApp::~CApp()
+{
+	for (auto& e : m_Img)
+		SafeRelease(e);
+}
+
 void CApp::Init()
 {
 }

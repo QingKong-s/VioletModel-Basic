@@ -103,7 +103,7 @@ LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		InitEasingCurve(m_pec);
 		m_pec->SetAnProc(eck::Easing::OutCubic);
 		m_pec->SetRange(0.f, CoverAnEndValue);
-		m_pec->SetDuration(160.f);
+		m_pec->SetDuration(200.f);
 		m_pec->SetCallBack([](float fCurrValue, float fOldValue, LPARAM lParam)
 			{
 				const auto p = (CVeMiniCover*)lParam;

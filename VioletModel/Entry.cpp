@@ -39,6 +39,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return 0;
 	}
 
+	//eck::ThreadUnInit();
+	//eck::UnInit();
+	//CoUninitialize();
+	//return 0;
+
 	App = new CApp{};
 	CApp::Init();
 
@@ -58,7 +63,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	CPlayList pl{};
 	App->GetPlayer().SetList(&pl);
-	
+	pl.FlInsert(LR"(D:\@重要文件\@音乐\垭口 - 齐秦.mp3)");
+
 
 	MSG msg;
 	while (GetMessageW(&msg, nullptr, 0, 0))

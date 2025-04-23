@@ -6,13 +6,13 @@ private:
 	{
 		int idxImage{ -1 };
 		eck::CRefStrW rsText{};
-		IDWriteTextLayout* pTextLayout{};
+		ComPtr<IDWriteTextLayout> pTextLayout{};
 	};
 
 	struct LIST
 	{
-		IDWriteTextLayout* pTextLayout;
-		std::vector<ITEM> vItem;
+		ComPtr<IDWriteTextLayout> pTextLayout{};
+		std::vector<ITEM> vItem{};
 	};
 
 	Dui::CTabList m_TBLPlayList{};

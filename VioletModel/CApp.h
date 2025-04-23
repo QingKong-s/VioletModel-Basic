@@ -154,6 +154,8 @@ enum :int
 	CyPageSwitchAnDelta = 60,
 	CxPaddingCtrlBtnWithPlayPage = 44,
 	CxPaddingProgBarWithPlayPage = 70,
+	CyFontNormal = 15,
+	CyFontPageTitle = 20,
 };
 
 enum class GPal
@@ -193,8 +195,12 @@ private:
 	BOOL m_bDarkMode{};
 
 	CPlayer m_Player{};
+
+	eck::CDWriteFontFactory m_FontFactory{};
 public:
 	CApp();
+
+	~CApp();
 
 	static void Init();
 
@@ -211,6 +217,7 @@ public:
 	EckInlineCe void SetDarkMode(BOOL bDarkMode) { m_bDarkMode = bDarkMode; }
 
 	EckInlineNdCe auto& GetPlayer() { return m_Player; }
+	EckInlineNdCe auto& GetFontFactory() { return m_FontFactory; }
 };
 
 extern CApp* App;

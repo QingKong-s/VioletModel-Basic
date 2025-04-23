@@ -26,6 +26,13 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_LAWatermark.SetRect({ GetWidth() / 2,0,GetWidth() - 10,GetHeight() - 10 });
 		return 0;
 
+	case WM_SETFONT:
+	{
+		m_LAArtist.SetTextFormat(GetTextFormat());
+		m_LATime.SetTextFormat(GetTextFormat());
+	}
+	break;
+
 	case WM_CREATE:
 	{
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
@@ -38,11 +45,13 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		};
 		m_LAWatermark.Create(Watermark, Dui::DES_VISIBLE, 0,
 			0, 0, 10, 10, this, pWnd);
-		auto pTfWatermark = pWnd->TfClone();
-		pTfWatermark->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_TRAILING);
-		pTfWatermark->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_FAR);
-		m_LAWatermark.SetTextFormat(pTfWatermark);
-		pTfWatermark->Release();
+		ComPtr<IDWriteTextFormat> pTfWatermark, pTfTitle;
+		App->GetFontFactory().NewFont(pTfWatermark.RefOf(), eck::Align::Far,
+			eck::Align::Far, (float)CyFontNormal);
+		App->GetFontFactory().NewFont(pTfTitle.RefOf(), eck::Align::Near,
+			eck::Align::Center, (float)CyFontNormal, 700);
+
+		m_LAWatermark.SetTextFormat(pTfWatermark.Get());
 		m_LAWatermark.SetUseThemeColor(FALSE);
 		m_LAWatermark.SetTextColor(App->GetColor(GPal::PlayPanelWatermark));
 
@@ -52,32 +61,17 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		x += (CxyMiniCover + CxPaddingPlayPanelText);
 
 		int y = DTopTitle;
-		IDWriteTextFormat* pTfBold;
-		LOGFONTW lf;
-		eck::GetDefFontInfo(lf);
-		eck::g_pDwFactory->CreateTextFormat(
-			lf.lfFaceName,
-			nullptr,
-			DWRITE_FONT_WEIGHT_BOLD,
-			lf.lfItalic ? DWRITE_FONT_STYLE_ITALIC : DWRITE_FONT_STYLE_NORMAL,
-			DWRITE_FONT_STRETCH_NORMAL,
-			15.f,
-			L"zh-cn",
-			&pTfBold);
 		m_LATitle.Create(L"Violet", Dui::DES_VISIBLE, 0,
 			x, y, CxMaxTitleAndArtist, CyPlayPanelText, this, pWnd);
 		y += (CyPlayPanelText + CyPaddingTitleAndArtist);
-		m_LATitle.SetTextFormat(pTfBold);
-		pTfBold->Release();
+		m_LATitle.SetTextFormat(pTfTitle.Get());
 
 		m_LAArtist.Create(L"Player", Dui::DES_VISIBLE, 0,
 			x, y, CxMaxTitleAndArtist, CyPlayPanelText, this, pWnd);
 		x += (CxMaxTitleAndArtist + CxPaddingPlayPanelText);
-		m_LAArtist.SetTextFormat(pWnd->TfGetLeft());
 
 		m_LATime.Create(L"00:00/00:00", Dui::DES_VISIBLE, 0,
 			x, DTopTime, CxMaxTime, CyPlayPanelText, this, pWnd);
-		m_LATime.SetTextFormat(pWnd->TfGetLeft());
 	}
 	break;
 

@@ -33,7 +33,7 @@ public:
 
 	constexpr static double ProgBarScale = 100.;
 private:
-	constexpr static float MaxPPAnDuration = 600.f;
+	constexpr static float MaxPPAnDuration = 700.f;
 	constexpr static int XCenterButtonLeftLimit = DLeftMiniCover + CxyMiniCover +
 		CxPaddingPlayPanelText + CxMaxTitleAndArtist + CxPaddingPlayPanelText +
 		CxMaxTime + CxPaddingPlayPanelText;
@@ -61,9 +61,6 @@ private:
 		m_BTVol{};
 
 	ID2D1Bitmap1* m_vBmpRealization[(size_t)GImg::Max]{};
-	IDWriteTextFormat* m_pTfCenter{};
-	IDWriteTextFormat* m_pTfLeft{};
-	IDWriteTextFormat* m_pTfRight{};
 	ID2D1SolidColorBrush* m_pBrush{};
 
 	ID2D1Bitmap1* m_pBmpCover{};
@@ -122,12 +119,6 @@ public:
 		}
 		return m_vBmpRealization[(size_t)n];
 	}
-
-	EckInlineNdCe auto TfGetCenter() const noexcept { return m_pTfCenter; }
-	EckInlineNdCe auto TfGetLeft() const noexcept { return m_pTfLeft; }
-	EckInlineNdCe auto TfGetRight() const noexcept { return m_pTfRight; }
-
-	IDWriteTextFormat* TfClone();
 
 	//***ITimeLine***
 	void STDMETHODCALLTYPE Tick(int iMs);

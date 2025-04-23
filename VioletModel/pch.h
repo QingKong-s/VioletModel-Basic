@@ -23,6 +23,7 @@
 #include "eck\MediaTagID3v1.h"
 #include "eck\MediaTagID3v2.h"
 #include "eck\Lyric.h"
+#include "eck\CDWriteFontFactory.h"
 
 //#if VIOLET_WINRT
 //#include "eck\WinRtDCompInterop.h"

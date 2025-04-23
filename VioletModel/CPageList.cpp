@@ -29,12 +29,16 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			case Dui::GLE_GETDISPINFO:
 			{
 				const auto p = (Dui::GL_GETDISPINFO*)lParam;
-				
+
 			}
 			return 0;
-		}
+			}
 	}
 	return 0;
+
+	case WM_SIZE:
+		m_Lyt.Arrange(0, 0, GetWidth(), GetHeight());
+		break;
 
 	case WM_SETFONT:
 	{
@@ -44,6 +48,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return 0;
 
 	case WM_CREATE:
+	{
 		m_TBLPlayList.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, CxListFileList, 0, this, GetWnd());
 		m_Lyt.Add(&m_TBLPlayList, { .cxRightWidth = CxPageIntPadding },
@@ -55,10 +60,13 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_GLList.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, 0, 0, this, GetWnd());
 		m_Lyt.Add(&m_GLList, {}, eck::LF_FILL, 1);
-		break;
-	case WM_SIZE:
-		m_Lyt.Arrange(0, 0, GetWidth(), GetHeight());
-		break;
+	}
+	break;
+	case WM_DESTROY:
+	{
+		m_vList.clear();
+	}
+	break;
 	}
 	return __super::OnEvent(uMsg, wParam, lParam);
 }

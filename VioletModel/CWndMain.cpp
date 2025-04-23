@@ -32,29 +32,13 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 
 	BlurInit();
 	BlurSetUseLayer(TRUE);
-
-	m_pTfLeft = eck::CreateDefTextFormatWithSize(15);
-	m_pTfLeft->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-
-	m_pTfCenter = eck::CreateDefTextFormatWithSize(15);
-	m_pTfCenter->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
-	m_pTfCenter->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-
-	m_pTfRight = eck::CreateDefTextFormatWithSize(15);
-	m_pTfRight->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_JUSTIFIED);
-
-	LOGFONTW lf;
-	eck::GetDefFontInfo(lf, 96);
-	IDWriteTextFormat* pTextFormat;
-	const auto hr = eck::g_pDwFactory->CreateTextFormat(
-		lf.lfFaceName,
-		nullptr,
-		(DWRITE_FONT_WEIGHT)600,
-		lf.lfItalic ? DWRITE_FONT_STYLE_ITALIC : DWRITE_FONT_STYLE_NORMAL,
-		DWRITE_FONT_STRETCH_NORMAL,
-		20,
-		L"zh-cn",
-		&pTextFormat);
+	ComPtr<IDWriteTextFormat> pTfPageTitle, pTfLeft, pTfCenter;
+	App->GetFontFactory().NewFont(pTfPageTitle.RefOf(), eck::Align::Near,
+		eck::Align::Center, (float)CyFontPageTitle, 600);
+	App->GetFontFactory().NewFont(pTfLeft.RefOf(), eck::Align::Near,
+		eck::Align::Center, (float)CyFontNormal);
+	App->GetFontFactory().NewFont(pTfCenter.RefOf(), eck::Align::Center,
+		eck::Align::Center, (float)CyFontNormal);
 
 	m_NormalPageContainer.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
@@ -65,31 +49,31 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	// 标题
 	m_LAPageTitle.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, pNormalParent, this);
-	m_LAPageTitle.SetTextFormat(pTextFormat);
-	pTextFormat->Release();
+	m_LAPageTitle.SetTextFormat(pTfPageTitle.Get());
 	// 页 主页
 	m_PageMain.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, pNormalParent, this);
-	m_PageMain.SetTextFormat(m_pTfCenter);
+	m_PageMain.SetTextFormat(pTfCenter.Get());
 	// 页 列表
 	m_PageList.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, pNormalParent, this);
-	m_PageList.SetTextFormat(m_pTfLeft);
+	m_PageList.SetTextFormat(pTfLeft.Get());
 	// 页 效果
 	m_PageEffect.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, pNormalParent, this);
-	m_PageEffect.SetTextFormat(m_pTfLeft);
+	m_PageEffect.SetTextFormat(pTfLeft.Get());
 	// 页 设置
 	m_PageOptions.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, pNormalParent, this);
-	m_PageOptions.SetTextFormat(m_pTfLeft);
+	m_PageOptions.SetTextFormat(pTfLeft.Get());
 	// 底部播放控制栏
 	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE /*| Dui::DES_BLURBKG*/, 0,
 		0, 0, 0, 0, nullptr, this);
+	m_PlayPanel.SetTextFormat(pTfLeft.Get());
 	// 页 播放
 	m_PagePlaying.Create(nullptr, 0, 0,
 		0, 0, 0, 0, nullptr, this);
-	m_PagePlaying.SetTextFormat(m_pTfLeft);
+	m_PagePlaying.SetTextFormat(pTfLeft.Get());
 	// 进度条
 	m_TBProgress.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
@@ -165,7 +149,7 @@ void CWndMain::ShowPage(Page ePage, BOOL bAnimate)
 			RegisterTimeLine(m_pecPage);
 			m_pecPage->SetParam((LPARAM)this);
 			m_pecPage->SetDuration(160);
-			m_pecPage->SetAnProc(eck::Easing::OutCubic);
+			m_pecPage->SetAnProc(eck::Easing::OutExpo);
 			m_pecPage->SetCallBack([](float fCurrValue, float fOldValue, LPARAM lParam)
 				{
 					auto p = (CWndMain*)lParam;
@@ -400,11 +384,6 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 	return __super::OnElemEvent(pElem, uMsg, wParam, lParam);
 }
 
-IDWriteTextFormat* CWndMain::TfClone()
-{
-	return eck::CreateDefTextFormatWithSize(15);
-}
-
 void STDMETHODCALLTYPE CWndMain::Tick(int iMs)
 {
 	constexpr float Duration[]
@@ -440,7 +419,7 @@ void STDMETHODCALLTYPE CWndMain::Tick(int iMs)
 		return;
 	}
 	float k;
-	m_kPalyPageAn = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, MaxPPAnDuration);
+	m_kPalyPageAn = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, MaxPPAnDuration);
 	if (!m_bPPAnReverse)
 		m_kPalyPageAn = 1.f - m_kPalyPageAn;
 	// 移动底部的按钮
@@ -457,25 +436,25 @@ void STDMETHODCALLTYPE CWndMain::Tick(int iMs)
 	if (m_bPPAnReverse)
 	{
 		// 左上
-		k = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, DurationR[0]);
+		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, DurationR[0]);
 		k = 1.f - k;
 		k = std::clamp(k, 0.f, 1.f);
 		eck::CalcPointFromLineScalePos(m_rcPPLarge.left, m_rcPPLarge.top,
 			m_rcPPMini.left, m_rcPPMini.top, k, pt[0].x, pt[0].y);
 		// 右上
-		k = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, DurationR[1]);
+		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, DurationR[1]);
 		k = 1.f - k;
 		k = std::clamp(k, 0.f, 1.f);
 		eck::CalcPointFromLineScalePos(m_rcPPLarge.right, m_rcPPLarge.top,
 			m_rcPPMini.right, m_rcPPMini.top, k, pt[1].x, pt[1].y);
 		// 左下
-		k = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, DurationR[2]);
+		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, DurationR[2]);
 		k = 1.f - k;
 		k = std::clamp(k, 0.f, 1.f);
 		eck::CalcPointFromLineScalePos(m_rcPPLarge.left, m_rcPPLarge.bottom,
 			m_rcPPMini.left, m_rcPPMini.bottom, k, pt[2].x, pt[2].y);
 		// 右下
-		k = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, DurationR[3]);
+		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, DurationR[3]);
 		k = 1.f - k;
 		k = std::clamp(k, 0.f, 1.f);
 		eck::CalcPointFromLineScalePos(m_rcPPLarge.right, m_rcPPLarge.bottom,
@@ -484,22 +463,22 @@ void STDMETHODCALLTYPE CWndMain::Tick(int iMs)
 	else
 	{
 		// 左上
-		k = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, Duration[0]);
+		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, Duration[0]);
 		k = std::clamp(k, 0.f, 1.f);
 		eck::CalcPointFromLineScalePos(m_rcPPLarge.left, m_rcPPLarge.top,
 			m_rcPPMini.left, m_rcPPMini.top, k, pt[0].x, pt[0].y);
 		// 右上
-		k = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, Duration[1]);
+		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, Duration[1]);
 		k = std::clamp(k, 0.f, 1.f);
 		eck::CalcPointFromLineScalePos(m_rcPPLarge.right, m_rcPPLarge.top,
 			m_rcPPMini.right, m_rcPPMini.top, k, pt[1].x, pt[1].y);
 		// 左下
-		k = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, Duration[2]);
+		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, Duration[2]);
 		k = std::clamp(k, 0.f, 1.f);
 		eck::CalcPointFromLineScalePos(m_rcPPLarge.left, m_rcPPLarge.bottom,
 			m_rcPPMini.left, m_rcPPMini.bottom, k, pt[2].x, pt[2].y);
 		// 右下
-		k = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, Duration[3]);
+		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, Duration[3]);
 		k = std::clamp(k, 0.f, 1.f);
 		eck::CalcPointFromLineScalePos(m_rcPPLarge.right, m_rcPPLarge.bottom,
 			m_rcPPMini.right, m_rcPPMini.bottom, k, pt[3].x, pt[3].y);

@@ -9,6 +9,7 @@ void CPagePlaying::UpdateBlurredCover()
 	App->GetPlayer().GetCover(pWicCover.RefOf());
 	if (!pWicCover.Get())
 		return;
+	ECK_DUILOCK;
 
 	ComPtr<ID2D1Image> pOldTarget;
 	m_pDC->GetTarget(&pOldTarget);
