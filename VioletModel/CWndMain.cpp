@@ -7,8 +7,10 @@ void CWndMain::ClearRes()
 	for (auto& e : m_vBmpRealization)
 		SafeRelease(e);
 	SafeRelease(m_pecPage);
+	SafeRelease(m_pBmpCover);
+	SafeRelease(m_pBrush);
 	SafeRelease(m_pCompPlayPageAn);
-
+	SafeRelease(m_pCompNormalPageAn);
 }
 
 BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
@@ -16,6 +18,10 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	CBass::Init();
 	App->GetPlayer().GetSignal().Connect(this, &CWndMain::OnPlayEvent);
 	m_pCompPlayPageAn = new CCompPlayPageAn{};
+	m_pCompNormalPageAn = new Dui::CCompositorPageAn{};
+	m_pCompNormalPageAn->SetWorkDC(GetDeviceContext());
+	m_pCompNormalPageAn->InitAsScaleBlur();
+	m_pCompNormalPageAn->InitAsScaleOpacity();
 	GetDeviceContext()->CreateSolidColorBrush({}, &m_pBrush);
 	RegisterTimeLine(this);
 
@@ -50,29 +56,32 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 		L"zh-cn",
 		&pTextFormat);
 
-	// 左侧选择夹
-	m_TabPanel.Create(nullptr, Dui::DES_VISIBLE, 0,
+	m_NormalPageContainer.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
+	const auto pNormalParent = &m_NormalPageContainer;
+	// 左侧选择夹
+	m_TabPanel.Create(nullptr, Dui::DES_VISIBLE | Dui::DES_NOTIFY_TO_WND, 0,
+		0, 0, 0, 0, pNormalParent, this);
 	// 标题
 	m_LAPageTitle.Create(nullptr, Dui::DES_VISIBLE, 0,
-		0, 0, 0, 0, nullptr, this);
+		0, 0, 0, 0, pNormalParent, this);
 	m_LAPageTitle.SetTextFormat(pTextFormat);
 	pTextFormat->Release();
 	// 页 主页
 	m_PageMain.Create(nullptr, Dui::DES_VISIBLE, 0,
-		0, 0, 0, 0, nullptr, this);
+		0, 0, 0, 0, pNormalParent, this);
 	m_PageMain.SetTextFormat(m_pTfCenter);
 	// 页 列表
 	m_PageList.Create(nullptr, Dui::DES_VISIBLE, 0,
-		0, 0, 0, 0, nullptr, this);
+		0, 0, 0, 0, pNormalParent, this);
 	m_PageList.SetTextFormat(m_pTfLeft);
 	// 页 效果
 	m_PageEffect.Create(nullptr, Dui::DES_VISIBLE, 0,
-		0, 0, 0, 0, nullptr, this);
+		0, 0, 0, 0, pNormalParent, this);
 	m_PageEffect.SetTextFormat(m_pTfLeft);
 	// 页 设置
 	m_PageOptions.Create(nullptr, Dui::DES_VISIBLE, 0,
-		0, 0, 0, 0, nullptr, this);
+		0, 0, 0, 0, pNormalParent, this);
 	m_PageOptions.SetTextFormat(m_pTfLeft);
 	// 底部播放控制栏
 	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE /*| Dui::DES_BLURBKG*/, 0,
@@ -116,6 +125,8 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	m_TitleBar.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
 	UpdateButtonImageSize();
+	m_PagePlaying.UpdateBlurredCover();
+	OnCoverUpdate();
 
 	ShowPage(Page::List, FALSE);
 	return TRUE;
@@ -232,6 +243,8 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		ClearPageAnimation();
 		const auto cxClient = GetClientWidthLog();
 		const auto cyClient = GetClientHeightLog();
+		m_pCompNormalPageAn->RefPoint = { cxClient / 2.f,cyClient / 2.f };
+		m_NormalPageContainer.SetRect({ 0,0,cxClient,cyClient });
 		m_TitleBar.SetRect({ 0,0,cxClient,CyTitleBar });
 		m_TabPanel.SetRect({ 0,0,CxTabPanel,cyClient - CyPlayPanel });
 
@@ -247,7 +260,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_PagePlaying.SetRect({ 0,0,cxClient,cyClient });
 		m_rcPPLarge = { 0.f,0.f,(float)cxClient,(float)cyClient };
 		m_rcPPMini.left = DLeftMiniCover;
-		m_rcPPMini.top = cyClient - CyPlayPanel + DTopMiniCover;
+		m_rcPPMini.top = float(cyClient - CyPlayPanel + DTopMiniCover);
 		m_rcPPMini.right = m_rcPPMini.left + (float)CxyMiniCover;
 		m_rcPPMini.bottom = m_rcPPMini.top + (float)CxyMiniCover;
 		for (auto& e : m_vPage)
@@ -274,6 +287,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		__super::OnMsg(hWnd, uMsg, wParam, lParam);
 		return HANDLE_WM_CREATE(hWnd, wParam, lParam, OnCreate);
 	case WM_DESTROY:
+		KillTimer(hWnd, IDT_COMM_TICK);
 		__super::OnMsg(hWnd, uMsg, wParam, lParam);
 		ClearRes();
 		PostQuitMessage(0);
@@ -403,7 +417,7 @@ void STDMETHODCALLTYPE CWndMain::Tick(int iMs)
 	constexpr float DurationR[]
 	{
 		MaxPPAnDuration * 4 / 6,
-		MaxPPAnDuration * 5 / 6,
+		MaxPPAnDuration * 8 / 9,
 		MaxPPAnDuration * 5 / 6,
 		MaxPPAnDuration,
 	};
@@ -413,17 +427,31 @@ void STDMETHODCALLTYPE CWndMain::Tick(int iMs)
 		m_msPPTotalTime = 0.f;
 		m_bPPAnActive = FALSE;
 		m_PagePlaying.SetCompositor(nullptr);
-		if (!m_bPPAnReverse)
+		m_NormalPageContainer.SetCompositor(nullptr);
+		m_NormalPageContainer.SetStyle(m_NormalPageContainer.GetStyle() &
+			~Dui::DES_BASE_BEGIN_END_PAINT);
+		if (m_bPPAnReverse)
+		{
+			m_NormalPageContainer.SetVisible(FALSE);
+			m_PlayPanel.SetVisible(FALSE);
+		}
+		else
 			m_PagePlaying.SetVisible(FALSE);
 		return;
 	}
 	float k;
-	// 移动底部的按钮
-	m_kPalyPanelAn = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, MaxPPAnDuration);
+	m_kPalyPageAn = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, MaxPPAnDuration);
 	if (!m_bPPAnReverse)
-		m_kPalyPanelAn = 1.f - m_kPalyPanelAn;
+		m_kPalyPageAn = 1.f - m_kPalyPageAn;
+	// 移动底部的按钮
 	RePosButtonProgBar();
-	m_pCompPlayPageAn->Opacity = m_kPalyPanelAn;
+	// 页面动画更新
+	m_pCompPlayPageAn->Opacity = m_kPalyPageAn;
+	m_pCompNormalPageAn->Scale = 1.f - (m_kPalyPageAn * 0.2f);
+	m_pCompNormalPageAn->Update2DAffineTransform();
+	m_pCompNormalPageAn->SetBlurStdDeviation(20.f * m_kPalyPageAn);
+	m_pCompNormalPageAn->Opacity = 1.f - m_kPalyPageAn;
+	m_pCompNormalPageAn->UpdateOpacity();
 
 	D2D1_POINT_2F pt[4];
 	if (m_bPPAnReverse)
@@ -480,7 +508,14 @@ void STDMETHODCALLTYPE CWndMain::Tick(int iMs)
 	m_pCompPlayPageAn->MatR = eck::CalcInverseDistortMatrix(m_rcPPLarge, pt);
 	if (!m_PagePlaying.GetCompositor())
 		m_PagePlaying.SetCompositor(m_pCompPlayPageAn);
+	if (!m_NormalPageContainer.GetCompositor())
+	{
+		m_NormalPageContainer.SetCompositor(m_pCompNormalPageAn);
+		m_NormalPageContainer.SetStyle(Dui::DES_BASE_BEGIN_END_PAINT |
+			m_NormalPageContainer.GetStyle());
+	}
 	m_PagePlaying.CompReCalcCompositedRect();
+	m_NormalPageContainer.CompReCalcCompositedRect();
 
 	Redraw();
 }
@@ -504,7 +539,12 @@ void CWndMain::PreparePlayPageAnimation()
 		m_msPPTotalTime = 0.f;
 	}
 	m_bPPAnActive = TRUE;
-		m_PlayPanel.m_Cover.SetVisible(!m_bPPAnReverse);
+	m_PlayPanel.m_Cover.SetVisible(!m_bPPAnReverse);
+	if (!m_bPPAnReverse)
+	{
+		m_NormalPageContainer.SetVisible(TRUE);
+		m_PlayPanel.SetVisible(TRUE);
+	}
 	WakeRenderThread();
 }
 
@@ -515,7 +555,7 @@ void CWndMain::RePosButtonProgBar()
 	// 移动右侧按钮
 	const auto y = cyClient - CyPlayPanel + (CyPlayPanel - CxyCircleButton) / 2;
 	int x = cxClient - CxyCircleButton - CxPaddingCircleButtonRightEdge;
-	x += ((x - (cxClient - CxPaddingCtrlBtnWithPlayPage)) * m_kPalyPanelAn);
+	x += int((x - (cxClient - CxPaddingCtrlBtnWithPlayPage)) * m_kPalyPageAn);
 
 	m_BTVol.SetPos(x, y);
 	x -= (CxyCircleButton + CxPaddingCircleButton);
@@ -527,7 +567,7 @@ void CWndMain::RePosButtonProgBar()
 		(CxyCircleButton * 2 + CxyCircleButtonBig + CxPaddingCircleButton * 2)) / 2;
 	const auto xCenter = (cxClient - (CxyCircleButton * 2 + CxyCircleButtonBig +
 		CxPaddingCircleButton * 2)) / 2;
-	x += ((xCenter - x) * m_kPalyPanelAn);
+	x += int((xCenter - x) * m_kPalyPageAn);
 	// 移动中间按钮
 	m_BTPrev.SetPos(x, y);
 	x += (CxyCircleButton + CxPaddingCircleButton);
@@ -540,7 +580,7 @@ void CWndMain::RePosButtonProgBar()
 	//-----移动进度条
 	const auto yPlayPanel = cyClient - CyPlayPanel;
 	const auto dTrackSpacing = m_TBProgress.GetTrackSpacing();
-	const auto oxIndent = int(CxPaddingProgBarWithPlayPage * m_kPalyPanelAn);
+	const auto oxIndent = int((float)CxPaddingProgBarWithPlayPage * m_kPalyPageAn);
 	m_TBProgress.SetRect({
 		-(int)dTrackSpacing + oxIndent,
 		yPlayPanel - CyProgress / 2,

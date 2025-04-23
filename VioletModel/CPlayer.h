@@ -23,7 +23,7 @@ enum class PlayErr
 };
 
 class CPlayList;
-class CPlayer
+class CPlayer final
 {
 private:
 	// 该信号上的所有操作都在UI线程执行
@@ -48,6 +48,9 @@ public:
 		// 保证这是第一个槽
 		m_Sig.Connect(this, &CPlayer::OnPlayEvent);
 	}
+
+	~CPlayer();
+
 	EckInlineNdCe auto& GetSignal() noexcept { return m_Sig; }
 	EckInlineCe void SetList(CPlayList* pPlayList) noexcept { m_pPlayList = pPlayList; }
 	EckInlineNdCe CPlayList* GetList() const noexcept { return m_pPlayList; }

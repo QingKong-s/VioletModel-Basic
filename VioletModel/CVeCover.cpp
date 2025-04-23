@@ -45,6 +45,12 @@ LRESULT CVeCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
         EndPaint(ps);
     }
     return 0;
+
+    case WM_DESTROY:
+    {
+        SafeRelease(m_pBmp);
+    }
+    break;
     }
 
     return __super::OnEvent(uMsg, wParam, lParam);

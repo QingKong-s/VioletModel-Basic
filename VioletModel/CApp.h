@@ -153,7 +153,7 @@ enum :int
 	CxyCircleButtonImage = 18,
 	CyPageSwitchAnDelta = 60,
 	CxPaddingCtrlBtnWithPlayPage = 44,
-	CxPaddingProgBarWithPlayPage = 40,
+	CxPaddingProgBarWithPlayPage = 70,
 };
 
 enum class GPal

@@ -14,6 +14,11 @@ void CPlayer::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	}
 }
 
+CPlayer::~CPlayer()
+{
+	SafeRelease(m_pBmpCover);
+}
+
 PlayErr CPlayer::PlayWorker(PLLITEM& e)
 {
 	m_bActive = TRUE;

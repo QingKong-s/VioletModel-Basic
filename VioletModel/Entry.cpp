@@ -58,7 +58,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	CPlayList pl{};
 	App->GetPlayer().SetList(&pl);
-	pl.FlInsert(LR"(D:\@重要文件\@音乐\Shy - IT BOYS!.mp3)");
+	
 
 	MSG msg;
 	while (GetMessageW(&msg, nullptr, 0, 0))
@@ -74,5 +74,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	eck::ThreadUnInit();
 	eck::UnInit();
 	CoUninitialize();
+
+	if (eck::g_pDxgiDebug)
+	eck::g_pDxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL,
+		DXGI_DEBUG_RLO_ALL);
 	return (int)msg.wParam;
 }

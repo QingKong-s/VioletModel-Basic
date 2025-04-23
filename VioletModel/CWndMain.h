@@ -33,7 +33,7 @@ public:
 
 	constexpr static double ProgBarScale = 100.;
 private:
-	constexpr static float MaxPPAnDuration = 700.f;
+	constexpr static float MaxPPAnDuration = 600.f;
 	constexpr static int XCenterButtonLeftLimit = DLeftMiniCover + CxyMiniCover +
 		CxPaddingPlayPanelText + CxMaxTitleAndArtist + CxPaddingPlayPanelText +
 		CxMaxTime + CxPaddingPlayPanelText;
@@ -79,10 +79,12 @@ private:
 	BOOLEAN m_bPPAnActive{};
 	BOOLEAN m_bPPAnReverse{};// TRUE = 小到大，FALSE = 大到小
 	float m_msPPTotalTime{};
-	float m_kPalyPanelAn{};
+	float m_kPalyPageAn{};
 	D2D1_RECT_F m_rcPPMini{};
 	D2D1_RECT_F m_rcPPLarge{};
 	CCompPlayPageAn* m_pCompPlayPageAn{};
+
+	Dui::CCompositorPageAn* m_pCompNormalPageAn{};
 private:
 	void ClearRes();
 
