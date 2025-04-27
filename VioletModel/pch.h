@@ -18,12 +18,12 @@
 #include "eck\CDuiLabel.h"
 #include "eck\CDuiTabList.h"
 #include "eck\CDuiList.h"
-#include "eck\CDuiGroupList.h"
 #include "eck\MediaTagFlac.h"
 #include "eck\MediaTagID3v1.h"
 #include "eck\MediaTagID3v2.h"
 #include "eck\Lyric.h"
 #include "eck\CDWriteFontFactory.h"
+#include "eck\CEnumFile.h"
 
 //#if VIOLET_WINRT
 //#include "eck\WinRtDCompInterop.h"
@@ -35,6 +35,8 @@
 //#include <winrt/Windows.Graphics.Effects.h>
 //#include <winrt/Windows.UI.Composition.Effects.h>
 //#endif
+
+#include <lmcons.h>
 
 using eck::PCVOID;
 using eck::PCBYTE;
@@ -80,20 +82,10 @@ struct PLDATA// 结构稳定，不能修改
 	BYTE bFree : 1{};		// 项目空闲
 };
 
-struct PLLITEM
+enum class PlType : UINT
 {
-	eck::CRefStrW rsName{};		// 名称
-	eck::CRefStrW rsFile{};		// 文件路径
-
-	eck::CRefStrW rsTitle{};	// 标题
-	eck::CRefStrW rsArtist{};	// 艺术家
-	eck::CRefStrW rsAlbum{};	// 唱片集
-	eck::CRefStrW rsGenre{};	// 流派
-
-	PLDATA s{};
-	union
-	{
-		int idxSortMapping{ -1 };// 【排序时用】映射到的项
-		int idxNextFree;		// 【仅当项目空闲时】下一个空闲项
-	};
+	Normal,			// 普通列表
+	Recent,			// 最近播放
+	ViewList,		// 从其他列表导出的视图
+	ViewMediaLib,	// 媒体库视图
 };

@@ -50,7 +50,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	const auto pWnd = new CWndMain{};
 	const auto hMon = eck::GetOwnerMonitor(nullptr);
 	const auto iDpi = eck::GetMonitorDpi(hMon);
-	auto size = SIZE{ 800,600 };
+	auto size = SIZE{ 900,640 };
 	eck::DpiScale(size, iDpi);
 	const auto pt = eck::CalcCenterWndPos(nullptr, size.cx, size.cy, FALSE);
 	pWnd->SetUserDpi(iDpi);
@@ -63,7 +63,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	CPlayList pl{};
 	App->GetPlayer().SetList(&pl);
-	pl.FlInsert(LR"(D:\@重要文件\@音乐\垭口 - 齐秦.mp3)");
+	pl.FlInsert(LR"(D:\@重要文件\@音乐\无夏之城 - 洛天依.mp3)");
 
 
 	MSG msg;
@@ -80,9 +80,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	eck::ThreadUnInit();
 	eck::UnInit();
 	CoUninitialize();
-
+#ifdef _DEBUG
 	if (eck::g_pDxgiDebug)
-	eck::g_pDxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL,
-		DXGI_DEBUG_RLO_ALL);
+		eck::g_pDxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL,
+			DXGI_DEBUG_RLO_ALL);
+#endif
 	return (int)msg.wParam;
 }

@@ -197,6 +197,9 @@
     <ClInclude Include="CApp.h" />
     <ClInclude Include="CBass.h" />
     <ClInclude Include="CCompPlayPageAn.h" />
+    <ClInclude Include="CMediaLib.h" />
+    <ClInclude Include="CPlayListFile.h" />
+    <ClInclude Include="CPlayListMgr.h" />
     <ClInclude Include="CVeMiniCover.h" />
     <ClInclude Include="CPage.h" />
     <ClInclude Include="CPageEffect.h" />
@@ -218,6 +221,9 @@
   <ItemGroup>
     <ClCompile Include="CApp.cpp" />
     <ClCompile Include="CBass.cpp" />
+    <ClCompile Include="CMediaLib.cpp" />
+    <ClCompile Include="CPlayListFile.cpp" />
+    <ClCompile Include="CPlayListMgr.cpp" />
     <ClCompile Include="CVeMiniCover.cpp" />
     <ClCompile Include="CPage.cpp" />
     <ClCompile Include="CPageEffect.cpp" />

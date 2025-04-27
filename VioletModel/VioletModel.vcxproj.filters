@@ -25,6 +25,18 @@
     <Filter Include="逻辑">
       <UniqueIdentifier>{d15eb3a4-cee4-4e2d-bc8d-0db3b6331f24}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI\容器">
+      <UniqueIdentifier>{cc6f939b-8114-4cfd-9a33-b1fdb557b4a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\元素">
+      <UniqueIdentifier>{0e8e2e0a-f723-4d53-9e91-73e20fcfa1a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\混合器">
+      <UniqueIdentifier>{d3bf331d-e3bc-4039-930d-8d47d08d299a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="窗口">
+      <UniqueIdentifier>{d0e20229-bd56-4899-b4fd-4761ce841c0b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -36,56 +48,65 @@
     <ClInclude Include="CApp.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="CWndMain.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>pch</Filter>
-    </ClInclude>
-    <ClInclude Include="CPlayPanel.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="CTabPanel.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="CPageMain.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="CPageList.h">
-      <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="CPlayer.h">
       <Filter>逻辑</Filter>
     </ClInclude>
-    <ClInclude Include="CPage.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="CVeMiniCover.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="CPageEffect.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="CPageOptions.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="CPagePlaying.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="CVeCover.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="CVeLrc.h">
-      <Filter>UI</Filter>
-    </ClInclude>
     <ClInclude Include="CBass.h">
       <Filter>逻辑</Filter>
     </ClInclude>
-    <ClInclude Include="CPlayList.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="CPage.h">
+      <Filter>UI\容器</Filter>
+    </ClInclude>
+    <ClInclude Include="CPageEffect.h">
+      <Filter>UI\容器</Filter>
+    </ClInclude>
+    <ClInclude Include="CPageList.h">
+      <Filter>UI\容器</Filter>
+    </ClInclude>
+    <ClInclude Include="CPageMain.h">
+      <Filter>UI\容器</Filter>
+    </ClInclude>
+    <ClInclude Include="CPageOptions.h">
+      <Filter>UI\容器</Filter>
+    </ClInclude>
+    <ClInclude Include="CPagePlaying.h">
+      <Filter>UI\容器</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayPanel.h">
+      <Filter>UI\容器</Filter>
+    </ClInclude>
+    <ClInclude Include="CTabPanel.h">
+      <Filter>UI\容器</Filter>
+    </ClInclude>
+    <ClInclude Include="CVeCover.h">
+      <Filter>UI\元素</Filter>
+    </ClInclude>
+    <ClInclude Include="CVeLrc.h">
+      <Filter>UI\元素</Filter>
+    </ClInclude>
+    <ClInclude Include="CVeMiniCover.h">
+      <Filter>UI\元素</Filter>
     </ClInclude>
     <ClInclude Include="CCompPlayPageAn.h">
-      <Filter>UI</Filter>
+      <Filter>UI\混合器</Filter>
+    </ClInclude>
+    <ClInclude Include="CMediaLib.h">
+      <Filter>逻辑</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayList.h">
+      <Filter>逻辑</Filter>
+    </ClInclude>
+    <ClInclude Include="CWndMain.h">
+      <Filter>窗口</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayListMgr.h">
+      <Filter>逻辑</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayListFile.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -95,55 +116,64 @@
     <ClCompile Include="CApp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="CWndMain.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="MyEck.cpp">
       <Filter>eck</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>pch</Filter>
     </ClCompile>
-    <ClCompile Include="CPlayPanel.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="CTabPanel.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="CPageMain.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="CPageList.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
     <ClCompile Include="CPlayer.cpp">
       <Filter>逻辑</Filter>
-    </ClCompile>
-    <ClCompile Include="CPage.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="CVeMiniCover.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="CPageEffect.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="CPageOptions.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="CPagePlaying.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="CVeCover.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="CVeLrc.cpp">
-      <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="CBass.cpp">
       <Filter>逻辑</Filter>
     </ClCompile>
+    <ClCompile Include="CPage.cpp">
+      <Filter>UI\容器</Filter>
+    </ClCompile>
+    <ClCompile Include="CPageEffect.cpp">
+      <Filter>UI\容器</Filter>
+    </ClCompile>
+    <ClCompile Include="CPageList.cpp">
+      <Filter>UI\容器</Filter>
+    </ClCompile>
+    <ClCompile Include="CPageMain.cpp">
+      <Filter>UI\容器</Filter>
+    </ClCompile>
+    <ClCompile Include="CPageOptions.cpp">
+      <Filter>UI\容器</Filter>
+    </ClCompile>
+    <ClCompile Include="CPagePlaying.cpp">
+      <Filter>UI\容器</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayPanel.cpp">
+      <Filter>UI\容器</Filter>
+    </ClCompile>
+    <ClCompile Include="CTabPanel.cpp">
+      <Filter>UI\容器</Filter>
+    </ClCompile>
+    <ClCompile Include="CVeCover.cpp">
+      <Filter>UI\元素</Filter>
+    </ClCompile>
+    <ClCompile Include="CVeLrc.cpp">
+      <Filter>UI\元素</Filter>
+    </ClCompile>
+    <ClCompile Include="CVeMiniCover.cpp">
+      <Filter>UI\元素</Filter>
+    </ClCompile>
+    <ClCompile Include="CMediaLib.cpp">
+      <Filter>逻辑</Filter>
+    </ClCompile>
     <ClCompile Include="CPlayList.cpp">
+      <Filter>逻辑</Filter>
+    </ClCompile>
+    <ClCompile Include="CWndMain.cpp">
+      <Filter>窗口</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayListMgr.cpp">
+      <Filter>逻辑</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayListFile.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -65,6 +65,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		Dui::ELEMPAINTSTRU ps;
 		BeginPaint(ps, wParam, lParam);
+		m_pBrush->SetColor(App->GetColor(GPal::TabPanelBk));
 		m_pDC->FillRectangle(ps.rcfClipInElem, m_pBrush);
 		EndPaint(ps);
 	}
@@ -84,7 +85,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	break;
 
 	case WM_CREATE:
-		m_pDC->CreateSolidColorBrush(App->GetColor(GPal::TabPanelBk), &m_pBrush);
+		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 		m_LAIcon.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, GetWidth(), GetWidth(), this, GetWnd());
 		m_LAIcon.SetOnlyBitmap(TRUE);

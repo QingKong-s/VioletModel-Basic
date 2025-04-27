@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include "CPlayList.h"
+
 enum class PlayEvt
 {
 	Play,
@@ -7,6 +9,7 @@ enum class PlayEvt
 	Stop,
 	End,
 	CommTick,
+	ListChanged,
 };
 
 struct PLAY_EVT_PARAM
@@ -22,7 +25,6 @@ enum class PlayErr
 	HResultError,
 };
 
-class CPlayList;
 class CPlayer final
 {
 private:
@@ -39,7 +41,7 @@ private:
 	double m_lfTotalTime{};// 秒
 	BITBOOL m_bActive : 1{};
 
-	PlayErr PlayWorker(PLLITEM& e);
+	PlayErr PlayWorker(CPlayList::ITEM& e);
 
 	void OnPlayEvent(const PLAY_EVT_PARAM& e);
 public:
@@ -52,7 +54,11 @@ public:
 	~CPlayer();
 
 	EckInlineNdCe auto& GetSignal() noexcept { return m_Sig; }
-	EckInlineCe void SetList(CPlayList* pPlayList) noexcept { m_pPlayList = pPlayList; }
+	EckInline void SetList(CPlayList* pPlayList) noexcept
+	{
+		m_pPlayList = pPlayList;
+		GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::ListChanged });
+	}
 	EckInlineNdCe CPlayList* GetList() const noexcept { return m_pPlayList; }
 	EckInlineNdCe BOOL IsActive() const noexcept { return m_bActive; }
 	// 秒

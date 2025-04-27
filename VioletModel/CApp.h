@@ -162,9 +162,8 @@ enum class GPal
 {
 	TabPanelBk,
 	PlayPanelBk,
+	PlayPanelBlurMask,
 	PlayPanelWatermark,
-	CkBtnHot,
-	CkBtnPushed,
 
 	Max
 };
@@ -172,30 +171,24 @@ enum class GPal
 class CApp
 {
 private:
-	Dui::CThemePalette* m_pThemePalette;
+	constexpr static D2D1_COLOR_F PalLight[]
+	{
+		Dui::StMakeForegroundColorLight(0.5f),
+		Dui::StMakeForegroundColorLight(0.5f),
+		Dui::StMakeForegroundColorLight(0.3f),
+		{ 0.f,0.f,0.f,0.3f },
+	};
+	constexpr static D2D1_COLOR_F PalDark[]
+	{
+		Dui::StMakeForegroundColorDark(0.5f),
+		Dui::StMakeForegroundColorDark(0.5f),
+		Dui::StMakeForegroundColorDark(0.3f),
+		{ 1.f,1.f,1.f,0.3f },
+	};
 
 	IWICBitmap* m_Img[ARRAYSIZE(ImgFile)];
-
-	constexpr static D2D1_COLOR_F m_cr[]
-	{
-		{ 1.f,1.f,1.f,0.6f },
-		{ 1.f,1.f,1.f,0.8f },
-		{ 0.f,0.f,0.f,0.5f },
-		{ 0.f,0.f,0.f,0.1f },
-		{ 0.f,0.f,0.f,0.3f },
-	};
-	constexpr static D2D1_COLOR_F crDark[]
-	{
-		{ 0.2f,0.2f,0.99f,1.f },
-		{ 0.2f,0.2f,0.4f,1.f },
-		{ 0.f,0.f,0.f,0.5f },
-		{ 0.f,0.f,0.f,0.1f },
-		{ 0.f,0.f,0.f,0.3f },
-	};
 	BOOL m_bDarkMode{};
-
 	CPlayer m_Player{};
-
 	eck::CDWriteFontFactory m_FontFactory{};
 public:
 	CApp();
@@ -206,7 +199,7 @@ public:
 
 	constexpr const D2D1_COLOR_F& GetColor(GPal n) const
 	{
-		return m_bDarkMode ? crDark[size_t(n)] : m_cr[size_t(n)];
+		return m_bDarkMode ? PalLight[size_t(n)] : PalDark[size_t(n)];
 	}
 
 	constexpr IWICBitmap* GetImg(GImg n) const
@@ -214,7 +207,11 @@ public:
 		return m_Img[size_t(n)];
 	}
 
-	EckInlineCe void SetDarkMode(BOOL bDarkMode) { m_bDarkMode = bDarkMode; }
+	EckInlineCe void SetDarkMode(BOOL bDarkMode) 
+	{ 
+		if (m_bDarkMode != bDarkMode)
+		m_bDarkMode = bDarkMode; 
+	}
 
 	EckInlineNdCe auto& GetPlayer() { return m_Player; }
 	EckInlineNdCe auto& GetFontFactory() { return m_FontFactory; }

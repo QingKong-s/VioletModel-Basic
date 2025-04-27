@@ -1,6 +1,11 @@
 ﻿#include "pch.h"
 #include "CWndMain.h"
 
+void CPageList::OnPlayEvent(const PLAY_EVT_PARAM& e)
+{
+
+}
+
 LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -14,10 +19,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				const auto p = (Dui::TBL_DISPINFO*)lParam;
 				if (p->uMask & eck::DIM_TEXT)
-				{
 					p->cchText = swprintf((PWSTR)p->pszText, L"播放列表 %d", p->idx);
-					p->ppTextLayout = &m_vList[p->idx].pTextLayout;
-				}
 				if (p->uMask & eck::DIM_IMAGE)
 					p->pImage = ((CWndMain*)GetWnd())->RealizeImg(GImg::List);
 			}
@@ -26,10 +28,9 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		else if (wParam == (WPARAM)&m_GLList)
 			switch (((Dui::DUINMHDR*)lParam)->uCode)
 			{
-			case Dui::GLE_GETDISPINFO:
+			case Dui::LEE_GETDISPINFO:
 			{
-				const auto p = (Dui::GL_GETDISPINFO*)lParam;
-
+				const auto p = (Dui::LEE_DISPINFO*)lParam;
 			}
 			return 0;
 			}
@@ -54,7 +55,8 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_Lyt.Add(&m_TBLPlayList, { .cxRightWidth = CxPageIntPadding },
 			eck::LF_FIX_WIDTH | eck::LF_FILL_HEIGHT);
 		m_TBLPlayList.SetItemCount(40);
-		m_TBLPlayList.SetBottomPadding(CyPlayPanel);
+		m_TBLPlayList.SetBottomExtraSpace(CyPlayPanel);
+		m_TBLPlayList.ReCalc();
 		m_vList.resize(40);
 
 		m_GLList.Create(nullptr, Dui::DES_VISIBLE, 0,

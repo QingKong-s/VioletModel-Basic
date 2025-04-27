@@ -16,12 +16,12 @@ private:
 	};
 
 	Dui::CTabList m_TBLPlayList{};
-	Dui::CGroupList m_GLList{};
+	Dui::CList m_GLList{};
 
 	eck::CLinearLayoutH m_Lyt{};
 	std::vector<LIST> m_vList{};
 
-	eck::CSrwLock m_LkList{};
+	void OnPlayEvent(const PLAY_EVT_PARAM& e);
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 };

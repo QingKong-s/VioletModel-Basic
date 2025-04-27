@@ -2,7 +2,7 @@
 #include "CPlayList.h"
 #include "CApp.h"
 
-PLLITEM& CPlayList::PoolAllocItem(_Out_ int& idx)
+CPlayList::ITEM& CPlayList::ImAllocItem(_Out_ int& idx)
 {
 	if (m_idxFirstFree >= 0)
 	{
@@ -20,15 +20,27 @@ PLLITEM& CPlayList::PoolAllocItem(_Out_ int& idx)
 	}
 }
 
+CPlayList::GROUPIDX CPlayList::GrInsert(const eck::CRefStrW& rsFile, int idxItem, int idxGroup)
+{
+	return GROUPIDX();
+}
+
 BOOL CPlayList::IsActive() noexcept
 {
 	return App->GetPlayer().GetList() == this;
 }
 
+HRESULT CPlayList::InitFromListFile(PCWSTR pszFile)
+{
+	const auto rbFile = eck::ReadInFile(pszFile);
+	// TODO
+	return S_OK;
+}
+
 int CPlayList::FlInsert(const eck::CRefStrW& rsFile, int idx)
 {
 	int idxPool;
-	auto& e = PoolAllocItem(idxPool);
+	auto& e = ImAllocItem(idxPool);
 	e.rsFile = rsFile;
 	if (idx < 0)
 	{
@@ -38,4 +50,9 @@ int CPlayList::FlInsert(const eck::CRefStrW& rsFile, int idx)
 	else
 		m_vFlat.emplace(m_vFlat.begin() + idx, idxPool);
 	return idx;
+}
+
+int CPlayList::GrInsertGroup(const eck::CRefStrW& rsName, int idx)
+{
+	return 0;
 }

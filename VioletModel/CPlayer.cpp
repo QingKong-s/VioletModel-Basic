@@ -19,7 +19,7 @@ CPlayer::~CPlayer()
 	SafeRelease(m_pBmpCover);
 }
 
-PlayErr CPlayer::PlayWorker(PLLITEM& e)
+PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 {
 	m_bActive = TRUE;
 	if (!m_Bass.Open(e.rsFile.Data()))
@@ -75,7 +75,7 @@ PlayErr CPlayer::Play(int idx)
 	if (!m_pPlayList)
 		return PlayErr::NoPlayList;
 	Stop();
-	GetList()->SetCurrentItem(idx);
+	GetList()->PlySetCurrentItem(idx);
 	return PlayWorker(GetList()->FlAt(idx));
 }
 
@@ -84,7 +84,7 @@ PlayErr CPlayer::Play(int idxGroup, int idxItem)
 	if (!m_pPlayList)
 		return PlayErr::NoPlayList;
 	Stop();
-	GetList()->SetCurrentItem(idxGroup, idxItem);
+	GetList()->PlySetCurrentItem(idxGroup, idxItem);
 	return PlayWorker(GetList()->GrAt(idxGroup, idxItem));
 }
 
@@ -102,9 +102,9 @@ PlayErr CPlayer::Stop()
 	m_Bass.Stop();
 	m_Bass.Close();
 	if (GetList()->IsGroupEnabled())
-		GetList()->SetCurrentItem(-1, -1);
+		GetList()->PlySetCurrentItem(-1, -1);
 	else
-		GetList()->SetCurrentItem(-1);
+		GetList()->PlySetCurrentItem(-1);
 	return PlayErr::Ok;
 }
 

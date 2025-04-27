@@ -2,6 +2,7 @@
 
 #include "CWndMain.h"
 
+
 void CWndMain::ClearRes()
 {
 	for (auto& e : m_vBmpRealization)
@@ -67,7 +68,7 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 		0, 0, 0, 0, pNormalParent, this);
 	m_PageOptions.SetTextFormat(pTfLeft.Get());
 	// 底部播放控制栏
-	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE /*| Dui::DES_BLURBKG*/, 0,
+	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE/* | Dui::DES_BLURBKG*/, 0,
 		0, 0, 0, 0, nullptr, this);
 	m_PlayPanel.SetTextFormat(pTfLeft.Get());
 	// 页 播放
@@ -85,6 +86,7 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
 	m_BTPrev.SetImage(RealizeImg(GImg::Prev));
 	m_BTPrev.SetCustomDraw(TRUE);
+	m_BTPrev.SetTransparentBk(TRUE);
 	// 按钮 播放/暂停
 	m_BTPlay.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButtonBig, CxyCircleButtonBig, nullptr, this);
@@ -95,16 +97,19 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
 	m_BTNext.SetImage(RealizeImg(GImg::Next));
 	m_BTNext.SetCustomDraw(TRUE);
+	m_BTNext.SetTransparentBk(TRUE);
 	// 按钮 歌词
 	m_BTLrc.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
 	m_BTLrc.SetImage(RealizeImg(GImg::Lrc));
 	m_BTLrc.SetCustomDraw(TRUE);
+	m_BTLrc.SetTransparentBk(TRUE);
 	// 按钮 音量
 	m_BTVol.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
 	m_BTVol.SetImage(RealizeImg(GImg::PlayerVolume3));
 	m_BTVol.SetCustomDraw(TRUE);
+	m_BTVol.SetTransparentBk(TRUE);
 	// 标题栏
 	m_TitleBar.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
@@ -112,6 +117,9 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	m_PagePlaying.UpdateBlurredCover();
 	OnCoverUpdate();
 
+	StUpdateColorizationColor();
+	StSwitchStdThemeMode(ShouldAppsUseDarkMode());
+	App->SetDarkMode(ShouldAppsUseDarkMode());
 	ShowPage(Page::List, FALSE);
 	return TRUE;
 }
@@ -286,11 +294,14 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			const auto bDark = ShouldAppsUseDarkMode();
 			App->SetDarkMode(bDark);
-			SwitchStdThemeMode(bDark);
+			StSwitchStdThemeMode(bDark);
 			Redraw();
 		}
 	}
 	break;
+	case WM_DWMCOLORIZATIONCOLORCHANGED:
+		StUpdateColorizationColor();
+		break;
 	}
 	return __super::OnMsg(hWnd, uMsg, wParam, lParam);
 }
@@ -307,7 +318,7 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 	case ELEN_PAGE_CHANGE:
 	{
 		const auto* const p = (Dui::LTN_ITEM*)lParam;
-		ShowPage((Page)p->idxItem, TRUE);
+		ShowPage((Page)p->idx, TRUE);
 	}
 	return 0;
 
@@ -331,34 +342,6 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 	}
 	return 0;
 
-	case Dui::EE_CUSTOMDRAW:
-	{
-		if (pElem == &m_BTPrev || pElem == &m_BTNext ||
-			pElem == &m_BTVol || pElem == &m_BTLrc)
-		{
-			const auto p = (Dui::CBTN_CUSTOM_DRAW*)lParam;
-			if (p->dwStage == CDDS_PREPAINT)
-			{
-				if (p->eState == Dui::State::Hot ||
-					p->eState == Dui::State::Selected)
-				{
-					const auto dxy = std::min(pElem->GetWidthF() / 2.f,
-						pElem->GetHeightF() / 2.f);
-					D2D1_ELLIPSE Ellipse{ { dxy, dxy }, dxy, dxy };
-					if (p->eState == Dui::State::Hot)
-						m_pBrush->SetColor(App->GetColor(GPal::CkBtnHot));
-					else
-						m_pBrush->SetColor(App->GetColor(GPal::CkBtnPushed));
-					GetDeviceContext()->FillEllipse(Ellipse, m_pBrush);
-				}
-
-				GetDeviceContext()->DrawBitmap(p->pImg, p->rcImg, 1.f,
-					((Dui::CCircleButton*)pElem)->GetInterpolationMode());
-				return CDRF_SKIPDEFAULT;
-			}
-		}
-	}
-	break;
 	case Dui::EE_COMMAND:
 	{
 		if (pElem == &m_BTPlay)
