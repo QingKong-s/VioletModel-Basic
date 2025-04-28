@@ -156,6 +156,8 @@ enum :int
 	CxPaddingProgBarWithPlayPage = 70,
 	CyFontNormal = 15,
 	CyFontPageTitle = 20,
+	CyStdList = 32,
+	CyStdEdit = CyStdList,
 };
 
 enum class GPal

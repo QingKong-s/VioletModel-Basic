@@ -49,7 +49,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			return 0;
 
-			case Dui::LTE_ITEMCLICK:
+			case Dui::EE_CLICK:
 			{
 				Dui::LTN_ITEM nm{ *(Dui::LTN_ITEM*)lParam };
 				nm.uCode = ELEN_PAGE_CHANGE;

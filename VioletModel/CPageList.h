@@ -15,7 +15,11 @@ private:
 		std::vector<ITEM> vItem{};
 	};
 
+	Dui::CEdit m_EDSearch{};
+
 	Dui::CTabList m_TBLPlayList{};
+	eck::CLinearLayoutV m_LytPlayList{};
+
 	Dui::CList m_GLList{};
 
 	eck::CLinearLayoutH m_Lyt{};

@@ -45,19 +45,27 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_TBLPlayList.SetTextFormat(GetTextFormat());
 		m_GLList.SetTextFormat(GetTextFormat());
+		m_EDSearch.SetTextFormat(GetTextFormat());
 	}
 	return 0;
 
 	case WM_CREATE:
 	{
-		m_TBLPlayList.Create(nullptr, Dui::DES_VISIBLE, 0,
-			0, 0, CxListFileList, 0, this, GetWnd());
-		m_Lyt.Add(&m_TBLPlayList, { .cxRightWidth = CxPageIntPadding },
+		{
+			m_EDSearch.Create(nullptr, Dui::DES_VISIBLE, 0,
+				0, 0, 0, CyStdEdit, this);
+			m_LytPlayList.Add(&m_EDSearch, { .cyBottomHeight = CxPageIntPadding }, eck::LF_FIX_HEIGHT | eck::LF_FILL_WIDTH);
+
+			m_TBLPlayList.Create(nullptr, Dui::DES_VISIBLE, 0,
+				0, 0, CxListFileList, 0, this, GetWnd());
+			m_TBLPlayList.SetItemCount(40);
+			m_TBLPlayList.SetBottomExtraSpace(CyPlayPanel);
+			m_TBLPlayList.ReCalc();
+			m_vList.resize(40);
+			m_LytPlayList.Add(&m_TBLPlayList, {}, eck::LF_FILL, 1);
+		}
+		m_Lyt.Add(&m_LytPlayList, { .cxRightWidth = CxPageIntPadding },
 			eck::LF_FIX_WIDTH | eck::LF_FILL_HEIGHT);
-		m_TBLPlayList.SetItemCount(40);
-		m_TBLPlayList.SetBottomExtraSpace(CyPlayPanel);
-		m_TBLPlayList.ReCalc();
-		m_vList.resize(40);
 
 		m_GLList.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, 0, 0, this, GetWnd());
