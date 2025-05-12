@@ -27,6 +27,13 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	RegisterTimeLine(this);
 
 	eck::GetThreadCtx()->UpdateDefColor();
+	if (GetPresentMode() != Dui::PresentMode::DCompositionSurface ||
+		GetPresentMode() != Dui::PresentMode::DCompositionVisual)
+	{
+		MARGINS m{};// 不能使用-1，否则会绘制标准标题栏
+		m.cxLeftWidth = INT_MAX;
+		DwmExtendFrameIntoClientArea(hWnd, &m);
+	}
 	eck::EnableWindowMica(hWnd);
 
 	BlurInit();
