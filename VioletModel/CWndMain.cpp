@@ -28,8 +28,6 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 
 	eck::GetThreadCtx()->UpdateDefColor();
 	eck::EnableWindowMica(hWnd);
-	const MARGINS mg{ -1 };
-	DwmExtendFrameIntoClientArea(hWnd, &mg);
 
 	BlurInit();
 	BlurSetUseLayer(TRUE);
@@ -271,7 +269,9 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		const auto cxFrame = eck::DaGetSystemMetrics(SM_CXFRAME, GetDpiValue());
 		const auto cyFrame = eck::DaGetSystemMetrics(SM_CYFRAME, GetDpiValue());
-		return eck::MsgOnNcCalcSize(wParam, lParam, { cxFrame,cxFrame,0,cyFrame });
+		const auto cxPadded = eck::DaGetSystemMetrics(SM_CXPADDEDBORDER, GetDpiValue());
+		return eck::MsgOnNcCalcSize(wParam, lParam,
+			{ cxFrame + cxPadded,cxFrame + cxPadded,0,cyFrame + cxPadded });
 	}
 	break;
 
@@ -289,8 +289,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_SETTINGCHANGE:
 	{
-		eck::MsgOnSettingChangeMainWnd(hWnd, wParam, lParam);
-		if (eck::IsColorSchemeChangeMessage(lParam))
+		if (eck::MsgOnSettingChangeMainWnd(hWnd, wParam, lParam, TRUE))
 		{
 			const auto bDark = ShouldAppsUseDarkMode();
 			App->SetDarkMode(bDark);
