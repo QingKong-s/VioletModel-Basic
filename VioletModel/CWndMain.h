@@ -82,6 +82,8 @@ private:
 	CCompPlayPageAn* m_pCompPlayPageAn{};
 
 	Dui::CCompositorPageAn* m_pCompNormalPageAn{};
+
+	eck::THREADCTX* m_ptcUiThread{};
 private:
 	void ClearRes();
 
@@ -121,6 +123,8 @@ public:
 	}
 
 	//***ITimeLine***
-	void STDMETHODCALLTYPE Tick(int iMs);
-	BOOL STDMETHODCALLTYPE IsValid() { return m_bPPAnActive; }
+	void Tick(int iMs);
+	BOOL IsValid() { return m_bPPAnActive; }
+
+	EckInlineNdCe auto ThreadCtx() const noexcept { return m_ptcUiThread; }
 };

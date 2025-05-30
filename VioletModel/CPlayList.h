@@ -26,6 +26,8 @@ private:
 			int idxSortMapping{ -1 };// 【排序时用】映射到的项
 			int idxNextFree;		// 【仅当项目空闲时】下一个空闲项
 		};
+		ULONGLONG TskTag{};			// 与该项关联的信息获取任务
+		int idxIl{ 0 };				// 图像列表索引，供UI使用
 	};
 	struct FLAT
 	{
@@ -50,11 +52,16 @@ private:
 	int m_idxCurrGroupItem{};
 	int m_idxFirstFree{ -1 };
 
-	BITBOOL m_bEnableGroup : 1{};
+	BITBOOL m_bGroup : 1{};
+	BITBOOL m_bSort : 1{};
 	PlType m_eType{};
+
+	std::atomic_bool m_bTaskRunning{};
 
 	ITEM& ImAllocItem(_Out_ int& idx);
 public:
+	ITEM* FindTag(ULONGLONG TskTag) noexcept;
+
 	EckInlineNdCe auto& FlAt(int idx) noexcept { return m_vItemPool[m_vFlat[idx].idxInPool]; }
 
 	/// <summary>
@@ -64,7 +71,9 @@ public:
 	/// <param name="rsFile">文件全路径</param>
 	/// <param name="idx">插入位置，-1表示末尾</param>
 	/// <returns>索引</returns>
-	int FlInsert(const eck::CRefStrW& rsFile, int idx = -1);
+	int FlInsert(const eck::CRefStrW& rsFile, int idx = -1, ULONGLONG TskTag = 0);
+
+	EckInlineNdCe int FlGetCount() const noexcept { return (int)m_vFlat.size(); }
 
 	EckInlineNdCe auto& GrAtGroup(int idxGroup) noexcept { return m_vGroup[idxGroup]; }
 	EckInlineNdCe auto& GrAt(int idxGroup, int idxItem) noexcept { return m_vItemPool[m_vGroup[idxGroup].vItem[idxItem].idxInPool]; }
@@ -101,8 +110,11 @@ public:
 	}
 	// -------------------------
 
-	EckInlineCe void EnableGroup(BOOL b) noexcept { m_bEnableGroup = b; }
-	EckInlineNdCe BOOL IsGroupEnabled() const noexcept { return m_bEnableGroup; }
+	EckInlineCe void EnableGroup(BOOL b) noexcept { m_bGroup = b; }
+	EckInlineNdCe BOOL IsGroupEnabled() const noexcept { return m_bGroup; }
 
 	HRESULT InitFromListFile(PCWSTR pszFile);
+
+	EckInline void SetTaskRunning(bool b) noexcept { m_bTaskRunning = b; }
+	EckInlineNd bool GetTaskRunning() const noexcept { return m_bTaskRunning; }
 };

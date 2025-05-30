@@ -24,6 +24,8 @@
 #include "eck\Lyric.h"
 #include "eck\CDWriteFontFactory.h"
 #include "eck\CEnumFile.h"
+#include "eck\CoroutineHelper.h"
+#include "eck\CTimeIdGenerator.h"
 
 //#if VIOLET_WINRT
 //#include "eck\WinRtDCompInterop.h"
@@ -45,6 +47,7 @@ using eck::ComPtr;
 
 namespace Dui = eck::Dui;
 namespace Tag = eck::MediaTag;
+using namespace std::literals;
 
 enum
 {
@@ -77,7 +80,7 @@ struct PLDATA// 结构稳定，不能修改
 	BYTE byRating{};		// 【元数据】分级
 	BYTE bIgnore : 1{};		// 项目被忽略
 	BYTE bBookmark : 1{};	// 项目含书签
-	BYTE bNeedUpdated : 1{};// 信息需要更新
+	BYTE bUpdated : 1{};	// 信息已更新
 	BYTE bMarked : 1{};		// 项目已标记
 	BYTE bFree : 1{};		// 项目空闲
 };

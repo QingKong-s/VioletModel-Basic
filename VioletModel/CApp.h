@@ -132,7 +132,7 @@ enum :int
 	CyPageTitle = 34,
 	CxPageIntPadding = 10,
 	CxTabToPagePadding = 14,
-	CxListFileList = 140,
+	CxListFileList = 170,
 	CyProgress = 20,
 	CyProgressTrack = 12,
 	DLeftMiniCover = 50,
@@ -158,6 +158,9 @@ enum :int
 	CyFontPageTitle = 20,
 	CyStdList = 32,
 	CyStdEdit = CyStdList,
+
+	CxyListCover = 40,
+	CyPlayListItem = 46,
 };
 
 enum class GPal

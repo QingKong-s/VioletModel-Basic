@@ -20,6 +20,16 @@ CPlayList::ITEM& CPlayList::ImAllocItem(_Out_ int& idx)
 	}
 }
 
+CPlayList::ITEM* CPlayList::FindTag(ULONGLONG TskTag) noexcept
+{
+	for (auto& e : m_vItemPool)
+	{
+		if (e.TskTag == TskTag)
+			return &e;
+	}
+	return nullptr;
+}
+
 CPlayList::GROUPIDX CPlayList::GrInsert(const eck::CRefStrW& rsFile, int idxItem, int idxGroup)
 {
 	return GROUPIDX();
@@ -37,11 +47,13 @@ HRESULT CPlayList::InitFromListFile(PCWSTR pszFile)
 	return S_OK;
 }
 
-int CPlayList::FlInsert(const eck::CRefStrW& rsFile, int idx)
+int CPlayList::FlInsert(const eck::CRefStrW& rsFile, int idx, ULONGLONG TskTag)
 {
 	int idxPool;
 	auto& e = ImAllocItem(idxPool);
 	e.rsFile = rsFile;
+	e.rsName = eck::GetFileNameFromPath(rsFile.Data(), rsFile.Size());
+	e.TskTag = TskTag;
 	if (idx < 0)
 	{
 		m_vFlat.emplace_back(idxPool);

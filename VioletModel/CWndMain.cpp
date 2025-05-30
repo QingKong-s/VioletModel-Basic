@@ -16,6 +16,7 @@ void CWndMain::ClearRes()
 
 BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 {
+	m_ptcUiThread = eck::GetThreadCtx();
 	CBass::Init();
 	App->GetPlayer().GetSignal().Connect(this, &CWndMain::OnPlayEvent);
 	m_pCompPlayPageAn = new CCompPlayPageAn{};
@@ -31,7 +32,7 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 		GetPresentMode() != Dui::PresentMode::DCompositionVisual)
 	{
 		MARGINS m{};// 不能使用-1，否则会绘制标准标题栏
-		m.cxLeftWidth = INT_MAX;
+		m.cxLeftWidth = (1 << 20);
 		DwmExtendFrameIntoClientArea(hWnd, &m);
 	}
 	eck::EnableWindowMica(hWnd);
@@ -373,7 +374,7 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 	return __super::OnElemEvent(pElem, uMsg, wParam, lParam);
 }
 
-void STDMETHODCALLTYPE CWndMain::Tick(int iMs)
+void CWndMain::Tick(int iMs)
 {
 	constexpr float Duration[]
 	{
