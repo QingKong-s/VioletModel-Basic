@@ -39,11 +39,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return 0;
 	}
 
-	//eck::ThreadUnInit();
-	//eck::UnInit();
-	//CoUninitialize();
-	//return 0;
-
 	App = new CApp{};
 	CApp::Init();
 

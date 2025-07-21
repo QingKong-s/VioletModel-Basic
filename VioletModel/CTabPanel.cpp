@@ -13,7 +13,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 			case Dui::TBLE_GETDISPINFO:
 			{
-				const auto p = (Dui::TBL_DISPINFO*)lParam;
+				const auto p = (Dui::NMTBLDISPINFO*)lParam;
 				const auto pWnd = (CWndMain*)GetWnd();
 				switch (p->idx)
 				{
@@ -51,7 +51,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			case Dui::EE_CLICK:
 			{
-				Dui::LTN_ITEM nm{ *(Dui::LTN_ITEM*)lParam };
+				auto nm{ *(Dui::NMTBLITEMINDEX*)lParam };
 				nm.uCode = ELEN_PAGE_CHANGE;
 				GenElemNotify(&nm);
 			}

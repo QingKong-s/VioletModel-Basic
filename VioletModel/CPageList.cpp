@@ -200,7 +200,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 			case Dui::TBLE_GETDISPINFO:
 			{
-				const auto p = (Dui::TBL_DISPINFO*)lParam;
+				const auto p = (Dui::NMTBLDISPINFO*)lParam;
 				if (p->uMask & eck::DIM_TEXT)
 					p->cchText = swprintf((PWSTR)p->pszText, L"播放列表 %d", p->idx);
 				if (p->uMask & eck::DIM_IMAGE)
@@ -209,7 +209,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return 0;
 			case Dui::TBLE_SELCHANGED:
 			{
-				const auto p = (Dui::TBL_ITEM*)lParam;
+				const auto p = (Dui::NMTBLITEMINDEX*)lParam;
 				const auto& e = *m_vListFile[p->idx];
 				m_GLList.SetItemCount(e.PlayList.FlGetCount());
 				m_GLList.ReCalc();
@@ -222,7 +222,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 			case Dui::LEE_GETDISPINFO:
 			{
-				const auto p = (Dui::LEE_DISPINFO*)lParam;
+				const auto p = (Dui::NMLEDISPINFO*)lParam;
 				if (p->bItem)
 				{
 					const auto pList = GetCurrPlayList();
@@ -264,7 +264,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return 0;
 			case Dui::HEE_GETDISPINFO:
 			{
-				const auto p = (Dui::HEE_DISPINFO*)lParam;
+				const auto p = (Dui::NMHEDISPINFO*)lParam;
 				p->pszText = ColumnName[p->idx].data();
 				p->cchText = (int)ColumnName[p->idx].size();
 			}
@@ -275,7 +275,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (idx < 0)
 					break;
 				const auto pListFile = m_vListFile[idx];
-				const auto p = (Dui::LTN_SCROLLED*)lParam;
+				const auto p = (Dui::NMLTSCROLLED*)lParam;
 				if (!m_vLoadDataTask.empty())
 					for (size_t i{ m_vLoadDataTask.size() - 1 }; i; --i)
 					{

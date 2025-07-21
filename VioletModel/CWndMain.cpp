@@ -74,7 +74,7 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 		0, 0, 0, 0, pNormalParent, this);
 	m_PageOptions.SetTextFormat(pTfLeft.Get());
 	// 底部播放控制栏
-	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE/* | Dui::DES_BLURBKG*/, 0,
+	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE | Dui::DES_BLURBKG, 0,
 		0, 0, 0, 0, nullptr, this);
 	m_PlayPanel.SetTextFormat(pTfLeft.Get());
 	// 页 播放
@@ -85,7 +85,7 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	m_TBProgress.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
 	m_TBProgress.SetRange(0, 100);
-	m_TBProgress.SetPos(50);
+	m_TBProgress.SetTrackPos(50);
 	m_TBProgress.SetTrackSize(CyProgressTrack);
 	// 按钮 上一曲
 	m_BTPrev.Create(nullptr, Dui::DES_VISIBLE, 0,
@@ -196,7 +196,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	switch (e.eEvent)
 	{
 	case PlayEvt::CommTick:
-		m_TBProgress.SetPos(float(App->GetPlayer().GetCurrTime() * ProgBarScale));
+		m_TBProgress.SetTrackPos(float(App->GetPlayer().GetCurrTime() * ProgBarScale));
 		m_TBProgress.InvalidateRect();
 		break;
 	case PlayEvt::Play:
@@ -205,14 +205,14 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		if (m_PagePlaying.GetStyle() & Dui::DES_VISIBLE)
 			m_PagePlaying.InvalidateRect();
 		m_TBProgress.SetRange(0.f, float(App->GetPlayer().GetTotalTime() * ProgBarScale));
-		m_TBProgress.SetPos(0.f);
+		m_TBProgress.SetTrackPos(0.f);
 		m_TBProgress.InvalidateRect();
 		[[fallthrough]];
 	case PlayEvt::Resume:
 		SetTimer(HWnd, IDT_COMM_TICK, TE_COMM_TICK, nullptr);
 		break;
 	case PlayEvt::Stop:
-		m_TBProgress.SetPos(0.f);
+		m_TBProgress.SetTrackPos(0.f);
 		m_TBProgress.InvalidateRect();
 		[[fallthrough]];
 	case PlayEvt::Pause:
@@ -324,7 +324,7 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 	{
 	case ELEN_PAGE_CHANGE:
 	{
-		const auto* const p = (Dui::LTN_ITEM*)lParam;
+		const auto* const p = (Dui::NMLTITEMINDEX*)lParam;
 		ShowPage((Page)p->idx, TRUE);
 	}
 	return 0;
@@ -334,7 +334,7 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 		if (pElem == &m_TBProgress)
 		{
 			App->GetPlayer().SetPosition(
-				m_TBProgress.GetPos() / ProgBarScale);
+				m_TBProgress.GetTrackPos() / ProgBarScale);
 			return 0;
 		}
 	}
