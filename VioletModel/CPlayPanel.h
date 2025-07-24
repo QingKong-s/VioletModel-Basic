@@ -13,6 +13,7 @@ private:
 	Dui::CLabel m_LATime{};
 	Dui::CLabel m_LAWatermark{};
 
+	void OnPlayEvent(const PLAY_EVT_PARAM& e);
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 };

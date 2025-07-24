@@ -20,9 +20,11 @@ struct PLAY_EVT_PARAM
 enum class PlayErr
 {
 	Ok,
-	NoPlayList,
-	BassError,
-	HResultError,
+	NoPlayList,		// 没有播放列表
+	ErrBass,		// Bass报告了错误
+	ErrHResult,		// HRESULT错误
+	ErrUnexpectedPlayingState,// CPlayer::PlayOrPause使用，Bass播放状态异常
+	ErrNoCurrItem,	// 当前未播放任何项
 };
 
 class CPlayer final
@@ -56,6 +58,8 @@ public:
 	EckInlineNdCe auto& GetSignal() noexcept { return m_Sig; }
 	EckInline void SetList(CPlayList* pPlayList) noexcept
 	{
+		if (m_pPlayList == pPlayList)
+			return;
 		m_pPlayList = pPlayList;
 		GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::ListChanged });
 	}
@@ -70,15 +74,21 @@ public:
 	PlayErr Play(int idx);
 	PlayErr Play(int idxGroup, int idxItem);
 	PlayErr PlayOrPause();
-	PlayErr Stop();
+	PlayErr Stop(BOOL bNoGap = FALSE);
+	PlayErr Next();
+	PlayErr Prev();
+	PlayErr AutoNext();
 
+	// 秒
 	void SetPosition(double lfPos);
 
 	// 返回后调用方持有一份引用
-	void GetCover(IWICBitmap*& pBmp)
+	void GetCover(_COM_Outptr_result_maybenull_ IWICBitmap*& pBmp)
 	{
 		if (m_pBmpCover)
 			m_pBmpCover->AddRef();
 		pBmp = m_pBmpCover;
 	}
+
+	EckInlineNdCe auto& GetMusicInfo() const noexcept { return m_MusicInfo; }
 };

@@ -2,6 +2,31 @@
 #include "CWndMain.h"
 
 
+void CPlayPanel::OnPlayEvent(const PLAY_EVT_PARAM& e)
+{
+	switch (e.eEvent)
+	{
+	case PlayEvt::CommTick:
+	{
+		const auto& Player = App->GetPlayer();
+		const auto lfCurrTime = Player.GetCurrTime();
+		const auto lfTotalTime = Player.GetTotalTime();
+		m_LATime.SetText(eck::Format(L"%02d:%02d/%02d:%02d",
+			int(lfCurrTime / 60), int(lfCurrTime) % 60,
+			int(lfTotalTime / 60), int(lfTotalTime) % 60).Data());
+		m_LATime.InvalidateRect();
+	}
+	break;
+	case PlayEvt::Play:
+	{
+		const auto& mi = App->GetPlayer().GetMusicInfo();
+		m_LATitle.SetText(mi.rsTitle.Data());
+		m_LAArtist.SetText(mi.GetArtistStr().Data());
+	}
+	break;
+	}
+}
+
 LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -35,6 +60,7 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CREATE:
 	{
+		App->GetPlayer().GetSignal().Connect(this, &CPlayPanel::OnPlayEvent);
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 		const auto pWnd = (CWndMain*)GetWnd();
 

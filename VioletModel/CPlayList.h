@@ -96,6 +96,8 @@ public:
 	/// <returns></returns>
 	GROUPIDX GrInsert(const eck::CRefStrW& rsFile, int idxItem = -1, int idxGroup = -1);
 
+	EckInlineNdCe int GrGetGroupCount() const noexcept { return (int)m_vGroup.size(); }
+
 	// 当前列表是否已被播放器选入
 	BOOL IsActive() noexcept;
 
@@ -107,6 +109,12 @@ public:
 		EckAssert((idxGroup < 0) ? (idxItem < 0) : TRUE);
 		m_idxCurrGroup = idxGroup;
 		m_idxCurrGroupItem = idxItem;
+	}
+	EckInlineNdCe int PlyGetCurrentItem() const noexcept { return m_idxCurrFlat; }
+	EckInlineNdCe int PlyGetCurrentItem(_Out_ int& idxGroup) const noexcept
+	{
+		idxGroup = m_idxCurrGroup;
+		return m_idxCurrGroupItem;
 	}
 	// -------------------------
 

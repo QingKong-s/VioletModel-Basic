@@ -74,7 +74,7 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 		0, 0, 0, 0, pNormalParent, this);
 	m_PageOptions.SetTextFormat(pTfLeft.Get());
 	// 底部播放控制栏
-	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE | Dui::DES_BLURBKG, 0,
+	m_PlayPanel.Create(nullptr, Dui::DES_VISIBLE/* | Dui::DES_BLURBKG*/, 0,
 		0, 0, 0, 0, nullptr, this);
 	m_PlayPanel.SetTextFormat(pTfLeft.Get());
 	// 页 播放
@@ -207,9 +207,11 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		m_TBProgress.SetRange(0.f, float(App->GetPlayer().GetTotalTime() * ProgBarScale));
 		m_TBProgress.SetTrackPos(0.f);
 		m_TBProgress.InvalidateRect();
+		m_PlayPanel.InvalidateRect();
 		[[fallthrough]];
 	case PlayEvt::Resume:
 		SetTimer(HWnd, IDT_COMM_TICK, TE_COMM_TICK, nullptr);
+		m_BTPlay.SetImage(RealizeImg(GImg::Pause));
 		break;
 	case PlayEvt::Stop:
 		m_TBProgress.SetTrackPos(0.f);
@@ -217,6 +219,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		[[fallthrough]];
 	case PlayEvt::Pause:
 		KillTimer(HWnd, IDT_COMM_TICK);
+		m_BTPlay.SetImage(RealizeImg(GImg::Triangle));
 		break;
 	}
 }
@@ -352,16 +355,11 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 	case Dui::EE_COMMAND:
 	{
 		if (pElem == &m_BTPlay)
-		{
-			auto& Player = App->GetPlayer();
-			if (Player.IsActive())
-				Player.PlayOrPause();
-			else
-			{
-				// TMPTMPTMP
-				Player.Play(0);
-			}
-		}
+			App->GetPlayer().PlayOrPause();
+		else if (pElem == &m_BTPrev)
+			App->GetPlayer().Prev();
+		else if (pElem == &m_BTNext)
+			App->GetPlayer().Next();
 		else if (pElem->GetID() == ELEID_PLAYPAGE_BACK)
 		{
 			ECK_DUILOCK;

@@ -23,7 +23,7 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 {
 	m_bActive = TRUE;
 	if (!m_Bass.Open(e.rsFile.Data()))
-		return PlayErr::BassError;
+		return PlayErr::ErrBass;
 	m_Bass.TempoCreate();
 	m_Bass.Play(TRUE);
 	m_lfCurrTime = 0;
@@ -43,6 +43,7 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 	mf.DetectTag();
 	Tag::CID3v2 Id3v2{ mf };
 	Id3v2.ReadTag(0);
+	m_MusicInfo.uFlag = Tag::MIF_JOIN_ARTIST;
 	m_MusicInfo.uMask = Tag::MIM_ALL;
 	Id3v2.SimpleExtract(m_MusicInfo);
 	const auto pPic = m_MusicInfo.GetMainCover();
@@ -59,7 +60,7 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 			pStream->Release();
 		}
 		if (FAILED(hr))
-			return PlayErr::HResultError;
+			return PlayErr::ErrHResult;
 	}
 	else
 	{
@@ -74,7 +75,7 @@ PlayErr CPlayer::Play(int idx)
 {
 	if (!m_pPlayList)
 		return PlayErr::NoPlayList;
-	Stop();
+	Stop(TRUE);
 	GetList()->PlySetCurrentItem(idx);
 	return PlayWorker(GetList()->FlAt(idx));
 }
@@ -83,29 +84,126 @@ PlayErr CPlayer::Play(int idxGroup, int idxItem)
 {
 	if (!m_pPlayList)
 		return PlayErr::NoPlayList;
-	Stop();
+	Stop(TRUE);
 	GetList()->PlySetCurrentItem(idxGroup, idxItem);
 	return PlayWorker(GetList()->GrAt(idxGroup, idxItem));
 }
 
 PlayErr CPlayer::PlayOrPause()
 {
+	if (!m_pPlayList)
+		return PlayErr::NoPlayList;
+	if (m_bActive)
+	{
+		switch (m_Bass.IsActive())
+		{
+		case BASS_ACTIVE_PLAYING:
+			m_Bass.Pause();
+			GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::Pause });
+			return PlayErr::Ok;
+		case BASS_ACTIVE_PAUSED:
+			m_Bass.Play();
+			GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::Resume });
+			return PlayErr::Ok;
+		}
+		return PlayErr::ErrUnexpectedPlayingState;
+	}
+	else
+	{
+		if (GetList()->FlGetCount())
+			Play(0);
+	}
 	return PlayErr::Ok;
 }
 
-PlayErr CPlayer::Stop()
+PlayErr CPlayer::Stop(BOOL bNoGap)
 {
 	if (!m_pPlayList)
 		return PlayErr::NoPlayList;
-	m_bActive = FALSE;
-	m_Sig.Emit(PLAY_EVT_PARAM{ PlayEvt::Stop });
 	m_Bass.Stop();
 	m_Bass.Close();
-	if (GetList()->IsGroupEnabled())
-		GetList()->PlySetCurrentItem(-1, -1);
-	else
-		GetList()->PlySetCurrentItem(-1);
+	if (!bNoGap)
+	{
+		m_bActive = FALSE;
+		m_Sig.Emit(PLAY_EVT_PARAM{ PlayEvt::Stop });
+		if (GetList()->IsGroupEnabled())
+			GetList()->PlySetCurrentItem(-1, -1);
+		else
+			GetList()->PlySetCurrentItem(-1);
+	}
 	return PlayErr::Ok;
+}
+
+PlayErr CPlayer::Next()
+{
+	if (!m_pPlayList)
+		return PlayErr::NoPlayList;
+	int idxItem, idxGroup;
+	if (GetList()->IsGroupEnabled())
+	{
+		idxItem = GetList()->PlyGetCurrentItem(idxGroup);
+		if (idxItem < 0)
+			return PlayErr::NoPlayList;
+		const auto cCurrGroupItem = (int)GetList()->GrAtGroup(idxGroup).vItem.size();
+		++idxItem;
+		if (idxItem >= cCurrGroupItem)
+		{
+			idxItem = 0;
+			++idxGroup;
+			if (idxGroup >= GetList()->GrGetGroupCount())
+				idxGroup = 0;// 回到第一个组
+		}
+		Play(idxGroup, idxItem);
+	}
+	else
+	{
+		idxItem = GetList()->PlyGetCurrentItem();
+		if (idxItem < 0)
+			return PlayErr::NoPlayList;
+		++idxItem;
+		if (idxItem >= GetList()->FlGetCount())
+			idxItem = 0;
+		Play(idxItem);
+	}
+}
+
+PlayErr CPlayer::Prev()
+{
+	if (!m_pPlayList)
+		return PlayErr::NoPlayList;
+	int idxItem, idxGroup;
+	if (GetList()->IsGroupEnabled())
+	{
+		idxItem = GetList()->PlyGetCurrentItem(idxGroup);
+		if (idxItem < 0)
+			return PlayErr::NoPlayList;
+		if (idxItem <= 0)
+		{
+			idxGroup--;
+			if (idxGroup < 0)
+				idxGroup = GetList()->GrGetGroupCount() - 1;// 回到最后一个组
+			idxItem = (int)GetList()->GrAtGroup(idxGroup).vItem.size() - 1;
+		}
+		else
+			--idxItem;
+		return Play(idxGroup, idxItem);
+	}
+	else
+	{
+		idxItem = GetList()->PlyGetCurrentItem();
+		if (idxItem < 0)
+			return PlayErr::NoPlayList;
+		if (idxItem <= 0)
+			idxItem = GetList()->FlGetCount() - 1;
+		else
+			--idxItem;
+		return Play(idxItem);
+	}
+}
+
+PlayErr CPlayer::AutoNext()
+{
+	return PlayErr();
 }
 
 void CPlayer::SetPosition(double lfPos)

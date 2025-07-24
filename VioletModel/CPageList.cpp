@@ -34,7 +34,7 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFi
 		const auto& e = vItem[i];
 		auto& f = vTmp[i];
 		CBass Bass{};
-		auto h =Bass.Open(e.rsFile.Data(), BASS_STREAM_DECODE,
+		auto h = Bass.Open(e.rsFile.Data(), BASS_STREAM_DECODE,
 			BASS_STREAM_DECODE, BASS_STREAM_DECODE);
 		if (!h)
 			EckDbgPrintFmt(L"%s打开失败", e.rsFile.Data());
@@ -87,7 +87,7 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFi
 	if (Token.GetPromise().IsCanceled())
 		co_return;
 	ECK_DUILOCK;
-	for (auto it = m_vLoadDataTask.begin(); it!= m_vLoadDataTask.end(); ++it)
+	for (auto it = m_vLoadDataTask.begin(); it != m_vLoadDataTask.end(); ++it)
 		if (&it->Task.GetPromise() == &Token.GetPromise())
 		{
 			m_vLoadDataTask.erase(it);
@@ -96,6 +96,7 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFi
 	EckCounter(vItem.size(), i)
 	{
 		const auto Tag = vItem[i].Tag;
+		EckDbgPrint(Tag);
 		auto& f = vTmp[i];
 		const auto pItem = pListFile->PlayList.FindTag(Tag);
 		if (!pItem)
@@ -284,7 +285,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 							std::min(e.idxFlatEnd, p->idxEnd)))
 						{
 							e.Task.TryCancel();
-							for (int i = e.idxFlatBegin;i <= e.idxFlatEnd; ++i)
+							for (int i = e.idxFlatBegin; i <= e.idxFlatEnd; ++i)
 								pListFile->PlayList.FlAt(i).TskTag = 0ull;
 							m_vLoadDataTask.erase(m_vLoadDataTask.begin() + i);
 						}
@@ -397,7 +398,28 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_GLList.GetHeader().SetTextFormat(pTextFormat.Get());
 			m_LytList.Add(&m_GLList, {}, eck::LF_FILL, 1);
 		}
-		m_Lyt.Add(&m_LytList, {}, eck::LF_FILL, 1);
+		m_Lyt.Add(&m_LytList, { .cxRightWidth = CxPageIntPadding }, eck::LF_FILL, 1);
+
+		m_GLList.GetSignal().Connect(
+			[&](UINT uMsg, WPARAM wParam, LPARAM lParam, eck::SlotCtx& Ctx)
+			{
+				switch (uMsg)
+				{
+				case WM_LBUTTONDBLCLK:
+				{
+					POINT pt ECK_GET_PT_LPARAM(lParam);
+					m_GLList.ClientToElem(pt);
+					Dui::LE_HITTEST ht{ pt };
+					const auto idx = m_GLList.HitTest(ht);
+					if (idx < 0)
+						break;
+					App->GetPlayer().SetList(GetCurrPlayList());
+					App->GetPlayer().Play(idx);
+				}
+				break;
+				}
+				return 0;
+			});
 	}
 	break;
 	case WM_DPICHANGED:

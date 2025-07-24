@@ -56,11 +56,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		pt.x, pt.y, size.cx, size.cy, nullptr, 0);
 	pWnd->Visible = TRUE;
 
-	CPlayList pl{};
-	App->GetPlayer().SetList(&pl);
-	pl.FlInsert(LR"(D:\@重要文件\@音乐\无夏之城 - 洛天依.mp3)");
-
-
 	MSG msg;
 	while (GetMessageW(&msg, nullptr, 0, 0))
 	{

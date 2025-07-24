@@ -53,6 +53,7 @@ enum class GImg
 	CircleOne,
 	ArrowRight1,
 	Lrc,
+	Pause,
 
 	Max
 };
@@ -109,6 +110,7 @@ constexpr inline PCWSTR ImgFile[]
 	LR"(CircleOne.png)",
 	LR"(ArrowRight1.png)",
 	LR"(Lrc.png)",
+	LR"(Pause.png)",
 };
 
 static_assert(ARRAYSIZE(ImgFile) == (size_t)GImg::Max, "ImgFile size error.");
