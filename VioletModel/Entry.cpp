@@ -15,6 +15,7 @@
 #pragma comment(lib, R"(Bass\bass_fx.lib)")
 #pragma comment(lib, R"(Bass\bassmidi.lib)")
 #endif
+#pragma comment(lib, "RuntimeObject.lib")
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	_In_ PWSTR pszCmdLine, _In_ int nCmdShow)
@@ -72,8 +73,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	CoUninitialize();
 #ifdef _DEBUG
 	if (eck::g_pDxgiDebug)
-		eck::g_pDxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL,
-			DXGI_DEBUG_RLO_ALL);
+		eck::g_pDxgiDebug->ReportLiveObjects(
+			DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
 #endif
 	return (int)msg.wParam;
 }

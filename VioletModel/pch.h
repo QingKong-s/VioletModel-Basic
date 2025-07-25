@@ -2,7 +2,7 @@
 #define _CRTDBG_MAP_ALLOC	1
 #define ECK_OPT_NO_YYJSON	1
 #define ECK_OPT_NO_PUGIXML	1
-#define VIOLET_WINRT		0
+#define VIOLET_WINRT		1
 
 #include "eck\PchInc.h"
 #include "eck\SystemHelper.h"
@@ -26,8 +26,9 @@
 #include "eck\CEnumFile.h"
 #include "eck\CoroutineHelper.h"
 #include "eck\CTimeIdGenerator.h"
+#include "eck\ShellHelper.h"
 
-//#if VIOLET_WINRT
+#if VIOLET_WINRT
 //#include "eck\WinRtDCompInterop.h"
 //#include "eck\BackdropEffectChain.h"
 //
@@ -36,7 +37,14 @@
 //#include <winrt/Windows.System.h>
 //#include <winrt/Windows.Graphics.Effects.h>
 //#include <winrt/Windows.UI.Composition.Effects.h>
-//#endif
+
+#include <winrt/Windows.Media.h>
+#include <winrt/windows.foundation.collections.h>
+#include <winrt/Windows.Storage.Streams.h>
+#include <SystemMediaTransportControlsInterop.h>
+
+namespace WinMedia = winrt::Windows::Media;
+#endif
 
 #include <lmcons.h>
 

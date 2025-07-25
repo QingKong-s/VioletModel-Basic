@@ -99,6 +99,12 @@ private:
 		m_hiTbPause{};
 	ComPtr<ITaskbarList4> m_pTaskbarList{};
 	CWndTbGhost m_WndTbGhost{ *this };
+
+#if VIOLET_WINRT
+	WinMedia::SystemMediaTransportControls m_Smtc{ nullptr };
+	eck::CoroTask<> m_TskSmtcUpdateDisplay{};
+	WinMedia::SystemMediaTransportControlsTimelineProperties m_SmtcTimeline{};
+#endif
 private:
 	void ClearRes();
 
@@ -135,6 +141,15 @@ private:
 	BOOL TblOnCommand(WPARAM wParam);
 
 	HRESULT TblUpdatePalyPauseButtonIcon(BOOL bPlay);
+
+	HRESULT SmtcInit() noexcept;
+#if VIOLET_WINRT
+	eck::CoroTask<> SmtcCoroUpdateDisplay();
+#endif
+	HRESULT SmtcUpdateDisplay() noexcept;
+
+	HRESULT SmtcUpdateTimeLineRange() noexcept;
+	HRESULT SmtcUpdateTimeLinePosition() noexcept;
 public:
 	~CWndMain();
 

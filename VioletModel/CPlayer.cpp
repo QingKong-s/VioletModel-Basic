@@ -23,7 +23,10 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 {
 	m_bActive = TRUE;
 	if (!m_Bass.Open(e.rsFile.Data()))
+	{
+		m_dwLastHrOrBassErr = CBass::GetError();
 		return PlayErr::ErrBass;
+	}
 	m_Bass.TempoCreate();
 	m_Bass.Play(TRUE);
 	m_lfCurrTime = 0;
@@ -33,9 +36,7 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 		{
 			((eck::THREADCTX*)pUser)->Callback.EnQueueCallback([]
 				{
-					PLAY_EVT_PARAM pep;
-					pep.eEvent = PlayEvt::End;
-					App->GetPlayer().m_Sig.Emit(pep);
+					App->GetPlayer().m_Sig.Emit({ PlayEvt::End });
 				});
 		}, eck::GetThreadCtx());
 
@@ -50,16 +51,16 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 	SafeRelease(m_pBmpCover);
 	if (pPic)
 	{
-		HRESULT hr;
 		if (pPic->bLink)
-			hr = eck::CreateWicBitmap(m_pBmpCover, std::get<1>(pPic->varPic).Data());
+			m_dwLastHrOrBassErr = eck::CreateWicBitmap(
+				m_pBmpCover, std::get<1>(pPic->varPic).Data());
 		else
 		{
 			auto pStream = new eck::CStreamView(std::get<0>(pPic->varPic));
-			hr = eck::CreateWicBitmap(m_pBmpCover, pStream);
+			m_dwLastHrOrBassErr = eck::CreateWicBitmap(m_pBmpCover, pStream);
 			pStream->Release();
 		}
-		if (FAILED(hr))
+		if (FAILED(m_dwLastHrOrBassErr))
 			return PlayErr::ErrHResult;
 	}
 	else
@@ -67,7 +68,7 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 		m_pBmpCover = App->GetImg(GImg::DefaultCover);
 		m_pBmpCover->AddRef();
 	}
-	GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::Play });
+	GetSignal().Emit({ PlayEvt::Play });
 	return PlayErr::Ok;
 }
 
@@ -99,14 +100,14 @@ PlayErr CPlayer::PlayOrPause()
 		{
 		case BASS_ACTIVE_PLAYING:
 			m_Bass.Pause();
-			GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::Pause });
+			GetSignal().Emit({ PlayEvt::Pause });
 			return PlayErr::Ok;
 		case BASS_ACTIVE_PAUSED:
 			m_Bass.Play();
-			GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::Resume });
+			GetSignal().Emit({ PlayEvt::Resume });
 			return PlayErr::Ok;
 		}
-		return PlayErr::ErrUnexpectedPlayingState;
+		return PlayErr::UnexpectedPlayingState;
 	}
 	else
 	{
@@ -125,7 +126,7 @@ PlayErr CPlayer::Stop(BOOL bNoGap)
 	if (!bNoGap)
 	{
 		m_bActive = FALSE;
-		m_Sig.Emit(PLAY_EVT_PARAM{ PlayEvt::Stop });
+		m_Sig.Emit({ PlayEvt::Stop });
 		if (GetList()->IsGroupEnabled())
 			GetList()->PlySetCurrentItem(-1, -1);
 		else

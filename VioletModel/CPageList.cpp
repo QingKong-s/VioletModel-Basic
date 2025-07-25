@@ -96,7 +96,7 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFi
 	EckCounter(vItem.size(), i)
 	{
 		const auto Tag = vItem[i].Tag;
-		EckDbgPrint(Tag);
+		//EckDbgPrint(Tag);
 		auto& f = vTmp[i];
 		const auto pItem = pListFile->PlayList.FindTag(Tag);
 		if (!pItem)

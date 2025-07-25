@@ -23,8 +23,8 @@ enum class PlayErr
 	NoPlayList,		// 没有播放列表
 	ErrBass,		// Bass报告了错误
 	ErrHResult,		// HRESULT错误
-	ErrUnexpectedPlayingState,// CPlayer::PlayOrPause使用，Bass播放状态异常
-	ErrNoCurrItem,	// 当前未播放任何项
+	UnexpectedPlayingState,// CPlayer::PlayOrPause使用，Bass播放状态异常
+	NoCurrItem,	// 当前未播放任何项
 };
 
 class CPlayer final
@@ -42,6 +42,8 @@ private:
 	double m_lfCurrTime{};// 秒
 	double m_lfTotalTime{};// 秒
 	BITBOOL m_bActive : 1{};
+
+	DWORD m_dwLastHrOrBassErr{};
 
 	PlayErr PlayWorker(CPlayList::ITEM& e);
 
@@ -91,4 +93,5 @@ public:
 	}
 
 	EckInlineNdCe auto& GetMusicInfo() const noexcept { return m_MusicInfo; }
+	EckInlineNdCe DWORD GetLastHrOrBassErr() const noexcept { return m_dwLastHrOrBassErr; }
 };
