@@ -105,6 +105,7 @@ private:
 	eck::CoroTask<> m_TskSmtcUpdateDisplay{};
 	WinMedia::SystemMediaTransportControlsTimelineProperties m_SmtcTimeline{};
 	ULONGLONG m_ullSmtcTimeLineLastUpdate{};
+	winrt::event_token m_SmtcEvtTokenButtonPressed{};
 #endif
 private:
 	void ClearRes();
@@ -139,6 +140,8 @@ private:
 	HRESULT SmtcUpdateDisplay() noexcept;
 	HRESULT SmtcUpdateTimeLineRange() noexcept;
 	HRESULT SmtcUpdateTimeLinePosition() noexcept;
+	HRESULT SmtcUpdateState() noexcept;
+	void SmtcUnInit() noexcept;
 public:
 	~CWndMain();
 
@@ -157,8 +160,6 @@ public:
 	}
 
 	LRESULT OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-
-	BOOL PreTranslateMessage(const MSG& Msg) override;
 
 	LRESULT OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

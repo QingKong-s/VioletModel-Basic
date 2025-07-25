@@ -100,10 +100,12 @@ PlayErr CPlayer::PlayOrPause()
 		{
 		case BASS_ACTIVE_PLAYING:
 			m_Bass.Pause();
+			m_bPaused = TRUE;
 			GetSignal().Emit({ PlayEvt::Pause });
 			return PlayErr::Ok;
 		case BASS_ACTIVE_PAUSED:
 			m_Bass.Play();
+			m_bPaused = FALSE;
 			GetSignal().Emit({ PlayEvt::Resume });
 			return PlayErr::Ok;
 		}
@@ -154,7 +156,7 @@ PlayErr CPlayer::Next()
 			if (idxGroup >= GetList()->GrGetGroupCount())
 				idxGroup = 0;// 回到第一个组
 		}
-		Play(idxGroup, idxItem);
+		return Play(idxGroup, idxItem);
 	}
 	else
 	{
@@ -164,7 +166,7 @@ PlayErr CPlayer::Next()
 		++idxItem;
 		if (idxItem >= GetList()->FlGetCount())
 			idxItem = 0;
-		Play(idxItem);
+		return Play(idxItem);
 	}
 }
 

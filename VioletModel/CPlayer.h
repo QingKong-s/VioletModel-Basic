@@ -42,6 +42,7 @@ private:
 	double m_lfCurrTime{};// 秒
 	double m_lfTotalTime{};// 秒
 	BITBOOL m_bActive : 1{};
+	BITBOOL m_bPaused : 1{};	// 是否暂停
 
 	DWORD m_dwLastHrOrBassErr{};
 
@@ -76,6 +77,12 @@ public:
 	PlayErr Play(int idx);
 	PlayErr Play(int idxGroup, int idxItem);
 	PlayErr PlayOrPause();
+	PlayErr PlayOrPause(BOOL bPause)
+	{
+		if (bPause == m_bPaused)
+			return PlayErr::Ok;
+		return PlayOrPause();
+	}
 	PlayErr Stop(BOOL bNoGap = FALSE);
 	PlayErr Next();
 	PlayErr Prev();
@@ -94,4 +101,5 @@ public:
 
 	EckInlineNdCe auto& GetMusicInfo() const noexcept { return m_MusicInfo; }
 	EckInlineNdCe DWORD GetLastHrOrBassErr() const noexcept { return m_dwLastHrOrBassErr; }
+	EckInlineNdCe BOOL IsPaused() const noexcept { return m_bPaused; }
 };

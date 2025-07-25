@@ -190,16 +190,28 @@ void CWndMain::ClearPageAnimation()
 	m_pAnPage = nullptr;
 }
 
+CWndMain::~CWndMain()
+{
+}
+
 void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 {
 	switch (e.eEvent)
 	{
 	case PlayEvt::CommTick:
+	{
 		m_TBProgress.SetTrackPos(float(App->GetPlayer().GetCurrTime() * ProgBarScale));
 		m_TBProgress.InvalidateRect();
-		SmtcUpdateTimeLinePosition();
-		break;
+		const auto ullTick = NtGetTickCount64();
+		if (ullTick - m_ullSmtcTimeLineLastUpdate >= 5000)
+		{
+			SmtcUpdateTimeLinePosition();
+			m_ullSmtcTimeLineLastUpdate = ullTick;
+		}
+	}
+	break;
 	case PlayEvt::Play:
+	{
 		m_PagePlaying.UpdateBlurredCover();
 		OnCoverUpdate();
 		SmtcUpdateTimeLineRange();
@@ -212,28 +224,31 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		m_PlayPanel.InvalidateRect();
 		m_WndTbGhost.InvalidateThumbnailCache();
 		m_WndTbGhost.SetIconicThumbnail();
-		[[fallthrough]];
+	}
+	[[fallthrough]];
 	case PlayEvt::Resume:
+	{
 		SetTimer(HWnd, IDT_COMM_TICK, TE_COMM_TICK, nullptr);
 		m_BTPlay.SetImage(RealizeImg(GImg::Pause));
 		m_BTPlay.InvalidateRect();
 		TblUpdatePalyPauseButtonIcon(FALSE);
-		break;
+	}
+	break;
 	case PlayEvt::Stop:
+	{
 		m_TBProgress.SetTrackPos(0.f);
 		m_TBProgress.InvalidateRect();
-		[[fallthrough]];
+	}
+	[[fallthrough]];
 	case PlayEvt::Pause:
+	{
 		KillTimer(HWnd, IDT_COMM_TICK);
 		m_BTPlay.SetImage(RealizeImg(GImg::Triangle));
 		m_BTPlay.InvalidateRect();
 		TblUpdatePalyPauseButtonIcon(TRUE);
-		break;
 	}
-}
-
-CWndMain::~CWndMain()
-{
+	break;
+	}
 }
 
 LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -306,6 +321,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		KillTimer(hWnd, IDT_COMM_TICK);
 		__super::OnMsg(hWnd, uMsg, wParam, lParam);
 		m_WndTbGhost.Destroy();
+		SmtcUnInit();
 		ClearRes();
 		PostQuitMessage(0);
 		return 0;
@@ -336,11 +352,6 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	break;
 	}
 	return __super::OnMsg(hWnd, uMsg, wParam, lParam);
-}
-
-BOOL CWndMain::PreTranslateMessage(const MSG& Msg)
-{
-	return __super::PreTranslateMessage(Msg);
 }
 
 LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -586,4 +597,3 @@ void CWndMain::OnCoverUpdate()
 		m_PlayPanel.m_Cover.SetBitmap(pBmp);
 	}
 }
-

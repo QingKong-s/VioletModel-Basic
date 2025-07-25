@@ -140,17 +140,19 @@ HRESULT CWndMain::SmtcInit() noexcept
 #if VIOLET_WINRT
 {
 	HRESULT hr;
+	//////////TMPTMPTMP//////////
 	PWSTR pszProgramPath;
 	hr = SHGetKnownFolderPath(FOLDERID_CommonPrograms, 0, nullptr, &pszProgramPath);
 	if (SUCCEEDED(hr))
 	{
 		eck::CRefStrW rsLink{ pszProgramPath };
-		rsLink.PushBack(L"\\VioletPlayer.lnk");
+		rsLink.PushBack(EckStrAndLen(L"\\VioletModel.lnk"));
 		if (!PathFileExistsW(rsLink.Data()))
 			eck::CreateShortcut(rsLink.Data(),
 				NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer);
+		CoTaskMemFree(pszProgramPath);
 	}
-
+	//////////TMPTMPTMP//////////
 	try
 	{
 		auto pSmtcInterop = winrt::get_activation_factory<
@@ -172,20 +174,20 @@ HRESULT CWndMain::SmtcInit() noexcept
 	m_Smtc.IsNextEnabled(true);
 	m_Smtc.IsPreviousEnabled(true);
 
-	m_Smtc.ButtonPressed(
+	m_SmtcEvtTokenButtonPressed = m_Smtc.ButtonPressed(
 		[&](const WinMedia::SystemMediaTransportControls&,
 			const WinMedia::SystemMediaTransportControlsButtonPressedEventArgs& Args)
 		{
 			const auto eBtn = Args.Button();
-			m_ptcUiThread->Callback.EnQueueCallback([=]
+			m_ptcUiThread->Callback.EnQueueCallback([=, this]
 				{
 					switch (eBtn)
 					{
 					case WinMedia::SystemMediaTransportControlsButton::Play:
-						App->GetPlayer().PlayOrPause();
+						App->GetPlayer().PlayOrPause(FALSE);
 						break;
 					case WinMedia::SystemMediaTransportControlsButton::Pause:
-						App->GetPlayer().PlayOrPause();
+						App->GetPlayer().PlayOrPause(TRUE);
 						break;
 					case WinMedia::SystemMediaTransportControlsButton::Next:
 						App->GetPlayer().Next();
@@ -193,10 +195,14 @@ HRESULT CWndMain::SmtcInit() noexcept
 					case WinMedia::SystemMediaTransportControlsButton::Previous:
 						App->GetPlayer().Prev();
 						break;
+					default:
+						return;
 					}
+					SmtcUpdateState();
+					SmtcUpdateTimeLinePosition();
 				});
 		});
-
+	return S_OK;
 }
 #else
 {
@@ -260,7 +266,7 @@ eck::CoroTask<> CWndMain::SmtcCoroUpdateDisplay()
 	}
 	u.Update();
 }
-#endif
+#endif// VIOLET_WINRT
 
 HRESULT CWndMain::SmtcUpdateDisplay() noexcept
 {
@@ -275,11 +281,12 @@ HRESULT CWndMain::SmtcUpdateDisplay() noexcept
 	return S_OK;
 #else
 	return E_NOTIMPL;
-#endif
+#endif// VIOLET_WINRT
 }
 
 HRESULT CWndMain::SmtcUpdateTimeLineRange() noexcept
 {
+#if VIOLET_WINRT
 	using winrt::Windows::Foundation::TimeSpan;
 	m_SmtcTimeline.StartTime(TimeSpan{});
 	m_SmtcTimeline.MinSeekTime(TimeSpan{});
@@ -291,14 +298,41 @@ HRESULT CWndMain::SmtcUpdateTimeLineRange() noexcept
 	m_Smtc.UpdateTimelineProperties(m_SmtcTimeline);
 	m_Smtc.PlaybackStatus(WinMedia::MediaPlaybackStatus::Playing);
 	return S_OK;
+#else
+	return E_NOTIMPL;
+#endif// VIOLET_WINRT
 }
 
 HRESULT CWndMain::SmtcUpdateTimeLinePosition() noexcept
 {
+#if VIOLET_WINRT
 	using winrt::Windows::Foundation::TimeSpan;
 	const auto lfSeconds = App->GetPlayer().GetCurrTime();
 	const TimeSpan Pos{ std::chrono::milliseconds{ LONGLONG(lfSeconds * 1000.) } };
 	m_SmtcTimeline.Position(Pos);
 	m_Smtc.UpdateTimelineProperties(m_SmtcTimeline);
 	return S_OK;
+#else
+	return E_NOTIMPL;
+#endif// VIOLET_WINRT
+}
+
+HRESULT CWndMain::SmtcUpdateState() noexcept
+{
+	const auto& Player = App->GetPlayer();
+	if (!Player.IsActive())
+	{
+		m_Smtc.PlaybackStatus(WinMedia::MediaPlaybackStatus::Closed);
+		return S_OK;
+	}
+	if (Player.IsPaused())
+		m_Smtc.PlaybackStatus(WinMedia::MediaPlaybackStatus::Paused);
+	else
+		m_Smtc.PlaybackStatus(WinMedia::MediaPlaybackStatus::Playing);
+	return S_OK;
+}
+
+void CWndMain::SmtcUnInit() noexcept
+{
+	m_Smtc.ButtonPressed(m_SmtcEvtTokenButtonPressed);
 }

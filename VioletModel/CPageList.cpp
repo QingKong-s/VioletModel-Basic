@@ -426,11 +426,14 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_cxIl = Log2Phy(CxyListCover);
 		m_cyIl = m_cxIl;
+		
 	}
 	break;
 	case WM_DESTROY:
 	{
 		m_vListFile.clear();
+		SafeRelease(m_pIlList);
+		SafeRelease(m_pBmpDefCover);
 	}
 	break;
 	}
