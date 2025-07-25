@@ -138,6 +138,7 @@ private:
 	eck::CoroTask<> SmtcCoroUpdateDisplay();
 #endif
 	HRESULT SmtcUpdateDisplay() noexcept;
+	HRESULT SmtcOnCommonTick() noexcept;
 	HRESULT SmtcUpdateTimeLineRange() noexcept;
 	HRESULT SmtcUpdateTimeLinePosition() noexcept;
 	HRESULT SmtcUpdateState() noexcept;

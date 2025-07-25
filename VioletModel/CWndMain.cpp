@@ -202,12 +202,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	{
 		m_TBProgress.SetTrackPos(float(App->GetPlayer().GetCurrTime() * ProgBarScale));
 		m_TBProgress.InvalidateRect();
-		const auto ullTick = NtGetTickCount64();
-		if (ullTick - m_ullSmtcTimeLineLastUpdate >= 5000)
-		{
-			SmtcUpdateTimeLinePosition();
-			m_ullSmtcTimeLineLastUpdate = ullTick;
-		}
+		SmtcOnCommonTick();
 	}
 	break;
 	case PlayEvt::Play:

@@ -47,6 +47,7 @@ namespace WinMedia = winrt::Windows::Media;
 #endif
 
 #include <lmcons.h>
+#include <d2d1_2.h>
 
 using eck::PCVOID;
 using eck::PCBYTE;

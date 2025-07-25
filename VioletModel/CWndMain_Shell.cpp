@@ -137,8 +137,8 @@ HRESULT CWndMain::TblUpdatePalyPauseButtonIcon(BOOL bPlay)
 }
 
 HRESULT CWndMain::SmtcInit() noexcept
-#if VIOLET_WINRT
 {
+#if VIOLET_WINRT
 	HRESULT hr;
 	//////////TMPTMPTMP//////////
 	PWSTR pszProgramPath;
@@ -203,12 +203,10 @@ HRESULT CWndMain::SmtcInit() noexcept
 				});
 		});
 	return S_OK;
-}
 #else
-{
 	return E_NOTIMPL;
+#endif// VIOLET_WINRT
 }
-#endif
 
 #if VIOLET_WINRT
 eck::CoroTask<> CWndMain::SmtcCoroUpdateDisplay()
@@ -284,6 +282,22 @@ HRESULT CWndMain::SmtcUpdateDisplay() noexcept
 #endif// VIOLET_WINRT
 }
 
+HRESULT CWndMain::SmtcOnCommonTick() noexcept
+{
+#if VIOLET_WINRT
+	const auto ullTick = NtGetTickCount64();
+	if (ullTick - m_ullSmtcTimeLineLastUpdate >= 5000)
+	{
+		m_ullSmtcTimeLineLastUpdate = ullTick;
+		return SmtcUpdateTimeLinePosition();
+	}
+	else
+		return S_FALSE;
+#else
+	return E_NOTIMPL;
+#endif// VIOLET_WINRT
+}
+
 HRESULT CWndMain::SmtcUpdateTimeLineRange() noexcept
 {
 #if VIOLET_WINRT
@@ -319,6 +333,7 @@ HRESULT CWndMain::SmtcUpdateTimeLinePosition() noexcept
 
 HRESULT CWndMain::SmtcUpdateState() noexcept
 {
+#if VIOLET_WINRT
 	const auto& Player = App->GetPlayer();
 	if (!Player.IsActive())
 	{
@@ -330,9 +345,14 @@ HRESULT CWndMain::SmtcUpdateState() noexcept
 	else
 		m_Smtc.PlaybackStatus(WinMedia::MediaPlaybackStatus::Playing);
 	return S_OK;
+#else
+	return E_NOTIMPL;
+#endif// VIOLET_WINRT
 }
 
 void CWndMain::SmtcUnInit() noexcept
 {
+#if VIOLET_WINRT
 	m_Smtc.ButtonPressed(m_SmtcEvtTokenButtonPressed);
+#endif// VIOLET_WINRT
 }

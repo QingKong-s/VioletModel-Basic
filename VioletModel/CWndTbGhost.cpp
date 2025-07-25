@@ -59,10 +59,30 @@ LRESULT CWndTbGhost::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return __super::OnMsg(hWnd, uMsg, wParam, lParam);
 }
 
+void CWndTbGhost::InvalidateLivePreviewCache()
+{
+	if (m_hbmLivePreviewCache)
+	{
+		DeleteObject(m_hbmLivePreviewCache);
+		m_hbmLivePreviewCache = nullptr;
+	}
+}
+
+void CWndTbGhost::InvalidateThumbnailCache()
+{
+	if (m_hbmThumbnailCache)
+	{
+		DeleteObject(m_hbmThumbnailCache);
+		m_hbmThumbnailCache = nullptr;
+	}
+}
+
 void CWndTbGhost::SetIconicThumbnail(UINT cxMax, UINT cyMax)
 {
 	if (cxMax == UINT_MAX || cyMax == UINT_MAX)
 	{
+		// 第一次调用最适尺寸未知，，使用120作为默认值
+		// 等到窗口第一次接收WM_DWMSENDICONICTHUMBNAIL时更新为正确的尺寸
 		cxMax = (m_cxPrev ? m_cxPrev : eck::DpiScale(120, m_WndMain.GetDpiValue()));
 		cyMax = (m_cyPrev ? m_cyPrev : eck::DpiScale(120, m_WndMain.GetDpiValue()));
 	}
@@ -98,10 +118,9 @@ void CWndTbGhost::SetIconicThumbnail(UINT cxMax, UINT cyMax)
 		cx = cxMax;
 		cy = cx * cy0 / cx0;
 	}
-	IWICBitmap* pBmp;
-	eck::ScaleWicBitmap(pOrg.Get(), pBmp, cx, cy, WICBitmapInterpolationModeFant);
-	m_hbmThumbnailCache = eck::CreateHBITMAP(pBmp);
+	ComPtr<IWICBitmap> pBmp;
+	eck::ScaleWicBitmap(pOrg.Get(), pBmp.RefOf(),
+		cx, cy, WICBitmapInterpolationModeFant);
+	m_hbmThumbnailCache = eck::CreateHBITMAP(pBmp.Get());
 	DwmSetIconicThumbnail(HWnd, m_hbmThumbnailCache, 0);
-	pBmp->Release();
-	return;
 }
