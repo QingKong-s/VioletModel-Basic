@@ -81,7 +81,7 @@ void CWndTbGhost::SetIconicThumbnail(UINT cxMax, UINT cyMax)
 {
 	if (cxMax == UINT_MAX || cyMax == UINT_MAX)
 	{
-		// 第一次调用最适尺寸未知，，使用120作为默认值
+		// 第一次调用最适尺寸未知，使用120作为默认值
 		// 等到窗口第一次接收WM_DWMSENDICONICTHUMBNAIL时更新为正确的尺寸
 		cxMax = (m_cxPrev ? m_cxPrev : eck::DpiScale(120, m_WndMain.GetDpiValue()));
 		cyMax = (m_cyPrev ? m_cyPrev : eck::DpiScale(120, m_WndMain.GetDpiValue()));

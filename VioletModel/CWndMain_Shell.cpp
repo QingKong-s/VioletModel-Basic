@@ -141,6 +141,7 @@ HRESULT CWndMain::SmtcInit() noexcept
 #if VIOLET_WINRT
 	HRESULT hr;
 	//////////TMPTMPTMP//////////
+	// HACK 更合理的创建快捷方式逻辑（要求管理员权限）
 	PWSTR pszProgramPath;
 	hr = SHGetKnownFolderPath(FOLDERID_CommonPrograms, 0, nullptr, &pszProgramPath);
 	if (SUCCEEDED(hr))
@@ -353,6 +354,7 @@ HRESULT CWndMain::SmtcUpdateState() noexcept
 void CWndMain::SmtcUnInit() noexcept
 {
 #if VIOLET_WINRT
+	// 若不取消将导致内存泄漏
 	m_Smtc.ButtonPressed(m_SmtcEvtTokenButtonPressed);
 #endif// VIOLET_WINRT
 }

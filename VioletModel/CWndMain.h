@@ -102,10 +102,10 @@ private:
 
 #if VIOLET_WINRT
 	WinMedia::SystemMediaTransportControls m_Smtc{ nullptr };
-	eck::CoroTask<> m_TskSmtcUpdateDisplay{};
 	WinMedia::SystemMediaTransportControlsTimelineProperties m_SmtcTimeline{};
-	ULONGLONG m_ullSmtcTimeLineLastUpdate{};
-	winrt::event_token m_SmtcEvtTokenButtonPressed{};
+	eck::CoroTask<> m_TskSmtcUpdateDisplay{};	// winrt无法在UI线程等待任务，因此将其在此协程中运行
+	ULONGLONG m_ullSmtcTimeLineLastUpdate{};	// 上次更新时间线的时间戳，5s一更新
+	winrt::event_token m_SmtcEvtTokenButtonPressed{};	// 反初始化时使用
 #endif
 private:
 	void ClearRes();
