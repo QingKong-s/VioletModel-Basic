@@ -83,7 +83,7 @@ public:
 	void SetPosition(double lfPos);
 
 	// 返回后调用方持有一份引用
-	void GetCover(_COM_Outptr_result_maybenull_ IWICBitmap*& pBmp)
+	void GetCover(_Out_ IWICBitmap*& pBmp)
 	{
 		if (m_pBmpCover)
 			m_pBmpCover->AddRef();

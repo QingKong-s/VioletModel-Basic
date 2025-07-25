@@ -3,6 +3,15 @@
 #include "CWndMain.h"
 
 
+static HRESULT ScaleImageForButton(GImg eImg, int iDpi,
+	_Out_ IWICBitmap*& pBmp)
+{
+	const auto cxy = eck::DpiScale(20, iDpi);
+	return eck::ScaleWicBitmap(App->GetImg(eImg), pBmp,
+		cxy, cxy, WICBitmapInterpolationModeFant);
+}
+
+
 void CWndMain::ClearRes()
 {
 	for (auto& e : m_vBmpRealization)
@@ -16,6 +25,8 @@ void CWndMain::ClearRes()
 
 BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 {
+	m_WndTbGhost.SetText(pcs->lpszName);
+
 	m_ptcUiThread = eck::GetThreadCtx();
 	CBass::Init();
 	App->GetPlayer().GetSignal().Connect(this, &CWndMain::OnPlayEvent);
@@ -28,13 +39,9 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	RegisterTimeLine(this);
 
 	eck::GetThreadCtx()->UpdateDefColor();
-	if (GetPresentMode() != Dui::PresentMode::DCompositionSurface ||
-		GetPresentMode() != Dui::PresentMode::DCompositionVisual)
-	{
-		MARGINS m{};// 不能使用-1，否则会绘制标准标题栏
-		m.cxLeftWidth = (1 << 20);
-		DwmExtendFrameIntoClientArea(hWnd, &m);
-	}
+	MARGINS m{};// 不能使用-1，否则会绘制标准标题栏
+	m.cxLeftWidth = 65536 * 4;
+	DwmExtendFrameIntoClientArea(hWnd, &m);
 	eck::EnableWindowMica(hWnd);
 
 	BlurInit();
@@ -166,7 +173,7 @@ void CWndMain::ShowPage(Page ePage, BOOL bAnimate)
 			m_pecPage->SetAnProc(eck::Easing::OutExpo);
 			m_pecPage->SetCallBack([](float fCurrValue, float fOldValue, LPARAM lParam)
 				{
-					auto p = (CWndMain*)lParam;
+					const auto p = (CWndMain*)lParam;
 					const auto x = p->m_pAnPage->GetRect().left;
 					constexpr int yNormal = CyPageTitle + DTopPageTitle + CxPageIntPadding;
 					if (p->m_bPageAnUpToDown)
@@ -208,10 +215,14 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		m_TBProgress.SetTrackPos(0.f);
 		m_TBProgress.InvalidateRect();
 		m_PlayPanel.InvalidateRect();
+		m_WndTbGhost.InvalidateThumbnailCache();
+		m_WndTbGhost.SetIconicThumbnail();
 		[[fallthrough]];
 	case PlayEvt::Resume:
 		SetTimer(HWnd, IDT_COMM_TICK, TE_COMM_TICK, nullptr);
 		m_BTPlay.SetImage(RealizeImg(GImg::Pause));
+		m_BTPlay.InvalidateRect();
+		TblUpdatePalyPauseButtonIcon(FALSE);
 		break;
 	case PlayEvt::Stop:
 		m_TBProgress.SetTrackPos(0.f);
@@ -220,6 +231,8 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	case PlayEvt::Pause:
 		KillTimer(HWnd, IDT_COMM_TICK);
 		m_BTPlay.SetImage(RealizeImg(GImg::Triangle));
+		m_BTPlay.InvalidateRect();
+		TblUpdatePalyPauseButtonIcon(TRUE);
 		break;
 	}
 }
@@ -286,6 +299,11 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 
+	case WM_COMMAND:
+		if (TblOnCommand(wParam))
+			return 0;
+		break;
+
 	case WM_CREATE:
 		__super::OnMsg(hWnd, uMsg, wParam, lParam);
 		return HANDLE_WM_CREATE(hWnd, wParam, lParam, OnCreate);
@@ -312,6 +330,14 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DWMCOLORIZATIONCOLORCHANGED:
 		StUpdateColorizationColor();
 		break;
+	case WM_SETTEXT:
+	{
+		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
+		if (lResult)
+			m_WndTbGhost.SetText((PCWSTR)lParam);
+		return lResult;
+	}
+	break;
 	}
 	return __super::OnMsg(hWnd, uMsg, wParam, lParam);
 }
@@ -563,4 +589,123 @@ void CWndMain::OnCoverUpdate()
 		m_pCompPlayPageAn->SetOverlayBitmap(pBmp);
 		m_PlayPanel.m_Cover.SetBitmap(pBmp);
 	}
+}
+
+HRESULT CWndMain::TblCreateGhostWindow()
+{
+	m_WndTbGhost.Create(nullptr, WS_OVERLAPPEDWINDOW,
+		WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+		-32000, -32000, 0, 0, nullptr, nullptr);
+	return S_OK;
+}
+
+HRESULT CWndMain::TblSetup()
+{
+	m_pTaskbarList->UnregisterTab(m_WndTbGhost.HWnd);
+	m_pTaskbarList->RegisterTab(m_WndTbGhost.HWnd, HWnd);
+#pragma warning(suppress: 6387)// 可能为NULL
+	m_pTaskbarList->SetTabOrder(m_WndTbGhost.HWnd, nullptr);
+
+	HICON hiPrev, hiNext;
+	IWICBitmap* pBmp;
+	ScaleImageForButton(GImg::PrevSolid, GetDpiValue(), pBmp);
+	hiPrev = eck::CreateHICON(pBmp);
+	pBmp->Release();
+	ScaleImageForButton(GImg::TriangleSolid, GetDpiValue(), pBmp);
+	m_hiTbPlay.reset(eck::CreateHICON(pBmp));
+	pBmp->Release();
+	ScaleImageForButton(GImg::PauseSolid, GetDpiValue(), pBmp);
+	m_hiTbPause.reset(eck::CreateHICON(pBmp));
+	pBmp->Release();
+	ScaleImageForButton(GImg::NextSolid, GetDpiValue(), pBmp);
+	hiNext = eck::CreateHICON(pBmp);
+	pBmp->Release();
+
+	THUMBBUTTON tb[3]{};
+	constexpr auto dwMask = THB_ICON | THB_TOOLTIP;
+	tb[0].dwMask = dwMask;
+	tb[0].hIcon = hiPrev;
+	tb[0].iId = IDTBB_PREV;
+	eck::TcsCopyLen(tb[0].szTip, EckArrAndLen(L"上一曲"));
+
+	tb[1].dwMask = dwMask;
+	tb[1].hIcon = m_hiTbPlay.get();
+	tb[1].iId = IDTBB_PLAY;
+	eck::TcsCopyLen(tb[1].szTip, EckArrAndLen(L"播放"));
+
+	tb[2].dwMask = dwMask;
+	tb[2].hIcon = hiNext;
+	tb[2].iId = IDTBB_NEXT;
+	eck::TcsCopyLen(tb[2].szTip, EckArrAndLen(L"下一曲"));
+
+	const auto hr = m_pTaskbarList->ThumbBarAddButtons(
+		m_WndTbGhost.HWnd, ARRAYSIZE(tb), tb);
+	DestroyIcon(hiNext);
+	DestroyIcon(hiPrev);
+	return S_OK;
+}
+
+HRESULT CWndMain::TblUpdateToolBarIcon()
+{
+	HICON hiPrev, hiNext;
+	IWICBitmap* pBmp;
+	ScaleImageForButton(GImg::PrevSolid, GetDpiValue(), pBmp);
+	hiPrev = eck::CreateHICON(pBmp);
+	pBmp->Release();
+	ScaleImageForButton(GImg::TriangleSolid, GetDpiValue(), pBmp);
+	m_hiTbPlay.reset(eck::CreateHICON(pBmp));
+	pBmp->Release();
+	ScaleImageForButton(GImg::PauseSolid, GetDpiValue(), pBmp);
+	m_hiTbPause.reset(eck::CreateHICON(pBmp));
+	pBmp->Release();
+	ScaleImageForButton(GImg::NextSolid, GetDpiValue(), pBmp);
+	hiNext = eck::CreateHICON(pBmp);
+	pBmp->Release();
+
+	THUMBBUTTON tb[3]{};
+	constexpr auto dwMask = THB_ICON;
+	tb[0].dwMask = dwMask;
+	tb[0].hIcon = hiPrev;
+	tb[0].iId = IDTBB_PREV;
+
+	tb[1].dwMask = dwMask;
+	tb[1].hIcon = m_hiTbPlay.get();
+	tb[1].iId = IDTBB_PLAY;
+
+	tb[2].dwMask = dwMask;
+	tb[2].hIcon = hiNext;
+	tb[2].iId = IDTBB_NEXT;
+
+	m_pTaskbarList->ThumbBarUpdateButtons(m_WndTbGhost.HWnd, ARRAYSIZE(tb), tb);
+	DestroyIcon(hiNext);
+	DestroyIcon(hiPrev);
+	return S_OK;
+}
+
+BOOL CWndMain::TblOnCommand(WPARAM wParam)
+{
+	if (HIWORD(wParam) != THBN_CLICKED)
+		return FALSE;
+	switch (LOWORD(wParam))
+	{
+	case IDTBB_NEXT:
+		App->GetPlayer().Next();
+		return TRUE;
+	case IDTBB_PLAY:
+		App->GetPlayer().PlayOrPause();
+		return TRUE;
+	case IDTBB_PREV:
+		App->GetPlayer().Prev();
+		return TRUE;
+	}
+	return FALSE;
+}
+
+HRESULT CWndMain::TblUpdatePalyPauseButtonIcon(BOOL bPlay)
+{
+	THUMBBUTTON tb{};
+	tb.dwMask = THB_ICON;
+	tb.iId = IDTBB_PLAY;
+	tb.hIcon = bPlay ? m_hiTbPlay.get() : m_hiTbPause.get();
+	return m_pTaskbarList->ThumbBarUpdateButtons(m_WndTbGhost.HWnd, 1, &tb);
 }

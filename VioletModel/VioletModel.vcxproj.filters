@@ -108,6 +108,9 @@
     <ClInclude Include="CPlayListFile.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CWndTbGhost.h">
+      <Filter>窗口</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Entry.cpp">
@@ -175,6 +178,9 @@
     </ClCompile>
     <ClCompile Include="CPlayListFile.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CWndTbGhost.cpp">
+      <Filter>窗口</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

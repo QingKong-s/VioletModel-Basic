@@ -54,6 +54,10 @@ enum class GImg
 	ArrowRight1,
 	Lrc,
 	Pause,
+	NextSolid,
+	PrevSolid,
+	PauseSolid,
+	TriangleSolid,
 
 	Max
 };
@@ -111,6 +115,10 @@ constexpr inline PCWSTR ImgFile[]
 	LR"(ArrowRight1.png)",
 	LR"(Lrc.png)",
 	LR"(Pause.png)",
+	LR"(NextSolid.png)",
+	LR"(PrevSolid.png)",
+	LR"(PauseSolid.png)",
+	LR"(TriangleSolid.png)",
 };
 
 static_assert(ARRAYSIZE(ImgFile) == (size_t)GImg::Max, "ImgFile size error.");

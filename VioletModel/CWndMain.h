@@ -9,11 +9,13 @@
 #include "CTabPanel.h"
 #include "CPlayPanel.h"
 #include "CCompPlayPageAn.h"
+#include "CWndTbGhost.h"
 
 class CWndMain final :
 	public Dui::CDuiWnd,
 	public eck::CFixedTimeLine
 {
+	friend class CWndTbGhost;
 public:
 	enum class Page : BYTE
 	{
@@ -29,6 +31,13 @@ public:
 		// 使用普通窗口定时器驱动进度和歌词轮询即可
 		IDT_COMM_TICK = 0x514B,
 		TE_COMM_TICK = 300,
+	};
+
+	enum
+	{
+		IDTBB_PREV = 10001,
+		IDTBB_PLAY,
+		IDTBB_NEXT
 	};
 
 	constexpr static double ProgBarScale = 100.;
@@ -84,6 +93,12 @@ private:
 	Dui::CCompositorPageAn* m_pCompNormalPageAn{};
 
 	eck::THREADCTX* m_ptcUiThread{};
+
+	eck::UniquePtr<eck::DelHIcon>
+		m_hiTbPlay{},
+		m_hiTbPause{};
+	ComPtr<ITaskbarList4> m_pTaskbarList{};
+	CWndTbGhost m_WndTbGhost{ *this };
 private:
 	void ClearRes();
 
@@ -102,8 +117,40 @@ private:
 	void RePosButtonProgBar();
 
 	void OnCoverUpdate();
+
+	HRESULT TblCreateGhostWindow();
+
+	HRESULT TblSetup();
+
+	HRESULT TblUpdateToolBarIcon();
+
+	HRESULT TblCreateObjectAndInit()
+	{
+		if (m_pTaskbarList.Get())
+			return S_FALSE;
+		m_pTaskbarList.CreateInstance(CLSID_TaskbarList);
+		return m_pTaskbarList->HrInit();
+	}
+
+	BOOL TblOnCommand(WPARAM wParam);
+
+	HRESULT TblUpdatePalyPauseButtonIcon(BOOL bPlay);
 public:
 	~CWndMain();
+
+	HWND Create(PCWSTR pszText, DWORD dwStyle, DWORD dwExStyle,
+		int x, int y, int cx, int cy, HWND hParent, HMENU hMenu, PCVOID pData = nullptr) override
+	{
+		TblCreateGhostWindow();
+
+		const auto hWnd = __super::Create(pszText, dwStyle, dwExStyle,
+			x, y, cx, cy, hParent, hMenu, pData);
+
+		TblCreateObjectAndInit();
+		TblSetup();
+		m_WndTbGhost.SetIconicThumbnail();
+		return hWnd;
+	}
 
 	LRESULT OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
