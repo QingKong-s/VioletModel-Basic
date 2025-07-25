@@ -104,6 +104,7 @@ private:
 	WinMedia::SystemMediaTransportControls m_Smtc{ nullptr };
 	eck::CoroTask<> m_TskSmtcUpdateDisplay{};
 	WinMedia::SystemMediaTransportControlsTimelineProperties m_SmtcTimeline{};
+	ULONGLONG m_ullSmtcTimeLineLastUpdate{};
 #endif
 private:
 	void ClearRes();
@@ -125,21 +126,10 @@ private:
 	void OnCoverUpdate();
 
 	HRESULT TblCreateGhostWindow();
-
 	HRESULT TblSetup();
-
 	HRESULT TblUpdateToolBarIcon();
-
-	HRESULT TblCreateObjectAndInit()
-	{
-		if (m_pTaskbarList.Get())
-			return S_FALSE;
-		m_pTaskbarList.CreateInstance(CLSID_TaskbarList);
-		return m_pTaskbarList->HrInit();
-	}
-
+	HRESULT TblCreateObjectAndInit();
 	BOOL TblOnCommand(WPARAM wParam);
-
 	HRESULT TblUpdatePalyPauseButtonIcon(BOOL bPlay);
 
 	HRESULT SmtcInit() noexcept;
@@ -147,7 +137,6 @@ private:
 	eck::CoroTask<> SmtcCoroUpdateDisplay();
 #endif
 	HRESULT SmtcUpdateDisplay() noexcept;
-
 	HRESULT SmtcUpdateTimeLineRange() noexcept;
 	HRESULT SmtcUpdateTimeLinePosition() noexcept;
 public:

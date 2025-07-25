@@ -225,6 +225,7 @@
     <ClCompile Include="CMediaLib.cpp" />
     <ClCompile Include="CPlayListFile.cpp" />
     <ClCompile Include="CPlayListMgr.cpp" />
+    <ClCompile Include="CWndMain_Shell.cpp" />
     <ClCompile Include="CWndTbGhost.cpp" />
     <ClCompile Include="CVeMiniCover.cpp" />
     <ClCompile Include="CPage.cpp" />

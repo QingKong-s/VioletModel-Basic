@@ -182,6 +182,9 @@
     <ClCompile Include="CWndTbGhost.cpp">
       <Filter>窗口</Filter>
     </ClCompile>
+    <ClCompile Include="CWndMain_Shell.cpp">
+      <Filter>窗口</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
