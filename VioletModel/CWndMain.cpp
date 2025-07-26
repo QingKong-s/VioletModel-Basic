@@ -227,6 +227,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		m_BTPlay.SetImage(RealizeImg(GImg::Pause));
 		m_BTPlay.InvalidateRect();
 		TblUpdatePalyPauseButtonIcon(FALSE);
+		SmtcUpdateState();
 	}
 	break;
 	case PlayEvt::Stop:
@@ -241,6 +242,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		m_BTPlay.SetImage(RealizeImg(GImg::Triangle));
 		m_BTPlay.InvalidateRect();
 		TblUpdatePalyPauseButtonIcon(TRUE);
+		SmtcUpdateState();
 	}
 	break;
 	}
