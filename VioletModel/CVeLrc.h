@@ -1,58 +1,35 @@
 ﻿#pragma once
 class CVeLrc : public Dui::CElem
 {
+public:
+	enum : size_t
+	{
+		CriNormal,
+		CriHiLight,
+		CriMax
+	};
 private:
 	struct ITEM
 	{
 		// 不要修改前两个字段的位置
-		IDWriteTextLayout* pLayout{};
-		IDWriteTextLayout* pLayoutTrans{};
-		ID2D1GeometryRealization* pGr{};
+		ComPtr<IDWriteTextLayout> pLayout{};
+		ComPtr<IDWriteTextLayout> pLayoutTrans{};
+		ComPtr<ID2D1GeometryRealization> pGr{};
 		float x{};
 		float y{};
 		float cy{};
 		float cx{};
 
 		float cxTrans{};
-		BITBOOL bSel : 1 {};
+		BITBOOL bSel : 1{};
 		BITBOOL bCacheValid : 1{};
 
-		ITEM() = default;
-		ITEM(const ITEM& x) = delete;
-		ITEM& operator=(const ITEM& x) = delete;
-		ITEM(ITEM&& x) noexcept
-		{
-			memcpy(this, &x, sizeof(*this));
-			x.pLayout = nullptr;
-			x.pLayoutTrans = nullptr;
-			x.pGr = nullptr;
-		}
-		ITEM& operator=(ITEM&& x) noexcept
-		{
-			if (&x == this)
-				return *this;
-			memcpy(this, &x, sizeof(*this));
-			x.pLayout = nullptr;
-			x.pLayoutTrans = nullptr;
-			x.pGr = nullptr;
-			return *this;
-		}
-		~ITEM()
-		{
-			if (pLayout)
-				pLayout->Release();
-			if (pLayoutTrans)
-				pLayoutTrans->Release();
-			if (pGr)
-				pGr->Release();
-		}
 	};
-private:
+
 	ID2D1DeviceContext1* m_pDC1{};
 	ID2D1SolidColorBrush* m_pBrush{};
 	ID2D1GeometryRealization* m_pGrEmptyText{};
 
-	IDWriteTextFormat* m_pTextFormat{};
 	IDWriteTextFormat* m_pTextFormatTrans{};
 
 	Dui::CScrollBar m_SB{};
@@ -75,6 +52,8 @@ private:
 
 	float m_fPlayingItemScale{ 1.2f };
 	eck::Align m_eAlignH{ eck::Align::Near };
+
+	D2D1_COLOR_F m_Color[CriMax]{};
 
 
 	static void ScrollProc(int iPos, int iPrevPos, LPARAM lParam);
@@ -110,4 +89,21 @@ public:
 	HRESULT LrcTick(int idxCurr);
 
 	HRESULT LrcInit(std::shared_ptr<std::vector<eck::LRCINFO>> pvLrc);
+
+	void LrcClear();
+
+	void SetTextFormatTrans(IDWriteTextFormat* pTf);
+
+	EckInlineCe void SetColor(size_t idx, const D2D1_COLOR_F& cr)
+	{
+		if (idx >= CriMax)
+			return;
+		m_Color[idx] = cr;
+	}
+
+	EckInlineCe void SetColor(_In_reads_(CriMax) const D2D1_COLOR_F* pcr)
+	{
+		for (size_t i = 0; i < CriMax; ++i)
+			m_Color[i] = pcr[i];
+	}
 };

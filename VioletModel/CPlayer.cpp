@@ -9,6 +9,7 @@ void CPlayer::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	case PlayEvt::CommTick:
 	{
 		m_lfCurrTime = m_Bass.GetPosition();
+		LrcUpdatePosition();
 	}
 	break;
 	}
@@ -56,7 +57,7 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 				m_pBmpCover, std::get<1>(pPic->varPic).Data());
 		else
 		{
-			auto pStream = new eck::CStreamView(std::get<0>(pPic->varPic));
+			const auto pStream = new eck::CStreamView{ std::get<0>(pPic->varPic) };
 			m_dwLastHrOrBassErr = eck::CreateWicBitmap(m_pBmpCover, pStream);
 			pStream->Release();
 		}
@@ -68,6 +69,21 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 		m_pBmpCover = App->GetImg(GImg::DefaultCover);
 		m_pBmpCover->AddRef();
 	}
+
+	m_pvLrc = std::make_shared<std::vector<eck::LRCINFO>>();
+	m_pvLrcLabel = std::make_shared<std::vector<eck::LRCLABEL>>();
+
+	auto rsLrcPath{ e.rsFile };
+	rsLrcPath.PazRenameExtension(EckStrAndLen(L".lrc"));
+	eck::ParseLrc(rsLrcPath.Data(), 0u, *m_pvLrc, *m_pvLrcLabel,
+		eck::LrcEncoding::Auto, (float)m_lfTotalTime);
+	if (!m_pvLrc->size())
+	{
+		eck::ParseLrc(m_MusicInfo.rsLrc.Data(), m_MusicInfo.rsLrc.ByteSize(),
+			*m_pvLrc, *m_pvLrcLabel,
+			eck::LrcEncoding::UTF16LE, (float)m_Bass.GetLength());
+	}
+
 	GetSignal().Emit({ PlayEvt::Play });
 	return PlayErr::Ok;
 }
@@ -127,6 +143,7 @@ PlayErr CPlayer::Stop(BOOL bNoGap)
 	m_Bass.Close();
 	if (!bNoGap)
 	{
+		m_idxCurrLrc = m_idxLastLrc = -1;
 		m_bActive = FALSE;
 		m_Sig.Emit({ PlayEvt::Stop });
 		if (GetList()->IsGroupEnabled())
@@ -213,4 +230,48 @@ void CPlayer::SetPosition(double lfPos)
 {
 	m_Bass.SetPosition(lfPos);
 	m_lfCurrTime = m_Bass.GetPosition();
+}
+
+BOOL CPlayer::LrcUpdatePosition()
+{
+	if (!m_pvLrc || m_pvLrc->empty())
+		return FALSE;
+	const auto fPos = (float)m_lfCurrTime;
+	const auto& vLrc = *m_pvLrc;
+	const auto cLrc = (int)vLrc.size();
+	//	FIXME FIXME
+	//if (m_idxCurrLrc >= 0)
+	//{
+	//	if (m_idxCurrLrc + 1 < cLrc)
+	//	{
+	//		if (fPos >= vLrc[m_idxCurrLrc].fTime &&
+	//			fPos < vLrc[m_idxCurrLrc + 1].fTime)
+	//		{
+	//			++m_idxCurrLrc;
+	//			m_idxLastLrc = m_idxCurrLrc;
+	//			return TRUE;
+	//		}
+	//	}
+	//	else if (fPos >= vLrc[m_idxCurrLrc].fTime)
+	//		return FALSE;
+	//}
+	const auto it = std::lower_bound(vLrc.begin(), vLrc.end(), fPos,
+		[](const eck::LRCINFO& Item, float fPos)->bool
+		{
+			return Item.fTime < fPos;
+		});
+	if (it == vLrc.end())
+		m_idxCurrLrc = (int)vLrc.size() - 1;
+	else if (it == vLrc.begin())
+		m_idxCurrLrc = -1;
+	else
+		m_idxCurrLrc = (int)std::distance(vLrc.begin(), it - 1);
+	EckAssert(m_idxCurrLrc >= -1 && m_idxCurrLrc < (int)vLrc.size());
+
+	if (m_idxCurrLrc != m_idxLastLrc)
+	{
+		m_idxLastLrc = m_idxCurrLrc;
+		return TRUE;
+	}
+	return FALSE;
 }

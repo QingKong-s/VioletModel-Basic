@@ -38,6 +38,10 @@ private:
 	CPlayList* m_pPlayList{};
 
 	Tag::MUSICINFO m_MusicInfo{};
+	std::shared_ptr<std::vector<eck::LRCINFO>> m_pvLrc{};
+	std::shared_ptr<std::vector<eck::LRCLABEL>> m_pvLrcLabel{};
+	int m_idxCurrLrc = -1;
+	int m_idxLastLrc = -1;
 
 	double m_lfCurrTime{};// 秒
 	double m_lfTotalTime{};// 秒
@@ -49,6 +53,9 @@ private:
 	PlayErr PlayWorker(CPlayList::ITEM& e);
 
 	void OnPlayEvent(const PLAY_EVT_PARAM& e);
+
+	BOOL LrcUpdatePosition();
+
 public:
 	CPlayer()
 	{
@@ -102,4 +109,6 @@ public:
 	EckInlineNdCe auto& GetMusicInfo() const noexcept { return m_MusicInfo; }
 	EckInlineNdCe DWORD GetLastHrOrBassErr() const noexcept { return m_dwLastHrOrBassErr; }
 	EckInlineNdCe BOOL IsPaused() const noexcept { return m_bPaused; }
+	EckInlineNdCe int GetCurrLrcIdx() const noexcept { return m_idxCurrLrc; }
+	EckInlineNd auto GetLrc() const noexcept { return m_pvLrc; }
 };

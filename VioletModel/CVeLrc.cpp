@@ -1,6 +1,5 @@
 ﻿#include "pch.h"
 #include "CVeLrc.h"
-#include "CApp.h"
 
 enum
 {
@@ -29,6 +28,15 @@ template <class FwdIt, class Ty, class Pr>
 	return UFirst;
 }
 
+static constexpr D2D1_COLOR_F InterpolateColor(const D2D1_COLOR_F& c1, const D2D1_COLOR_F& c2, float k)
+{
+	return {
+		c1.r + (c2.r - c1.r) * k,
+		c1.g + (c2.g - c1.g) * k,
+		c1.b + (c2.b - c1.b) * k,
+		c1.a + (c2.a - c1.a) * k };
+}
+
 void CVeLrc::ScrollProc(int iPos, int iPrevPos, LPARAM lParam)
 {
 	const auto p = (CVeLrc*)lParam;
@@ -48,22 +56,18 @@ void CVeLrc::ScrollProc(int iPos, int iPrevPos, LPARAM lParam)
 
 void CVeLrc::FillItemBkg(int idx, const D2D1_RECT_F& rc)
 {
-	D2D1_COLOR_F cr;
+	Dui::State eState;
 	if (m_vItem[idx].bSel)
 		if (idx == m_idxHot)
-			GetTheme()->GetColor(Dui::Part::ListItem, Dui::State::HotSelected,
-				eck::ClrPart::Bk, cr);
+			eState = Dui::State::HotSelected;
 		else
-			GetTheme()->GetColor(Dui::Part::ListItem, Dui::State::Selected,
-				eck::ClrPart::Bk, cr);
+			eState = Dui::State::Selected;
 	else
 		if (idx == m_idxHot)
-			GetTheme()->GetColor(Dui::Part::ListItem, Dui::State::Selected,
-				eck::ClrPart::Bk, cr);
+			eState = Dui::State::Hot;
 		else
 			return;
-	m_pBrush->SetColor(cr);
-	m_pDC->FillRectangle(rc, m_pBrush);
+	GetTheme()->DrawBackground(Dui::Part::ListItem, eState, rc, nullptr);
 }
 
 void CVeLrc::CalcTopItem()
@@ -117,7 +121,7 @@ BOOL CVeLrc::DrawItem(int idx, float& y)
 		break;
 	}
 
-	D2D1_MATRIX_3X2_F mat = mat0 * D2D1::Matrix3x2F::Translation(0, y);
+	D2D1_MATRIX_3X2_F mat = D2D1::Matrix3x2F::Translation(0, y) * mat0;
 
 	if (!Item.bCacheValid)
 	{
@@ -148,7 +152,7 @@ BOOL CVeLrc::DrawItem(int idx, float& y)
 				D2D1::Matrix3x2F::Identity(), xDpi, yDpi, m_fPlayingItemScale),
 			&pGr);
 
-		if (Item.pGr)
+		if (Item.pGr.Get())
 			Item.pGr->Release();
 		Item.pGr = pGr;
 		pPathGeometry->Release();
@@ -163,7 +167,9 @@ BOOL CVeLrc::DrawItem(int idx, float& y)
 			ptScale) * mat);
 		if (Item.bSel || idx == m_idxHot)
 			FillItemBkg(idx, rc);
-		m_pDC1->DrawGeometryRealization(Item.pGr, m_pBrush);
+		m_pBrush->SetColor(
+			InterpolateColor(m_Color[CriNormal], m_Color[CriHiLight], 1.f - m_fAnValue));
+		m_pDC1->DrawGeometryRealization(Item.pGr.Get(), m_pBrush);
 		m_pDC->SetTransform(mat0);
 		return TRUE;
 	}
@@ -176,14 +182,17 @@ BOOL CVeLrc::DrawItem(int idx, float& y)
 			ptScale) * mat);
 		if (Item.bSel || idx == m_idxHot)
 			FillItemBkg(idx, rc);
-		m_pDC1->DrawGeometryRealization(Item.pGr, m_pBrush);
+		m_pBrush->SetColor(
+			InterpolateColor(m_Color[CriNormal], m_Color[CriHiLight], m_fAnValue));
+		m_pDC1->DrawGeometryRealization(Item.pGr.Get(), m_pBrush);
 		m_pDC->SetTransform(mat0);
 		return TRUE;
 	}
 
 	m_pDC->SetTransform(mat);
 	FillItemBkg(idx, rc);
-	m_pDC1->DrawGeometryRealization(Item.pGr, m_pBrush);
+	m_pBrush->SetColor(m_Color[m_idxPrevCurr == idx ? CriHiLight : CriNormal]);
+	m_pDC1->DrawGeometryRealization(Item.pGr.Get(), m_pBrush);
 	m_pDC->SetTransform(mat0);
 	return TRUE;
 }
@@ -361,7 +370,6 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		ClientToElem(pt);
 
 		int idx = HitTest(pt);
-		SetRedraw(FALSE);
 		if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
 		{
 			if (idx >= 0)
@@ -370,10 +378,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		else if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
 		{
 			if (m_idxMark < 0 || idx < 0)
-			{
-				SetRedraw(TRUE);
 				break;
-			}
 			const int idx0 = std::min(m_idxMark, idx);
 			const int idx1 = std::max(m_idxMark, idx);
 			int i = 0;
@@ -401,7 +406,6 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					InvalidateItem(i);
 				}
 			}
-			SetRedraw(TRUE);
 			break;
 		}
 		else
@@ -424,7 +428,6 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_vItem[idx].bSel = TRUE;
 				InvalidateItem(idx);
 			}
-		SetRedraw(TRUE);
 	}
 	return 0;
 
@@ -532,7 +535,6 @@ HRESULT CVeLrc::UpdateEmptyText(std::wstring_view svEmptyText)
 	HRESULT hr;
 	SafeRelease(m_pGrEmptyText);
 
-	auto& Player = App->GetPlayer();
 	ComPtr<IDWriteTextLayout> pLayout;
 	hr = eck::g_pDwFactory->CreateTextLayout(svEmptyText.data(),
 		(UINT32)svEmptyText.size(), m_pTextFormat,
@@ -558,6 +560,7 @@ HRESULT CVeLrc::LrcTick(int idxCurr)
 {
 	if (m_idxPrevCurr == idxCurr)
 		return S_FALSE;
+	EckDbgPrint(idxCurr);
 	ECK_DUILOCK;
 	const int idxPrev = m_idxPrevCurr;
 	m_idxPrevCurr = idxCurr;
@@ -595,6 +598,33 @@ HRESULT CVeLrc::LrcInit(std::shared_ptr<std::vector<eck::LRCINFO>> pvLrc)
 	return S_OK;
 }
 
+void CVeLrc::LrcClear()
+{
+	ECK_DUILOCK;
+	m_pvLrc.reset();
+	m_vItem.clear();
+	m_idxTop = -1;
+	m_idxHot = -1;
+	m_idxMark = -1;
+	m_idxPrevCurr = -1;
+	m_idxPrevAnItem = -1;
+	m_idxCurrAnItem = -1;
+	m_fAnValue = 1.f;
+	m_bEnlarging = FALSE;
+	InvalidateRect();
+}
+
+void CVeLrc::SetTextFormatTrans(IDWriteTextFormat* pTf)
+{
+	ECK_DUILOCK;
+	std::swap(m_pTextFormatTrans, pTf);
+	if (m_pTextFormatTrans)
+		m_pTextFormatTrans->AddRef();
+	if (pTf)
+		pTf->Release();
+	CallEvent(WM_SETFONT, 0, 0);
+}
+
 void CVeLrc::ScrollToCurrPos()
 {
 	if (m_idxPrevCurr != m_idxCurrAnItem && m_idxCurrAnItem >= 0)
@@ -613,13 +643,13 @@ void CVeLrc::ScrollToCurrPos()
 
 void CVeLrc::LayoutItems()
 {
-	auto& Player = App->GetPlayer();
-	const auto& vLrc = *m_pvLrc;
-	const float cx = GetWidthF(), cy = GetHeightF();
-
 	m_vItem.clear();
-	if (cx <= 0.f || cy <= 0.f || vLrc.empty())
+	if (!m_pvLrc || m_pvLrc->empty())
 		return;
+	const float cx = GetWidthF(), cy = GetHeightF();
+	if (cx <= 0.f || cy <= 0.f)
+		return;
+	const auto& vLrc = *m_pvLrc;
 
 	constexpr auto cyMainTransPadding = 5.f;
 

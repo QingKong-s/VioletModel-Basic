@@ -207,7 +207,6 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	break;
 	case PlayEvt::Play:
 	{
-		m_PagePlaying.UpdateBlurredCover();
 		OnCoverUpdate();
 		SmtcUpdateTimeLineRange();
 		SmtcUpdateDisplay();
