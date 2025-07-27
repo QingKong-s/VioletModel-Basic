@@ -51,6 +51,8 @@ void CVeLrc::ScrollProc(int iPos, int iPrevPos, LPARAM lParam)
 			(float)p->m_psv->GetCurrTickInterval());
 
 	p->CalcTopItem();
+	EckDbgPrint(p->m_idxTop);
+
 	p->InvalidateRect();
 }
 
@@ -77,18 +79,8 @@ void CVeLrc::CalcTopItem()
 		m_idxTop = 0;
 		return;
 	}
-	auto it = LowerBound(m_vItem.begin(), m_vItem.end(), m_psv->GetPos(),
-		[this](decltype(m_vItem)::iterator it, int iPos)
-		{
-			const auto& e = *it;
-			float y = e.y;
-			const int idx = (int)std::distance(m_vItem.begin(), it);
-			if (idx > m_idxPrevAnItem && m_idxPrevAnItem >= 0)
-				y += (m_vItem[m_idxPrevAnItem].cy * (m_fPlayingItemScale - m_fAnValue));
-			if (idx > m_idxCurrAnItem && m_idxCurrAnItem >= 0)
-				y += (m_vItem[m_idxCurrAnItem].cy * (m_fAnValue - 1.f));
-			return y < iPos;
-		});
+	auto it = std::lower_bound(m_vItem.begin(), m_vItem.end(), (float)m_psv->GetPos(),
+		[](const ITEM& r, float f) { return r.y < f; });
 	EckAssert(it != m_vItem.end());
 
 	if (it == m_vItem.begin())
@@ -104,13 +96,15 @@ BOOL CVeLrc::DrawItem(int idx, float& y)
 {
 	EckAssert(idx >= 0 && idx < (int)m_vItem.size());
 	auto& Item = m_vItem[idx];
-	y = GetItemY(idx);
-	const D2D1_RECT_F rc{ Item.x,0,Item.x + Item.cx,Item.cy };
+	D2D1_RECT_F rc;
+	GetItemRect(idx, rc);
+	y = rc.top;
 
-	D2D1_MATRIX_3X2_F mat0;
-	m_pDC->GetTransform(&mat0);
+	D2D1_MATRIX_3X2_F Mat0;
+	m_pDC->GetTransform(&Mat0);
 
 	D2D1_POINT_2F ptScale{};
+	ptScale.y = Item.cy / 2.f - m_cxyLineMargin;
 	switch (m_eAlignH)
 	{
 	case eck::Align::Center:
@@ -121,7 +115,10 @@ BOOL CVeLrc::DrawItem(int idx, float& y)
 		break;
 	}
 
-	D2D1_MATRIX_3X2_F mat = D2D1::Matrix3x2F::Translation(0, y) * mat0;
+	D2D1_MATRIX_3X2_F Mat{ Mat0 };
+	const auto cyExtra = (Item.cy - m_cxyLineMargin * 2.f) *
+		(m_fPlayingItemScale - 1.f) / 2.f;
+	Mat.dy += (y + m_cxyLineMargin + cyExtra);
 
 	if (!Item.bCacheValid)
 	{
@@ -140,60 +137,41 @@ BOOL CVeLrc::DrawItem(int idx, float& y)
 			break;
 		}
 
-		ID2D1PathGeometry* pPathGeometry;
-		eck::GetTextLayoutPathGeometry(&Item.pLayout, 2, cyPadding, m_pDC, x, 0.f, pPathGeometry);
+		ComPtr<ID2D1PathGeometry> pPathGeometry;
+		eck::GetTextLayoutPathGeometry(&Item.pLayout, 2, cyPadding,
+			m_pDC, x, 0.f, pPathGeometry.RefOf());
 		float xDpi, yDpi;
 		m_pDC->GetDpi(&xDpi, &yDpi);
-
-		ID2D1GeometryRealization* pGr = nullptr;
 		m_pDC1->CreateFilledGeometryRealization(
-			pPathGeometry,
+			pPathGeometry.Get(),
 			D2D1::ComputeFlatteningTolerance(
 				D2D1::Matrix3x2F::Identity(), xDpi, yDpi, m_fPlayingItemScale),
-			&pGr);
-
-		if (Item.pGr.Get())
-			Item.pGr->Release();
-		Item.pGr = pGr;
-		pPathGeometry->Release();
+			Item.pGr.AddrOfClear());
 		Item.bCacheValid = TRUE;
 	}
 
+	FillItemBkg(idx, rc);
 	if (idx == m_idxPrevAnItem)
 	{
-		m_pDC->SetTransform(D2D1::Matrix3x2F::Scale(
-			m_fPlayingItemScale + 1.f - m_fAnValue,
-			m_fPlayingItemScale + 1.f - m_fAnValue,
-			ptScale) * mat);
-		if (Item.bSel || idx == m_idxHot)
-			FillItemBkg(idx, rc);
-		m_pBrush->SetColor(
-			InterpolateColor(m_Color[CriNormal], m_Color[CriHiLight], 1.f - m_fAnValue));
-		m_pDC1->DrawGeometryRealization(Item.pGr.Get(), m_pBrush);
-		m_pDC->SetTransform(mat0);
-		return TRUE;
+		const auto k = m_fPlayingItemScale + 1.f - m_fAnValue;
+		m_pDC->SetTransform(D2D1::Matrix3x2F::Scale(k, k, ptScale) * Mat);
+		m_pBrush->SetColor(InterpolateColor(
+			m_Color[CriNormal], m_Color[CriHiLight], 1.f - m_fAnValue));
 	}
-
-	if (idx == m_idxCurrAnItem)
+	else if (idx == m_idxCurrAnItem)
 	{
-		m_pDC->SetTransform(D2D1::Matrix3x2F::Scale(
-			m_fAnValue,
-			m_fAnValue,
-			ptScale) * mat);
-		if (Item.bSel || idx == m_idxHot)
-			FillItemBkg(idx, rc);
-		m_pBrush->SetColor(
-			InterpolateColor(m_Color[CriNormal], m_Color[CriHiLight], m_fAnValue));
-		m_pDC1->DrawGeometryRealization(Item.pGr.Get(), m_pBrush);
-		m_pDC->SetTransform(mat0);
-		return TRUE;
+		const auto k = m_fAnValue;
+		m_pDC->SetTransform(D2D1::Matrix3x2F::Scale(k, k, ptScale) * Mat);
+		m_pBrush->SetColor(InterpolateColor(
+			m_Color[CriNormal], m_Color[CriHiLight], m_fAnValue));
 	}
-
-	m_pDC->SetTransform(mat);
-	FillItemBkg(idx, rc);
-	m_pBrush->SetColor(m_Color[m_idxPrevCurr == idx ? CriHiLight : CriNormal]);
+	else
+	{
+		m_pDC->SetTransform(Mat);
+		m_pBrush->SetColor(m_Color[m_idxPrevCurr == idx ? CriHiLight : CriNormal]);
+	}
 	m_pDC1->DrawGeometryRealization(Item.pGr.Get(), m_pBrush);
-	m_pDC->SetTransform(mat0);
+	m_pDC->SetTransform(Mat0);
 	return TRUE;
 }
 
@@ -218,67 +196,29 @@ int CVeLrc::HitTest(POINT pt)
 	return -1;
 }
 
-void CVeLrc::GetItemRect(int idx, RECT& rc)
+void CVeLrc::GetItemRect(int idx, _Out_ RECT& rc)
 {
-	auto& e = m_vItem[idx];
-	const auto y = GetItemY(idx);
+	const auto& e = m_vItem[idx];
 	rc.left = (long)e.x;
-	rc.top = (long)y;
-	if (idx == m_idxPrevAnItem)
-	{
-		const auto cx = (long)(e.cx * (m_fPlayingItemScale + 1.f - m_fAnValue));
-		switch (m_eAlignH)
-		{
-		case eck::Align::Center:
-			rc.left = (GetWidth() - cx) / 2;
-			break;
-		case eck::Align::Far:
-			rc.left = GetWidth() - cx;
-			break;
-		}
-		rc.right = rc.left + cx;
-		rc.bottom = (long)(y + e.cy * (m_fPlayingItemScale + 1.f - m_fAnValue));
-	}
-	else if (idx == m_idxCurrAnItem)
-	{
-		const auto cx = (long)(e.cx * m_fAnValue);
-		switch (m_eAlignH)
-		{
-		case eck::Align::Center:
-			rc.left = (GetWidth() - cx) / 2;
-			break;
-		case eck::Align::Far:
-			rc.left = GetWidth() - cx;
-			break;
-		}
-		rc.right = rc.left + cx;
-		rc.bottom = (long)(y + e.cy * m_fAnValue);
-	}
-	else ECKLIKELY
-	{
-		rc.right = rc.left + (long)e.cx;
-		rc.bottom = (long)(y + e.cy);
-	}
+	rc.top = (long)e.y - m_psv->GetPos();
+	rc.right = long(e.x + e.cx);
+	rc.bottom = long(rc.top + e.cy);
 }
 
-float CVeLrc::GetItemY(int idx)
+void CVeLrc::GetItemRect(int idx, _Out_ D2D1_RECT_F& rc)
 {
-	float y = m_vItem[idx].y - m_psv->GetPos();
-	if (idx > m_idxPrevAnItem && m_idxPrevAnItem >= 0)
-		y += (m_vItem[m_idxPrevAnItem].cy * (m_fPlayingItemScale - m_fAnValue));
-	if (idx > m_idxCurrAnItem && m_idxCurrAnItem >= 0)
-		y += (m_vItem[m_idxCurrAnItem].cy * (m_fAnValue - 1.f));
-	return y;
+	const auto& e = m_vItem[idx];
+	rc.left = e.x;
+	rc.top = e.y - m_psv->GetPos();
+	rc.right = e.x + e.cx;
+	rc.bottom = rc.top + e.cy;
 }
 
 void CVeLrc::InvalidateItem(int idx)
 {
-	RECT rc;
+	D2D1_RECT_F rc;
 	GetItemRect(idx, rc);
 	ElemToClient(rc);
-	rc.top -= 1;
-	rc.bottom += 1;
-	rc.right += 1;
 	InvalidateRect(rc);
 }
 
@@ -558,6 +498,8 @@ HRESULT CVeLrc::UpdateEmptyText(std::wstring_view svEmptyText)
 
 HRESULT CVeLrc::LrcTick(int idxCurr)
 {
+	if (idxCurr < 0)
+		return E_BOUNDS;
 	if (m_idxPrevCurr == idxCurr)
 		return S_FALSE;
 	EckDbgPrint(idxCurr);
@@ -571,7 +513,7 @@ HRESULT CVeLrc::LrcTick(int idxCurr)
 		m_idxCurrAnItem = m_idxPrevCurr;
 		m_AnEnlarge.Begin(1.f, m_fPlayingItemScale - 1.f, (float)m_psv->GetDuration());
 		const auto& e = m_vItem[m_idxPrevCurr < 0 ? 0 : m_idxPrevCurr];
-		const auto yDest = e.y + e.cy * m_fPlayingItemScale / 2.f;
+		const auto yDest = e.y + e.cy / 2.f;
 		m_psv->InterruptAnimation();
 		m_psv->SmoothScrollDelta(int((yDest - GetHeightF() / 3.f) - m_psv->GetPos()));
 		GetWnd()->WakeRenderThread();
@@ -635,7 +577,7 @@ void CVeLrc::ScrollToCurrPos()
 		m_AnEnlarge.Begin(1.f, m_fPlayingItemScale - 1.f, 400);
 	}
 	const auto& CurrItem = m_idxPrevCurr < 0 ? m_vItem.front() : m_vItem[m_idxPrevCurr];
-	float yDest = CurrItem.y + CurrItem.cy * m_fPlayingItemScale / 2.f;
+	float yDest = CurrItem.y + CurrItem.cy / 2.f;
 	m_psv->InterruptAnimation();
 	m_psv->SmoothScrollDelta(int((yDest - GetHeight() / 3) - m_psv->GetPos()));
 	GetWnd()->WakeRenderThread();
@@ -657,8 +599,6 @@ void CVeLrc::LayoutItems()
 	const float cxMax = cx / m_fPlayingItemScale;
 	DWRITE_TEXT_METRICS Metrics;
 	float y = 0.f;
-	const float cyPadding = 2.f;
-
 	EckCounter(vLrc.size(), i)
 	{
 		auto& e = m_vItem[i];
@@ -689,12 +629,14 @@ void CVeLrc::LayoutItems()
 			e.x = cx - e.cx;
 			break;
 		}
-
-		y += (e.cy + cyPadding);
+		e.cx *= m_fPlayingItemScale;
+		e.cy *= m_fPlayingItemScale;
+		e.cy += (m_cxyLineMargin * 2.f);
+		y += (e.cy + m_cyLinePadding);
 	}
 
 	m_psv->SetMin(int(-cy / 3.f - m_vItem.front().cy));
-	m_psv->SetMax(int(y - cyPadding + cy / 3.f * 2.f));
+	m_psv->SetMax(int(y - m_cyLinePadding + cy / 3.f * 2.f));
 	m_psv->SetPage((int)cy);
 }
 

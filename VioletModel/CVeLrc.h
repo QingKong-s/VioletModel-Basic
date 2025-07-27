@@ -50,7 +50,9 @@ private:
 
 	int m_tMouseIdle{};
 
-	float m_fPlayingItemScale{ 1.2f };
+	float m_cyLinePadding{ 8.f };		// 项目间距
+	float m_fPlayingItemScale{ 1.2f };	// 正在播放的歌词行缩放比例
+	float m_cxyLineMargin{ 10.f };		// 项目内容边距
 	eck::Align m_eAlignH{ eck::Align::Near };
 
 	D2D1_COLOR_F m_Color[CriMax]{};
@@ -68,9 +70,8 @@ private:
 
 	int HitTest(POINT pt);
 
-	void GetItemRect(int idx, RECT& rc);
-
-	float GetItemY(int idx);
+	void GetItemRect(int idx, _Out_ RECT& rc);
+	void GetItemRect(int idx, _Out_ D2D1_RECT_F& rc);
 
 	void InvalidateItem(int idx);
 

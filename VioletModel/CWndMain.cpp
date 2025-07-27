@@ -335,6 +335,13 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 	}
 	break;
+	case WM_DPICHANGED:
+	{
+		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
+		SetUserDpi(GetDpiValue());
+		return lResult;
+	}
+	break;
 	case WM_DWMCOLORIZATIONCOLORCHANGED:
 		StUpdateColorizationColor();
 		break;

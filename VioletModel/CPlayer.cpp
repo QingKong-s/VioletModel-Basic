@@ -141,9 +141,9 @@ PlayErr CPlayer::Stop(BOOL bNoGap)
 		return PlayErr::NoPlayList;
 	m_Bass.Stop();
 	m_Bass.Close();
+	m_idxCurrLrc = m_idxLastLrc = -1;
 	if (!bNoGap)
 	{
-		m_idxCurrLrc = m_idxLastLrc = -1;
 		m_bActive = FALSE;
 		m_Sig.Emit({ PlayEvt::Stop });
 		if (GetList()->IsGroupEnabled())
@@ -239,22 +239,24 @@ BOOL CPlayer::LrcUpdatePosition()
 	const auto fPos = (float)m_lfCurrTime;
 	const auto& vLrc = *m_pvLrc;
 	const auto cLrc = (int)vLrc.size();
-	//	FIXME FIXME
-	//if (m_idxCurrLrc >= 0)
-	//{
-	//	if (m_idxCurrLrc + 1 < cLrc)
-	//	{
-	//		if (fPos >= vLrc[m_idxCurrLrc].fTime &&
-	//			fPos < vLrc[m_idxCurrLrc + 1].fTime)
-	//		{
-	//			++m_idxCurrLrc;
-	//			m_idxLastLrc = m_idxCurrLrc;
-	//			return TRUE;
-	//		}
-	//	}
-	//	else if (fPos >= vLrc[m_idxCurrLrc].fTime)
-	//		return FALSE;
-	//}
+	if (m_idxCurrLrc >= 0)
+	{
+		if (m_idxCurrLrc + 1 < cLrc)
+		{
+			if (fPos >= vLrc[m_idxCurrLrc].fTime &&
+				fPos < vLrc[m_idxCurrLrc + 1].fTime)
+				return FALSE;
+			else if (m_idxCurrLrc + 2 < cLrc &&
+				fPos >= vLrc[m_idxCurrLrc + 1].fTime &&
+				fPos < vLrc[m_idxCurrLrc + 2].fTime)
+			{
+				++m_idxCurrLrc;
+				return TRUE;
+			}
+		}
+		else if (fPos >= vLrc[m_idxCurrLrc].fTime)
+			return FALSE;
+	}
 	const auto it = std::lower_bound(vLrc.begin(), vLrc.end(), fPos,
 		[](const eck::LRCINFO& Item, float fPos)->bool
 		{
