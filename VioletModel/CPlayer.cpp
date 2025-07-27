@@ -42,12 +42,33 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 		}, eck::GetThreadCtx());
 
 	Tag::CMediaFile mf{ e.rsFile.Data(),STGM_READ };
-	mf.DetectTag();
-	Tag::CID3v2 Id3v2{ mf };
-	Id3v2.ReadTag(0);
+	const auto uTag = mf.DetectTag();
 	m_MusicInfo.uFlag = Tag::MIF_JOIN_ARTIST;
 	m_MusicInfo.uMask = Tag::MIM_ALL;
-	Id3v2.SimpleExtract(m_MusicInfo);
+	if (uTag & (Tag::TAG_ID3V2_3 | Tag::TAG_ID3V2_4))
+	{
+		Tag::CID3v2 Id3v2{ mf };
+		Id3v2.ReadTag(0);
+		Id3v2.SimpleExtract(m_MusicInfo);
+	}
+	else if (uTag & Tag::TAG_FLAC)
+	{
+		Tag::CFlac Flac{ mf };
+		Flac.ReadTag(0);
+		Flac.SimpleExtract(m_MusicInfo);
+	}
+	else if (uTag & Tag::TAG_APE)
+	{
+		Tag::CApe Ape{ mf };
+		Ape.ReadTag(0);
+		Ape.SimpleExtract(m_MusicInfo);
+	}
+	else if (uTag & Tag::TAG_ID3V1)
+	{
+		Tag::CID3v1 Id3v1{ mf };
+		Id3v1.ReadTag(0);
+		Id3v1.SimpleExtract(m_MusicInfo);
+	}
 	const auto pPic = m_MusicInfo.GetMainCover();
 	SafeRelease(m_pBmpCover);
 	if (pPic)

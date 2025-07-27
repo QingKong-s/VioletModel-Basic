@@ -20,8 +20,18 @@ void CPlayPanel::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	case PlayEvt::Play:
 	{
 		const auto& mi = App->GetPlayer().GetMusicInfo();
-		m_LATitle.SetText(mi.rsTitle.Data());
-		m_LAArtist.SetText(mi.GetArtistStr().Data());
+		if (mi.rsTitle.IsEmpty())
+		{
+			// HACK：至少应该显示项目的名称
+			// 待列表改进后处理此处
+			m_LATitle.SetText(L"未知艺术家");
+		}
+		else
+			m_LATitle.SetText(mi.rsTitle.Data());
+		if (mi.uMaskRead & Tag::MIM_ARTIST)
+			m_LAArtist.SetText(mi.GetArtistStr().Data());
+		else
+			m_LAArtist.SetText(L"未知艺术家");
 	}
 	break;
 	}

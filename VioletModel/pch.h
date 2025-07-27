@@ -21,6 +21,7 @@
 #include "eck\MediaTagFlac.h"
 #include "eck\MediaTagID3v1.h"
 #include "eck\MediaTagID3v2.h"
+#include "eck\MediaTagApe.h"
 #include "eck\Lyric.h"
 #include "eck\CDWriteFontFactory.h"
 #include "eck\CEnumFile.h"
