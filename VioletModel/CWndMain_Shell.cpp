@@ -210,7 +210,7 @@ HRESULT CWndMain::SmtcInit() noexcept
 }
 
 #if VIOLET_WINRT
-eck::CoroTask<> CWndMain::SmtcCoroUpdateDisplay()
+eck::CoroTask<> CWndMain::SmtcpCoroUpdateDisplay()
 {
 	const auto mi = App->GetPlayer().GetMusicInfo();// 复制一份
 	auto Token{ co_await eck::CoroGetPromiseToken() };
@@ -276,7 +276,7 @@ HRESULT CWndMain::SmtcUpdateDisplay() noexcept
 		m_TskSmtcUpdateDisplay.TryCancel();
 		m_TskSmtcUpdateDisplay.SyncWait();
 	}
-	m_TskSmtcUpdateDisplay = SmtcCoroUpdateDisplay();
+	m_TskSmtcUpdateDisplay = SmtcpCoroUpdateDisplay();
 	return S_OK;
 #else
 	return E_NOTIMPL;

@@ -155,10 +155,10 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		ComPtr<IDWriteTextFormat> pTfLrc;
 		auto& FontFactory = App->GetFontFactory();;
 		FontFactory.NewFont(pTfLrc.RefOfClear(),
-			eck::Align::Near, eck::Align::Near, 20, 500);
+			eck::Align::Near, eck::Align::Near, 24, 500);
 		m_Lrc.SetTextFormat(pTfLrc.Get());
 		FontFactory.NewFont(pTfLrc.RefOfClear(),
-			eck::Align::Near, eck::Align::Near, 18, 500);
+			eck::Align::Near, eck::Align::Near, 21, 500);
 		m_Lrc.SetTextFormatTrans(pTfLrc.Get());
 
 		m_BTBack.Create(nullptr, Dui::DES_VISIBLE | Dui::DES_NOTIFY_TO_WND, 0,

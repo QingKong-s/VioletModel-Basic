@@ -1,6 +1,9 @@
 ﻿#pragma once
-class CVeLrc : public Dui::CElem
+class CVeLrc : public Dui::CElem, public eck::CFixedTimeLine
 {
+	// Isb = Item Select Background
+	// Mi = Mouse Idle
+	// Se = Scroll Expand
 public:
 	enum : size_t
 	{
@@ -21,9 +24,15 @@ private:
 		float cx{};
 
 		float cxTrans{};
+		float kAnSelBkg{};	// 0~1
+		float msAnSelBkg{};	// 0~AnDurLrcSelBkg
 		BITBOOL bSel : 1{};
 		BITBOOL bCacheValid : 1{};
+		BITBOOL bAnSelBkg : 1{};
+		BITBOOL bAnSelBkgEnlarge : 1{};	// 正在扩大，即鼠标已移入
 
+		void OnSetHot();
+		void OnKillHot();
 	};
 
 	ID2D1DeviceContext1* m_pDC1{};
@@ -34,6 +43,8 @@ private:
 
 	Dui::CScrollBar m_SB{};
 	eck::CInertialScrollView* m_psv{};
+
+	D2D1_COLOR_F m_Color[CriMax]{};
 
 	std::shared_ptr<std::vector<eck::LRCINFO>> m_pvLrc{};
 	std::vector<ITEM> m_vItem{};
@@ -46,40 +57,50 @@ private:
 	int m_idxPrevAnItem{ -1 },
 		m_idxCurrAnItem{ -1 };
 	float m_fAnValue{ 1.f };
-	BOOL m_bEnlarging{};
+
+	float m_msScrollExpand{};
+	float m_kScrollExpand{};
 
 	int m_tMouseIdle{};
 
-	float m_cyLinePadding{ 8.f };		// 项目间距
-	float m_fPlayingItemScale{ 1.2f };	// 正在播放的歌词行缩放比例
-	float m_cxyLineMargin{ 10.f };		// 项目内容边距
-	eck::Align m_eAlignH{ eck::Align::Near };
+	float m_cyLinePadding{ 6.f };		// 项目间距
+	float m_fPlayingItemScale{ 1.1f };	// 正在播放的歌词行缩放比例
+	float m_cxyLineMargin{ 8.f };		// 项目内容边距
+	eck::Align m_eAlignH{ eck::Align::Near };	// 水平对齐
 
-	D2D1_COLOR_F m_Color[CriMax]{};
+	BOOLEAN m_bAnSelBkg{};		// 正在运行项目热点背景动画
+	BOOLEAN m_bEnlarging{};		// 正在放大当前歌词行
+	BOOLEAN m_bScrollExpand{};	// 由于用户滚动操作，所有歌词行都正在放大或缩小
+	BOOLEAN m_bSeEnlarging{};	// 指示ScrollExpand的操作是否为放大
 
 
 	static void ScrollProc(int iPos, int iPrevPos, LPARAM lParam);
 
-	void FillItemBkg(int idx, const D2D1_RECT_F& rc);
-
 	void CalcTopItem();
-
-	BOOL DrawItem(int idx, float& y);
-
-	void BeginMouseIdleDetect();
-
-	int HitTest(POINT pt);
-
+	// 返回项目顶边，WM_PAINT使用此值判断重画终止位置
+	float DrawItem(int idx);
 	void GetItemRect(int idx, _Out_ RECT& rc);
 	void GetItemRect(int idx, _Out_ D2D1_RECT_F& rc);
-
 	void InvalidateItem(int idx);
 
+	void LayoutItem();
+
 	void ScrollToCurrPos();
-
-	void LayoutItems();
-
 	void Scrolled();
+
+	void IsbWakeRenderThread()
+	{
+		if (!m_bAnSelBkg)
+		{
+			m_bAnSelBkg = TRUE;
+			GetWnd()->WakeRenderThread();
+		}
+	}
+
+	void MiBeginDetect();
+	EckInlineNdCe BOOL MiIsIdle() { return m_tMouseIdle > 0; }
+
+	void SeBeginExpand(BOOL bEnlarge);
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
@@ -107,4 +128,10 @@ public:
 		for (size_t i = 0; i < CriMax; ++i)
 			m_Color[i] = pcr[i];
 	}
+
+	int HitTest(POINT pt);
+
+	void Tick(int iMs) override;
+
+	BOOL IsValid() override { return m_bAnSelBkg || m_bScrollExpand; }
 };

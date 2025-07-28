@@ -135,7 +135,7 @@ private:
 
 	HRESULT SmtcInit() noexcept;
 #if VIOLET_WINRT
-	eck::CoroTask<> SmtcCoroUpdateDisplay();
+	eck::CoroTask<> SmtcpCoroUpdateDisplay();
 #endif
 	HRESULT SmtcUpdateDisplay() noexcept;
 	HRESULT SmtcOnCommonTick() noexcept;
