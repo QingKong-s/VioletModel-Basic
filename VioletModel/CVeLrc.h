@@ -5,6 +5,7 @@ class CVeLrc : public Dui::CElem, public eck::CFixedTimeLine
 	// Mi = Mouse Idle
 	// Se = Scroll Expand
 	// Itm = Item
+	// Scr = Scroll
 public:
 	enum : size_t
 	{
@@ -33,7 +34,7 @@ private:
 		float msAnDelay{};	// 0~AnDurLrcDelay，延迟动画曲线用
 		float msDelay{};	// 0~DurMaxItemDelay，已延迟时间，达到最大值时开始进行移动动画
 		BITBOOL bSel : 1{};				// 选中
-		BITBOOL bCacheValid : 1{};		// 前三个字段有效
+		BITBOOL bCacheValid : 1{};		// 前三个字段是否有效
 		BITBOOL bAnSelBkg : 1{};		// 正在运行项目热点背景动画
 		BITBOOL bAnSelBkgEnlarge : 1{};	// 正在扩大，即鼠标已移入
 
@@ -89,19 +90,21 @@ private:
 
 	void ScrAnProc(int iPos, int iPrevPos);
 
-	void CalcTopItem();
+	void ItmReCalcTop();
 	// 返回项目顶边，WM_PAINT使用此值判断重画终止位置
-	float DrawItem(int idx);
-	void GetItemRect(int idx, _Out_ RECT& rc);
-	void GetItemRect(int idx, _Out_ D2D1_RECT_F& rc);
-	int ItemFromY(float y);
+	float ItmPaint(int idx);
+	void ItmGetRect(int idx, _Out_ RECT& rc);
+	void ItmGetRect(int idx, _Out_ D2D1_RECT_F& rc);
+	int ItmIndexFromY(float y);
+	void ItmLayout();
+	// 取当前项目中线应该在的坐标
+	EckInlineNdCe float ItmGetCurrentItemTarget() const { return GetHeightF() / 3.f; }
 
-	void InvalidateItem(int idx);
+	void ItmInvalidate(int idx);
 
-	void LayoutItem();
-
-	void ScrollToCurrPos();
-	void Scrolled();
+	void ScrAutoScrolling();
+	void ScrManualScrolling();
+	void ScrDoItemScroll(int iPos);
 
 	void IsbWakeRenderThread()
 	{
@@ -129,10 +132,10 @@ public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	// 调用方检查歌词内容，若为空则调用此函数设置空提示文本
-	HRESULT UpdateEmptyText(std::wstring_view svEmptyText);
+	HRESULT LrcUpdateEmptyText(std::wstring_view svEmptyText);
 
 	// 调用方启动定时器检查当前时间对应的歌词行，每次检查后将结果传递到此方法
-	HRESULT LrcTick(int idxCurr);
+	HRESULT LrcSetCurrentLine(int idxCurr);
 
 	HRESULT LrcInit(std::shared_ptr<std::vector<eck::LRCINFO>> pvLrc);
 
@@ -153,7 +156,7 @@ public:
 			m_Color[i] = pcr[i];
 	}
 
-	int HitTest(POINT pt);
+	int ItmHitTest(POINT pt);
 
 	void Tick(int iMs) override;
 

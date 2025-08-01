@@ -55,34 +55,24 @@ void CVeLrc::ScrAnProc(int iPos, int iPrevPos)
 		}
 	}
 
-	float y = -iPos;
-	auto& Front = m_vItem.front();
-	Front.y = Front.yNoDelay = -iPos;
-	for (int i = 1; i < (int)m_vItem.size(); ++i)
-	{
-		const auto& Prev = m_vItem[i - 1];
-		y += (Prev.cy + m_cyLinePadding);
-		if (!(m_bItemAnDelay && ItmInDelayRange(i)))
-			m_vItem[i].y = y;
-		m_vItem[i].yNoDelay = y;
-	}
+	ScrDoItemScroll(iPos);
 
-	CalcTopItem();
+	ItmReCalcTop();
 	InvalidateRect();
 }
 
-void CVeLrc::CalcTopItem()
+void CVeLrc::ItmReCalcTop()
 {
 	if (IsEmpty())
 	{
 		m_idxTop = 0;
 		return;
 	}
-	m_idxTop = ItemFromY(0.f);
+	m_idxTop = ItmIndexFromY(0.f);
 	EckAssert(m_idxTop >= 0);
 }
 
-float CVeLrc::DrawItem(int idx)
+float CVeLrc::ItmPaint(int idx)
 {
 	EckAssert(idx >= 0 && idx < (int)m_vItem.size());
 	auto& Item = m_vItem[idx];
@@ -152,7 +142,7 @@ float CVeLrc::DrawItem(int idx)
 	if (eState != Dui::State::None)
 	{
 		D2D1_RECT_F rc;
-		GetItemRect(idx, rc);
+		ItmGetRect(idx, rc);
 		Dui::DTB_OPT Opt;
 		if (Item.bAnSelBkg && eState == Dui::State::Hot)
 		{
@@ -196,7 +186,7 @@ float CVeLrc::DrawItem(int idx)
 	WCHAR szDbg[eck::CchI32ToStrBufNoRadix2];
 	const auto cchDbg = swprintf_s(szDbg, L"%d", idx);
 	D2D1_RECT_F rcDbg;
-	GetItemRect(idx, rcDbg);
+	ItmGetRect(idx, rcDbg);
 	m_pBrush->SetColor(D2D1::ColorF{ D2D1::ColorF::Red });
 	m_pDC->DrawTextW(szDbg, cchDbg, GetTextFormat(), rcDbg, m_pBrush);
 	return TRUE;
@@ -209,12 +199,12 @@ void CVeLrc::MiBeginDetect()
 	m_tMouseIdle = T_MOUSEIDLEMAX;
 }
 
-int CVeLrc::HitTest(POINT pt)
+int CVeLrc::ItmHitTest(POINT pt)
 {
 	RECT rc;
 	for (int i = m_idxTop; i < (int)m_vItem.size(); ++i)
 	{
-		GetItemRect(i, rc);
+		ItmGetRect(i, rc);
 		if (eck::PtInRect(rc, pt))
 			return i;
 		if (rc.top > GetHeight())
@@ -223,7 +213,7 @@ int CVeLrc::HitTest(POINT pt)
 	return -1;
 }
 
-void CVeLrc::GetItemRect(int idx, _Out_ RECT& rc)
+void CVeLrc::ItmGetRect(int idx, _Out_ RECT& rc)
 {
 	const auto& e = m_vItem[idx];
 	rc.left = (long)e.x;
@@ -232,7 +222,7 @@ void CVeLrc::GetItemRect(int idx, _Out_ RECT& rc)
 	rc.bottom = long(rc.top + e.cy);
 }
 
-void CVeLrc::GetItemRect(int idx, _Out_ D2D1_RECT_F& rc)
+void CVeLrc::ItmGetRect(int idx, _Out_ D2D1_RECT_F& rc)
 {
 	const auto& e = m_vItem[idx];
 	rc.left = e.x;
@@ -241,7 +231,7 @@ void CVeLrc::GetItemRect(int idx, _Out_ D2D1_RECT_F& rc)
 	rc.bottom = rc.top + e.cy;
 }
 
-int CVeLrc::ItemFromY(float y)
+int CVeLrc::ItmIndexFromY(float y)
 {
 	if (IsEmpty())
 		return -1;
@@ -267,10 +257,10 @@ int CVeLrc::ItemFromY(float y)
 	}
 }
 
-void CVeLrc::InvalidateItem(int idx)
+void CVeLrc::ItmInvalidate(int idx)
 {
 	D2D1_RECT_F rc;
-	GetItemRect(idx, rc);
+	ItmGetRect(idx, rc);
 	ElemToClient(rc);
 	InvalidateRect(rc);
 }
@@ -331,7 +321,7 @@ void CVeLrc::ItmDelayPrepare(float dy)
 	int i;
 	const auto& ItemCurr = m_vItem[idxCurr];
 	// 当前（含）以上
-	y = GetHeightF() / 3.f - ItemCurr.cy / 2.f
+	y = ItmGetCurrentItemTarget() - ItemCurr.cy / 2.f
 		+ ItemCurr.cy + m_cyLinePadding;
 	m_idxDelayBegin = 0;
 	for (int i = idxCurr; i >= 0; --i)
@@ -388,7 +378,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		else
 			for (int i = m_idxTop; i < (int)m_vItem.size(); ++i)
 			{
-				if (DrawItem(i) > GetHeightF())
+				if (ItmPaint(i) > GetHeightF())
 					break;
 			}
 		ECK_DUI_DBG_DRAW_FRAME;
@@ -404,7 +394,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		POINT pt ECK_GET_PT_LPARAM(lParam);
 		ClientToElem(pt);
 
-		int idx = HitTest(pt);
+		int idx = ItmHitTest(pt);
 		if (idx != m_idxHot)
 		{
 			std::swap(idx, m_idxHot);
@@ -447,7 +437,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		if (!MiIsIdle())
 			SeBeginExpand(TRUE);
-		Scrolled();
+		ScrManualScrolling();
 		m_psv->OnMouseWheel2(-GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA);
 		GetWnd()->WakeRenderThread();
 	}
@@ -462,7 +452,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		POINT pt ECK_GET_PT_LPARAM(lParam);
 		ClientToElem(pt);
 
-		int idx = HitTest(pt);
+		int idx = ItmHitTest(pt);
 		if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
 		{
 			if (idx >= 0)
@@ -480,7 +470,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (m_vItem[i].bSel)
 				{
 					m_vItem[i].bSel = FALSE;
-					InvalidateItem(i);
+					ItmInvalidate(i);
 				}
 			}
 			for (; i <= idx1; ++i)
@@ -488,7 +478,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (!m_vItem[i].bSel)
 				{
 					m_vItem[i].bSel = TRUE;
-					InvalidateItem(i);
+					ItmInvalidate(i);
 				}
 			}
 			for (; i < (int)m_vItem.size(); ++i)
@@ -496,7 +486,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (m_vItem[i].bSel)
 				{
 					m_vItem[i].bSel = FALSE;
-					InvalidateItem(i);
+					ItmInvalidate(i);
 				}
 			}
 			break;
@@ -510,7 +500,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (m_vItem[i].bSel)
 				{
 					m_vItem[i].bSel = FALSE;
-					InvalidateItem(i);
+					ItmInvalidate(i);
 				}
 			}
 		}
@@ -519,7 +509,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (!m_vItem[idx].bSel)
 			{
 				m_vItem[idx].bSel = TRUE;
-				InvalidateItem(idx);
+				ItmInvalidate(idx);
 			}
 	}
 	return 0;
@@ -532,7 +522,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			m_tMouseIdle = 0;
 			KillTimer(IDT_MOUSEIDLE);
-			ScrollToCurrPos();
+			ScrAutoScrolling();
 		}
 	}
 	return 0;
@@ -548,9 +538,10 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				ECK_DUILOCK;
 				if (!MiIsIdle())
 					SeBeginExpand(TRUE);
-				Scrolled();
+				ScrManualScrolling();
 				m_psv->InterruptAnimation();
-				CalcTopItem();
+				ScrDoItemScroll(m_psv->GetPos());
+				ItmReCalcTop();
 				InvalidateRect();
 			}
 			return TRUE;
@@ -571,7 +562,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				m_tMouseIdle = 0;
 				KillTimer(IDT_MOUSEIDLE);
-				ScrollToCurrPos();
+				ScrAutoScrolling();
 			}
 		}
 	}
@@ -579,7 +570,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SIZE:
 	{
-		LayoutItem();
+		ItmLayout();
 		RECT rc;
 		rc.left = GetWidth() - m_SB.GetWidth();
 		rc.top = 0;
@@ -624,7 +615,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return __super::OnEvent(uMsg, wParam, lParam);
 }
 
-HRESULT CVeLrc::UpdateEmptyText(std::wstring_view svEmptyText)
+HRESULT CVeLrc::LrcUpdateEmptyText(std::wstring_view svEmptyText)
 {
 	ECK_DUILOCK;
 	HRESULT hr;
@@ -651,7 +642,7 @@ HRESULT CVeLrc::UpdateEmptyText(std::wstring_view svEmptyText)
 		&m_pGrEmptyText);
 }
 
-HRESULT CVeLrc::LrcTick(int idxCurr)
+HRESULT CVeLrc::LrcSetCurrentLine(int idxCurr)
 {
 	if (idxCurr < 0)
 		return E_BOUNDS;
@@ -670,9 +661,9 @@ HRESULT CVeLrc::LrcTick(int idxCurr)
 	if (MiIsIdle())
 	{
 		if (idxPrev >= 0)
-			InvalidateItem(idxPrev);
+			ItmInvalidate(idxPrev);
 		if (m_idxPrevCurr >= 0)
-			InvalidateItem(m_idxPrevCurr);
+			ItmInvalidate(m_idxPrevCurr);
 	}
 	else
 	{
@@ -681,7 +672,7 @@ HRESULT CVeLrc::LrcTick(int idxCurr)
 		m_idxCurrAnItem = m_idxPrevCurr;
 		m_AnEnlarge.Begin(1.f, m_fPlayingItemScale - 1.f, (float)m_psv->GetDuration());
 		const auto& e = m_vItem[m_idxPrevCurr];
-		const auto dy = (e.yNoDelay + e.cy / 2.f)/*当前*/ - (GetHeightF() / 3.f)/*目标*/;
+		const auto dy = (e.yNoDelay + e.cy / 2.f) - ItmGetCurrentItemTarget();
 		m_psv->InterruptAnimation();
 		m_psv->SmoothScrollDelta((int)dy);
 		ItmDelayPrepare(dy);
@@ -695,9 +686,9 @@ HRESULT CVeLrc::LrcInit(std::shared_ptr<std::vector<eck::LRCINFO>> pvLrc)
 	ECK_DUILOCK;
 	m_pvLrc = pvLrc;
 	m_idxPrevCurr = -1;
-	LayoutItem();
+	ItmLayout();
 	m_psv->SetPos(m_psv->GetMin());
-	CalcTopItem();
+	ItmReCalcTop();
 	InvalidateRect();
 	return S_OK;
 }
@@ -748,7 +739,7 @@ void CVeLrc::Tick(int iMs)
 				e.bAnSelBkg = FALSE;
 			else
 				bAn = TRUE;
-			InvalidateItem(i);
+			ItmInvalidate(i);
 		}
 		if (m_bItemAnDelay && !bDelay && ItmInDelayRange(i))
 			if (e.msDelay >= DurMaxItemDelay)
@@ -775,7 +766,7 @@ void CVeLrc::Tick(int iMs)
 						ItmDelayComplete();
 				}
 				D2D1_RECT_F rc;
-				GetItemRect(i, rc);
+				ItmGetRect(i, rc);
 				e.y = e.yAnDelaySrc + (e.yAnDelayDst - e.yAnDelaySrc) * k;
 				rc.top = std::min(rc.top, e.y);
 				rc.bottom = std::max(rc.bottom, e.y + e.cy);
@@ -791,10 +782,10 @@ void CVeLrc::Tick(int iMs)
 	}
 	m_bAnSelBkg = bAn;
 	if (m_bItemAnDelay)
-		CalcTopItem();
+		ItmReCalcTop();
 }
 
-void CVeLrc::ScrollToCurrPos()
+void CVeLrc::ScrAutoScrolling()
 {
 	if (m_idxPrevCurr != m_idxCurrAnItem && m_idxCurrAnItem >= 0)
 	{
@@ -804,14 +795,16 @@ void CVeLrc::ScrollToCurrPos()
 		m_AnEnlarge.Begin(1.f, m_fPlayingItemScale - 1.f, m_psv->GetDuration());
 	}
 	const auto& CurrItem = m_idxPrevCurr < 0 ? m_vItem.front() : m_vItem[m_idxPrevCurr];
-	float yDest = CurrItem.y + CurrItem.cy / 2.f;
+	const auto dy = (CurrItem.yNoDelay + CurrItem.cy / 2.f) - ItmGetCurrentItemTarget();
 	m_psv->InterruptAnimation();
-	m_psv->SmoothScrollDelta(int((yDest - GetHeight() / 3)));
+	m_psv->SmoothScrollDelta((int)dy);
 	SeBeginExpand(FALSE);
+	if (m_idxPrevCurr >= 0)
+		ItmDelayPrepare(dy);
 	GetWnd()->WakeRenderThread();
 }
 
-void CVeLrc::LayoutItem()
+void CVeLrc::ItmLayout()
 {
 	const float cx = GetWidthF(), cy = GetHeightF();
 	if (cx <= 0.f || cy <= 0.f)
@@ -869,12 +862,27 @@ void CVeLrc::LayoutItem()
 	m_psv->SetPage((int)cy);
 }
 
-void CVeLrc::Scrolled()
+void CVeLrc::ScrManualScrolling()
 {
 	MiBeginDetect();
 	m_bEnlarging = FALSE;
 	m_idxPrevAnItem = -1;
 	m_fAnValue = m_fPlayingItemScale;
+}
+
+void CVeLrc::ScrDoItemScroll(int iPos)
+{
+	float y = -iPos;
+	auto& Front = m_vItem.front();
+	Front.y = Front.yNoDelay = -iPos;
+	for (int i = 1; i < (int)m_vItem.size(); ++i)
+	{
+		const auto& Prev = m_vItem[i - 1];
+		y += (Prev.cy + m_cyLinePadding);
+		if (!(m_bItemAnDelay && ItmInDelayRange(i)))
+			m_vItem[i].y = y;
+		m_vItem[i].yNoDelay = y;
+	}
 }
 
 

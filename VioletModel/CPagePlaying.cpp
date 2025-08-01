@@ -71,7 +71,7 @@ void CPagePlaying::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	{
 	case PlayEvt::CommTick:
 	{
-		m_Lrc.LrcTick(App->GetPlayer().GetCurrLrcIdx());
+		m_Lrc.LrcSetCurrentLine(App->GetPlayer().GetCurrLrcIdx());
 	}
 	break;
 	case PlayEvt::Play:
