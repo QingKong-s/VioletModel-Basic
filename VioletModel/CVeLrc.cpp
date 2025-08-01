@@ -182,14 +182,15 @@ float CVeLrc::ItmPaint(int idx)
 	}
 	m_pDC1->DrawGeometryRealization(Item.pGr.Get(), m_pBrush);
 	m_pDC->SetTransform(Mat0);
-
+#ifdef _DEBUG
 	WCHAR szDbg[eck::CchI32ToStrBufNoRadix2];
 	const auto cchDbg = swprintf_s(szDbg, L"%d", idx);
 	D2D1_RECT_F rcDbg;
 	ItmGetRect(idx, rcDbg);
 	m_pBrush->SetColor(D2D1::ColorF{ D2D1::ColorF::Red });
 	m_pDC->DrawTextW(szDbg, cchDbg, GetTextFormat(), rcDbg, m_pBrush);
-	return TRUE;
+#endif
+	return y;
 }
 
 void CVeLrc::MiBeginDetect()
@@ -283,38 +284,6 @@ void CVeLrc::SeBeginExpand(BOOL bEnlarge)
 void CVeLrc::ItmDelayPrepare(float dy)
 {
 	float y;
-	if (ItmIsDelaying())
-	{
-		if (m_idxDelayBegin - 1 >= 0)
-		{
-			y = m_vItem[m_idxDelayBegin - 1].y +
-				m_vItem[m_idxDelayBegin - 1].cy + m_cyLinePadding;
-			for (int i = m_idxDelayBegin; i <= m_idxDelayEnd; ++i)
-			{
-				m_vItem[i].y = y;
-				y += (m_vItem[i].cy + m_cyLinePadding);
-			}
-		}
-		else if (m_idxDelayEnd + 1 < (int)m_vItem.size())
-		{
-			y = m_vItem[m_idxDelayEnd + 1].y - m_vItem[m_idxDelayEnd].cy -
-				m_cyLinePadding;
-			for (int i = m_idxDelayEnd; i >= m_idxDelayBegin; --i)
-			{
-				m_vItem[i].y = y;
-				y -= (m_vItem[i].cy + m_cyLinePadding);
-			}
-		}
-		else
-		{
-			y = -m_psv->GetPos();
-			for (auto& e : m_vItem)
-			{
-				e.y = y;
-				y += (e.cy + m_cyLinePadding);
-			}
-		}
-	}
 	m_bItemAnDelay = TRUE;// 马上要启动滚动条时间线，无需唤醒渲染线程
 	const int idxCurr = m_idxPrevCurr;
 	m_bDelayScrollUp = (dy > 0.f);
@@ -792,7 +761,7 @@ void CVeLrc::ScrAutoScrolling()
 		m_idxPrevAnItem = m_idxCurrAnItem;
 		m_idxCurrAnItem = m_idxPrevCurr;
 		m_bEnlarging = TRUE;
-		m_AnEnlarge.Begin(1.f, m_fPlayingItemScale - 1.f, m_psv->GetDuration());
+		m_AnEnlarge.Begin(1.f, m_fPlayingItemScale - 1.f, (float)m_psv->GetDuration());
 	}
 	const auto& CurrItem = m_idxPrevCurr < 0 ? m_vItem.front() : m_vItem[m_idxPrevCurr];
 	const auto dy = (CurrItem.yNoDelay + CurrItem.cy / 2.f) - ItmGetCurrentItemTarget();
@@ -872,9 +841,9 @@ void CVeLrc::ScrManualScrolling()
 
 void CVeLrc::ScrDoItemScroll(int iPos)
 {
-	float y = -iPos;
+	float y = (float)-iPos;
 	auto& Front = m_vItem.front();
-	Front.y = Front.yNoDelay = -iPos;
+	Front.y = Front.yNoDelay = y;
 	for (int i = 1; i < (int)m_vItem.size(); ++i)
 	{
 		const auto& Prev = m_vItem[i - 1];
