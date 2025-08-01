@@ -25,7 +25,7 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFi
 	auto UiThread{ eck::CoroCaptureUiThread(((CWndMain*)GetWnd())->ThreadCtx()) };
 	auto Token{ co_await eck::CoroGetPromiseToken() };
 	co_await eck::CoroResumeBackground();
-	co_await eck::CoroSleep(1000);
+	//co_await eck::CoroSleep(1000);
 	std::vector<TMP> vTmp(vItem.size());
 	EckCounter(vItem.size(), i)
 	{

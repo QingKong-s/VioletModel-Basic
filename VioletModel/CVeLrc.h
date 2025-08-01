@@ -4,6 +4,7 @@ class CVeLrc : public Dui::CElem, public eck::CFixedTimeLine
 	// Isb = Item Select Background
 	// Mi = Mouse Idle
 	// Se = Scroll Expand
+	// Itm = Item
 public:
 	enum : size_t
 	{
@@ -22,13 +23,18 @@ private:
 		float y{};
 		float cy{};
 		float cx{};
-
 		float cxTrans{};
+		float yNoDelay{};	// 没有延迟的情况下歌词行的Y坐标
+
 		float kAnSelBkg{};	// 0~1
 		float msAnSelBkg{};	// 0~AnDurLrcSelBkg
-		BITBOOL bSel : 1{};
-		BITBOOL bCacheValid : 1{};
-		BITBOOL bAnSelBkg : 1{};
+		float yAnDelayDst{};// 目标位置
+		float yAnDelaySrc{};// 起始位置
+		float msAnDelay{};	// 0~AnDurLrcDelay，延迟动画曲线用
+		float msDelay{};	// 0~DurMaxItemDelay，已延迟时间，达到最大值时开始进行移动动画
+		BITBOOL bSel : 1{};				// 选中
+		BITBOOL bCacheValid : 1{};		// 前三个字段有效
+		BITBOOL bAnSelBkg : 1{};		// 正在运行项目热点背景动画
 		BITBOOL bAnSelBkgEnlarge : 1{};	// 正在扩大，即鼠标已移入
 
 		void OnSetHot();
@@ -63,6 +69,10 @@ private:
 
 	int m_tMouseIdle{};
 
+	int m_idxDelayBegin{ -1 };
+	int m_idxDelayEnd{ -1 };
+
+	float m_msItemAnDelay{ 200.f };		// 当前行发生更改时歌词行之间开始动画的延迟
 	float m_cyLinePadding{ 6.f };		// 项目间距
 	float m_fPlayingItemScale{ 1.1f };	// 正在播放的歌词行缩放比例
 	float m_cxyLineMargin{ 8.f };		// 项目内容边距
@@ -72,15 +82,20 @@ private:
 	BOOLEAN m_bEnlarging{};		// 正在放大当前歌词行
 	BOOLEAN m_bScrollExpand{};	// 由于用户滚动操作，所有歌词行都正在放大或缩小
 	BOOLEAN m_bSeEnlarging{};	// 指示ScrollExpand的操作是否为放大
+	BOOLEAN m_bEnableItemAnDelay{};	// 启用项目动画延迟
+	BOOLEAN m_bItemAnDelay{};		// 当前正在运行项目动画延迟
+	BOOLEAN m_bDelayScrollUp{};		// 指示是否向上滚动
 
 
-	static void ScrollProc(int iPos, int iPrevPos, LPARAM lParam);
+	void ScrAnProc(int iPos, int iPrevPos);
 
 	void CalcTopItem();
 	// 返回项目顶边，WM_PAINT使用此值判断重画终止位置
 	float DrawItem(int idx);
 	void GetItemRect(int idx, _Out_ RECT& rc);
 	void GetItemRect(int idx, _Out_ D2D1_RECT_F& rc);
+	int ItemFromY(float y);
+
 	void InvalidateItem(int idx);
 
 	void LayoutItem();
@@ -101,6 +116,15 @@ private:
 	EckInlineNdCe BOOL MiIsIdle() { return m_tMouseIdle > 0; }
 
 	void SeBeginExpand(BOOL bEnlarge);
+
+	void ItmDelayPrepare(float dy);
+	void ItmDelayComplete();
+	EckInlineNdCe int ItmInDelayRange(int idx) const { return idx >= m_idxDelayBegin && idx <= m_idxDelayEnd; }
+	EckInlineNdCe BOOL ItmIsDelaying() const
+	{
+		return m_bItemAnDelay && m_idxDelayBegin >= 0 &&
+			m_idxDelayEnd >= m_idxDelayBegin;
+	}
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
@@ -133,5 +157,7 @@ public:
 
 	void Tick(int iMs) override;
 
-	BOOL IsValid() override { return m_bAnSelBkg || m_bScrollExpand; }
+	BOOL IsValid() override { return m_bAnSelBkg || m_bItemAnDelay; }
+
+	EckInlineNdCe BOOL IsEmpty() const { return m_vItem.empty(); }
 };

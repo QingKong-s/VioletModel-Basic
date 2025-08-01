@@ -222,10 +222,10 @@ public:
 		return m_Img[size_t(n)];
 	}
 
-	EckInlineCe void SetDarkMode(BOOL bDarkMode) 
-	{ 
+	EckInlineCe void SetDarkMode(BOOL bDarkMode)
+	{
 		if (m_bDarkMode != bDarkMode)
-		m_bDarkMode = bDarkMode; 
+			m_bDarkMode = bDarkMode;
 	}
 
 	EckInlineNdCe auto& GetPlayer() { return m_Player; }

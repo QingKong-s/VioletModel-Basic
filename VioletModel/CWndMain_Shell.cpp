@@ -176,7 +176,7 @@ HRESULT CWndMain::SmtcInit() noexcept
 	m_Smtc.IsPreviousEnabled(true);
 
 	m_SmtcEvtTokenButtonPressed = m_Smtc.ButtonPressed(
-		[&](const WinMedia::SystemMediaTransportControls&,
+		[=](const WinMedia::SystemMediaTransportControls&,
 			const WinMedia::SystemMediaTransportControlsButtonPressedEventArgs& Args)
 		{
 			const auto eBtn = Args.Button();

@@ -443,7 +443,7 @@ void CWndMain::Tick(int iMs)
 		return;
 	}
 	float k;
-	m_kPalyPageAn = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, MaxPPAnDuration);
+	m_kPalyPageAn = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, MaxPPAnDuration);
 	if (!m_bPPAnReverse)
 		m_kPalyPageAn = 1.f - m_kPalyPageAn;
 	// 移动底部的按钮
