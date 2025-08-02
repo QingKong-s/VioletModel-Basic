@@ -62,67 +62,6 @@ enum class GImg
 	Max
 };
 
-constexpr inline PCWSTR ImgFile[]
-{
-	LR"(About.png)",
-	LR"(AboutBg.png)",
-	LR"(AboutLogo.png)",
-	LR"(AboutLogo12.png)",
-	LR"(Add.png)",
-	LR"(ArrowLeft.png)",
-	LR"(ArrowLeftW.png)",
-	LR"(ArrowRight.png)",
-	LR"(ArrowRightW.png)",
-	LR"(Aurorast.png)",
-	LR"(AurorastDark.png)",
-	LR"(BigLogo.png)",
-	LR"(Copy.png)",
-	LR"(Default_Cover.png)",
-	LR"(Delete.png)",
-	LR"(File.png)",
-	LR"(FileW.png)",
-	LR"(Folder.png)",
-	LR"(FolderW.png)",
-	LR"(FoundryOymyakon.png)",
-	LR"(Home.png)",
-	LR"(HomeW.png)",
-	LR"(License.png)",
-	LR"(List.png)",
-	LR"(List_PlayList.png)",
-	LR"(ListW.png)",
-	LR"(Player_Volume_0.png)",
-	LR"(Player_Volume_1.png)",
-	LR"(Player_Volume_2.png)",
-	LR"(Player_Volume_3.png)",
-	LR"(Player_Volume_Mute.png)",
-	LR"(PlayPage_Down.png)",
-	LR"(PlayPage_Up.png)",
-	LR"(PlayW.png)",
-	LR"(Plugin.png)",
-	LR"(PluginW.png)",
-	LR"(Settings.png)",
-	LR"(SettingsW.png)",
-	LR"(SmallLogo.png)",
-	LR"(Test.jpg)",
-	LR"(WindowLogo.png)",
-	LR"(ArrowCross.png)",
-	LR"(ArrowRight3.png)",
-	LR"(Circle.png)",
-	LR"(Next.png)",
-	LR"(Prev.png)",
-	LR"(Triangle.png)",
-	LR"(CircleOne.png)",
-	LR"(ArrowRight1.png)",
-	LR"(Lrc.png)",
-	LR"(Pause.png)",
-	LR"(NextSolid.png)",
-	LR"(PrevSolid.png)",
-	LR"(PauseSolid.png)",
-	LR"(TriangleSolid.png)",
-};
-
-static_assert(ARRAYSIZE(ImgFile) == (size_t)GImg::Max, "ImgFile size error.");
-
 constexpr PCWSTR MainWndPageName[]
 {
 	L"主页",
@@ -183,25 +122,33 @@ enum class GPal
 	Max
 };
 
+// 所有的ID，包括窗口定时器、WM_COMMAND、控件ID等
+enum
+{
+	VIOLET_ID_BEGIN = 0x514B,
+
+	IDT_COMM_TICK,
+
+	IDTBB_PREV,
+	IDTBB_PLAY,
+	IDTBB_NEXT,
+
+	ELEID_PLAYPAGE_BACK,
+
+	TE_COMM_TICK = 300,
+};
+
+enum
+{
+	ELEN_PLACEHOLDER = Dui::EE_PRIVATE_BEGIN,
+	ELEN_PAGE_CHANGE,		// [CTabPanel]边栏被单击时(NMLTITEMINDEX*)
+	ELEN_MINICOVER_CLICK,	// [CMiniCover]封面被单击时
+};
+
 class CApp
 {
 private:
-	constexpr static D2D1_COLOR_F PalLight[]
-	{
-		Dui::StMakeForegroundColorLight(0.5f),
-		Dui::StMakeForegroundColorLight(0.5f),
-		Dui::StMakeForegroundColorLight(0.3f),
-		{ 0.f,0.f,0.f,0.3f },
-	};
-	constexpr static D2D1_COLOR_F PalDark[]
-	{
-		Dui::StMakeForegroundColorDark(0.5f),
-		Dui::StMakeForegroundColorDark(0.5f),
-		Dui::StMakeForegroundColorDark(0.3f),
-		{ 1.f,1.f,1.f,0.3f },
-	};
-
-	IWICBitmap* m_Img[ARRAYSIZE(ImgFile)];
+	IWICBitmap* m_Img[(size_t)GImg::Max];
 	BOOL m_bDarkMode{};
 	CPlayer m_Player{};
 	eck::CDWriteFontFactory m_FontFactory{};
@@ -212,15 +159,9 @@ public:
 
 	static void Init();
 
-	constexpr const D2D1_COLOR_F& GetColor(GPal n) const
-	{
-		return m_bDarkMode ? PalLight[size_t(n)] : PalDark[size_t(n)];
-	}
+	const D2D1_COLOR_F& GetColor(GPal n) const;
 
-	constexpr IWICBitmap* GetImg(GImg n) const
-	{
-		return m_Img[size_t(n)];
-	}
+	EckInlineNdCe IWICBitmap* GetImg(GImg n) const { return m_Img[size_t(n)]; }
 
 	EckInlineCe void SetDarkMode(BOOL bDarkMode)
 	{

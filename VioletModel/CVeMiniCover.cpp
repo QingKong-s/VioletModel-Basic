@@ -110,11 +110,11 @@ LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				p->InvalidateRect();
 			});
 
-		m_pBmp = ((CWndMain*)GetWnd())->RealizeImg(GImg::DefaultCover);
+		m_pBmp = ((CWndMain*)GetWnd())->RealizeImage(GImg::DefaultCover);
 		m_pBmp->AddRef();
 		/*GetWnd()->BmpNewLogSize(GetWidthF(), GetHeightF(), m_pBmp);
-		const auto pOrg = ((CWndMain*)GetWnd())->RealizeImg(GImg::DefaultCover);*/
-		m_pBmpCoverUp = ((CWndMain*)GetWnd())->RealizeImg(GImg::PlayPageUp);
+		const auto pOrg = ((CWndMain*)GetWnd())->RealizeImage(GImg::DefaultCover);*/
+		m_pBmpCoverUp = ((CWndMain*)GetWnd())->RealizeImage(GImg::PlayPageUp);
 		m_pBmpCoverUp->AddRef();
 
 		//ID2D1Image* pOldTarget;

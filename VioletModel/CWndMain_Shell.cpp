@@ -9,9 +9,9 @@ static HRESULT ScaleImageForButton(GImg eImg, int iDpi,
 		cxy, cxy, WICBitmapInterpolationModeFant);
 }
 
-HRESULT CWndMain::TblCreateGhostWindow()
+HRESULT CWndMain::TblCreateGhostWindow(PCWSTR pszText)
 {
-	m_WndTbGhost.Create(nullptr, WS_OVERLAPPEDWINDOW,
+	m_WndTbGhost.Create(pszText, WS_OVERLAPPEDWINDOW,
 		WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
 		-32000, -32000, 0, 0, nullptr, nullptr);
 	return S_OK;
@@ -176,11 +176,11 @@ HRESULT CWndMain::SmtcInit() noexcept
 	m_Smtc.IsPreviousEnabled(true);
 
 	m_SmtcEvtTokenButtonPressed = m_Smtc.ButtonPressed(
-		[=](const WinMedia::SystemMediaTransportControls&,
+		[this](const WinMedia::SystemMediaTransportControls&,
 			const WinMedia::SystemMediaTransportControlsButtonPressedEventArgs& Args)
 		{
 			const auto eBtn = Args.Button();
-			m_ptcUiThread->Callback.EnQueueCallback([=, this]
+			m_ptcUiThread->Callback.EnQueueCallback([eBtn, this]
 				{
 					switch (eBtn)
 					{

@@ -205,7 +205,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (p->uMask & eck::DIM_TEXT)
 					p->cchText = swprintf((PWSTR)p->pszText, L"播放列表 %d", p->idx);
 				if (p->uMask & eck::DIM_IMAGE)
-					p->pImage = ((CWndMain*)GetWnd())->RealizeImg(GImg::List);
+					p->pImage = ((CWndMain*)GetWnd())->RealizeImage(GImg::List);
 			}
 			return 0;
 			case Dui::TBLE_SELCHANGED:

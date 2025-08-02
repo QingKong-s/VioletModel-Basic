@@ -25,27 +25,10 @@ public:
 		Options,
 		Max
 	};
-
-	enum
-	{
-		// 使用普通窗口定时器驱动进度和歌词轮询即可
-		IDT_COMM_TICK = 0x514B,
-		TE_COMM_TICK = 300,
-	};
-
-	enum
-	{
-		IDTBB_PREV = 10001,
-		IDTBB_PLAY,
-		IDTBB_NEXT
-	};
-
 	constexpr static double ProgBarScale = 100.;
 private:
 	constexpr static float MaxPPAnDuration = 700.f;
-	constexpr static int XCenterButtonLeftLimit = DLeftMiniCover + CxyMiniCover +
-		CxPaddingPlayPanelText + CxMaxTitleAndArtist + CxPaddingPlayPanelText +
-		CxMaxTime + CxPaddingPlayPanelText;
+
 	Dui::CTitleBar m_TitleBar{};
 	Dui::CLabel m_LAPageTitle{};
 
@@ -126,7 +109,7 @@ private:
 
 	void OnCoverUpdate();
 
-	HRESULT TblCreateGhostWindow();
+	HRESULT TblCreateGhostWindow(PCWSTR pszText);
 	HRESULT TblSetup();
 	HRESULT TblUpdateToolBarIcon();
 	HRESULT TblCreateObjectAndInit();
@@ -147,37 +130,18 @@ public:
 	~CWndMain();
 
 	HWND Create(PCWSTR pszText, DWORD dwStyle, DWORD dwExStyle,
-		int x, int y, int cx, int cy, HWND hParent, HMENU hMenu, PCVOID pData = nullptr) override
-	{
-		TblCreateGhostWindow();
-
-		const auto hWnd = __super::Create(pszText, dwStyle, dwExStyle,
-			x, y, cx, cy, hParent, hMenu, pData);
-
-		TblCreateObjectAndInit();
-		TblSetup();
-		m_WndTbGhost.SetIconicThumbnail();
-		return hWnd;
-	}
+		int x, int y, int cx, int cy, HWND hParent, HMENU hMenu, PCVOID pData = nullptr) override;
 
 	LRESULT OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	LRESULT OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	ID2D1Bitmap1* RealizeImg(GImg n)
-	{
-		if (!m_vBmpRealization[(size_t)n])
-		{
-			GetDeviceContext()->CreateBitmapFromWicBitmap(App->GetImg(n),
-				(const D2D1_BITMAP_PROPERTIES1*)nullptr,
-				&m_vBmpRealization[(size_t)n]);
-		}
-		return m_vBmpRealization[(size_t)n];
-	}
+	ID2D1Bitmap1* RealizeImage(GImg n);
 
 	//***ITimeLine***
-	void Tick(int iMs);
-	BOOL IsValid() { return m_bPPAnActive; }
+	void Tick(int iMs) override;
+	BOOL IsValid() override { return m_bPPAnActive; }
+	//
 
 	EckInlineNdCe auto ThreadCtx() const noexcept { return m_ptcUiThread; }
 };

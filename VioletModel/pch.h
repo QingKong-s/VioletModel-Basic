@@ -59,16 +59,6 @@ namespace Dui = eck::Dui;
 namespace Tag = eck::MediaTag;
 using namespace std::literals;
 
-enum
-{
-	ELEN_PLACEHOLDER = Dui::EE_PRIVATE_BEGIN,
-	ELEN_PAGE_CHANGE,// [CTabPanel]边栏被单击时(NMLTITEMINDEX*)
-	ELEN_MINICOVER_CLICK,// [CMiniCover]封面被单击时
-
-	ELEID_BEGIN = 0x716B,
-	ELEID_PLAYPAGE_BACK,
-};
-
 #include "Bass\bass.h"
 #include "Bass\bass_fx.h"
 #include "Bass\bassmidi.h"

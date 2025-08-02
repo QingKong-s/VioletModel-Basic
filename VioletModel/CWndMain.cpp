@@ -15,8 +15,6 @@ void CWndMain::ClearRes()
 
 BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 {
-	m_WndTbGhost.SetText(pcs->lpszName);
-
 	m_ptcUiThread = eck::GetThreadCtx();
 	CBass::Init();
 	App->GetPlayer().GetSignal().Connect(this, &CWndMain::OnPlayEvent);
@@ -89,30 +87,30 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	// 按钮 上一曲
 	m_BTPrev.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
-	m_BTPrev.SetImage(RealizeImg(GImg::Prev));
+	m_BTPrev.SetImage(RealizeImage(GImg::Prev));
 	m_BTPrev.SetCustomDraw(TRUE);
 	m_BTPrev.SetTransparentBk(TRUE);
 	// 按钮 播放/暂停
 	m_BTPlay.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButtonBig, CxyCircleButtonBig, nullptr, this);
-	m_BTPlay.SetImage(RealizeImg(GImg::Triangle));
+	m_BTPlay.SetImage(RealizeImage(GImg::Triangle));
 	m_BTPlay.SetCustomDraw(TRUE);
 	// 按钮 下一曲
 	m_BTNext.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
-	m_BTNext.SetImage(RealizeImg(GImg::Next));
+	m_BTNext.SetImage(RealizeImage(GImg::Next));
 	m_BTNext.SetCustomDraw(TRUE);
 	m_BTNext.SetTransparentBk(TRUE);
 	// 按钮 歌词
 	m_BTLrc.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
-	m_BTLrc.SetImage(RealizeImg(GImg::Lrc));
+	m_BTLrc.SetImage(RealizeImage(GImg::Lrc));
 	m_BTLrc.SetCustomDraw(TRUE);
 	m_BTLrc.SetTransparentBk(TRUE);
 	// 按钮 音量
 	m_BTVol.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
-	m_BTVol.SetImage(RealizeImg(GImg::PlayerVolume3));
+	m_BTVol.SetImage(RealizeImage(GImg::PlayerVolume3));
 	m_BTVol.SetCustomDraw(TRUE);
 	m_BTVol.SetTransparentBk(TRUE);
 	// 标题栏
@@ -194,6 +192,20 @@ CWndMain::~CWndMain()
 {
 }
 
+HWND CWndMain::Create(PCWSTR pszText, DWORD dwStyle, DWORD dwExStyle,
+	int x, int y, int cx, int cy, HWND hParent, HMENU hMenu, PCVOID pData)
+{
+	TblCreateGhostWindow(pszText);
+
+	const auto hWnd = __super::Create(pszText, dwStyle, dwExStyle,
+		x, y, cx, cy, hParent, hMenu, pData);
+
+	TblCreateObjectAndInit();
+	TblSetup();
+	m_WndTbGhost.SetIconicThumbnail();
+	return hWnd;
+}
+
 void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 {
 	switch (e.eEvent)
@@ -223,7 +235,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	case PlayEvt::Resume:
 	{
 		SetTimer(HWnd, IDT_COMM_TICK, TE_COMM_TICK, nullptr);
-		m_BTPlay.SetImage(RealizeImg(GImg::Pause));
+		m_BTPlay.SetImage(RealizeImage(GImg::Pause));
 		m_BTPlay.InvalidateRect();
 		TblUpdatePalyPauseButtonIcon(FALSE);
 		SmtcUpdateState();
@@ -238,7 +250,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	case PlayEvt::Pause:
 	{
 		KillTimer(HWnd, IDT_COMM_TICK);
-		m_BTPlay.SetImage(RealizeImg(GImg::Triangle));
+		m_BTPlay.SetImage(RealizeImage(GImg::Triangle));
 		m_BTPlay.InvalidateRect();
 		TblUpdatePalyPauseButtonIcon(TRUE);
 		SmtcUpdateState();
@@ -336,12 +348,8 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 	case WM_DPICHANGED:
-	{
-		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
-		SetUserDpi(GetDpiValue());
-		return lResult;
-	}
-	break;
+		SetUserDpi(LOWORD(wParam));
+		break;
 	case WM_DWMCOLORIZATIONCOLORCHANGED:
 		StUpdateColorizationColor();
 		break;
@@ -406,6 +414,17 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 	break;
 	}
 	return __super::OnElemEvent(pElem, uMsg, wParam, lParam);
+}
+
+ID2D1Bitmap1* CWndMain::RealizeImage(GImg n)
+{
+	if (!m_vBmpRealization[(size_t)n])
+	{
+		GetDeviceContext()->CreateBitmapFromWicBitmap(App->GetImg(n),
+			(const D2D1_BITMAP_PROPERTIES1*)nullptr,
+			&m_vBmpRealization[(size_t)n]);
+	}
+	return m_vBmpRealization[(size_t)n];
 }
 
 void CWndMain::Tick(int iMs)
@@ -553,6 +572,10 @@ void CWndMain::PreparePlayPageAnimation()
 
 void CWndMain::RePosButtonProgBar()
 {
+	constexpr int XCenterButtonLeftLimit = DLeftMiniCover + CxyMiniCover +
+		CxPaddingPlayPanelText + CxMaxTitleAndArtist + CxPaddingPlayPanelText +
+		CxMaxTime + CxPaddingPlayPanelText;
+
 	const auto cxClient = GetClientWidthLog();
 	const auto cyClient = GetClientHeightLog();
 	// 移动右侧按钮
@@ -580,7 +603,7 @@ void CWndMain::RePosButtonProgBar()
 
 	m_BTNext.SetPos(x, y);
 
-	//-----移动进度条
+	// 移动进度条
 	const auto yPlayPanel = cyClient - CyPlayPanel;
 	const auto dTrackSpacing = m_TBProgress.GetTrackSpacing();
 	const auto oxIndent = int((float)CxPaddingProgBarWithPlayPage * m_kPalyPageAn);

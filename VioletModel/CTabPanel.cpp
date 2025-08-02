@@ -20,31 +20,31 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case 0:
 					p->pszText = L"主页";
 					p->cchText = 2;
-					p->pImage = pWnd->RealizeImg(
+					p->pImage = pWnd->RealizeImage(
 						ShouldAppsUseDarkMode() ? GImg::HomeW : GImg::Home);
 					break;
 				case 1:
 					p->pszText = L"列表";
 					p->cchText = 2;
-					p->pImage = pWnd->RealizeImg(
+					p->pImage = pWnd->RealizeImage(
 						ShouldAppsUseDarkMode() ? GImg::ListW : GImg::List);
 					break;
 				case 2:
 					p->pszText = L"效果";
 					p->cchText = 2;
-					p->pImage = pWnd->RealizeImg(
+					p->pImage = pWnd->RealizeImage(
 						ShouldAppsUseDarkMode() ? GImg::PluginW : GImg::Plugin);
 					break;
 				case 3:
 					p->pszText = L"设置";
 					p->cchText = 2;
-					p->pImage = pWnd->RealizeImg(
+					p->pImage = pWnd->RealizeImage(
 						ShouldAppsUseDarkMode() ? GImg::SettingsW : GImg::Settings);
 					break;
 				default:
 					p->pszText = L"...";
 					p->cchText = 3;
-					p->pImage = pWnd->RealizeImg(GImg::SmallLogo);
+					p->pImage = pWnd->RealizeImage(GImg::SmallLogo);
 				}
 			}
 			return 0;
@@ -89,7 +89,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_LAIcon.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, GetWidth(), GetWidth(), this, GetWnd());
 		m_LAIcon.SetOnlyBitmap(TRUE);
-		m_LAIcon.SetBitmap(((CWndMain*)GetWnd())->RealizeImg(GImg::WindowLogo));
+		m_LAIcon.SetBitmap(((CWndMain*)GetWnd())->RealizeImage(GImg::WindowLogo));
 		m_LAIcon.SetBkImgMode(eck::BkImgMode::StretchKeepAspectRatio);
 		m_LAIcon.SetFullElem(TRUE);
 

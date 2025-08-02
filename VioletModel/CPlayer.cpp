@@ -23,9 +23,11 @@ CPlayer::~CPlayer()
 PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 {
 	m_bActive = TRUE;
+	m_bPaused = FALSE;
 	if (!m_Bass.Open(e.rsFile.Data()))
 	{
 		m_dwLastHrOrBassErr = CBass::GetError();
+		m_bActive = FALSE;
 		return PlayErr::ErrBass;
 	}
 	m_Bass.TempoCreate();
