@@ -24,13 +24,31 @@ enum class PlayErr
 	ErrBass,		// Bass报告了错误
 	ErrHResult,		// HRESULT错误
 	UnexpectedPlayingState,// CPlayer::PlayOrPause使用，Bass播放状态异常
-	NoCurrItem,	// 当前未播放任何项
+	NoCurrItem,		// 当前未播放任何项
+	ListEnd,		// 已播放到列表末尾
 };
+
+enum class AutoNextMode : BYTE
+{
+	Min,
+
+	ListLoop = Min,	// 列表循环
+	List,		// 列表播放
+	Radom,		// 随机播放
+	SingleLoop,	// 单曲循环
+	Single,		// 单曲播放
+
+	Max,
+};
+EckInlineNdCe AutoNextMode operator++(AutoNextMode& eMode) noexcept
+{
+	return eMode = AutoNextMode((eck::UnderlyingType_T<AutoNextMode>)eMode + 1);
+}
+
 
 class CPlayer final
 {
 private:
-	// 该信号上的所有操作都在UI线程执行
 	eck::CSignal<eck::NoIntercept_T, void, const PLAY_EVT_PARAM&> m_Sig{};
 	CBass m_Bass{};
 
@@ -45,10 +63,14 @@ private:
 
 	double m_lfCurrTime{};// 秒
 	double m_lfTotalTime{};// 秒
+
+	DWORD m_dwLastHrOrBassErr{};
+
+	AutoNextMode m_eAutoNextMode{};
+
 	BITBOOL m_bActive : 1{};
 	BITBOOL m_bPaused : 1{};	// 是否暂停
 
-	DWORD m_dwLastHrOrBassErr{};
 
 	PlayErr PlayWorker(CPlayList::ITEM& e);
 
@@ -66,13 +88,7 @@ public:
 	~CPlayer();
 
 	EckInlineNdCe auto& GetSignal() noexcept { return m_Sig; }
-	EckInline void SetList(CPlayList* pPlayList) noexcept
-	{
-		if (m_pPlayList == pPlayList)
-			return;
-		m_pPlayList = pPlayList;
-		GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::ListChanged });
-	}
+	void SetList(CPlayList* pPlayList) noexcept;
 	EckInlineNdCe CPlayList* GetList() const noexcept { return m_pPlayList; }
 	EckInlineNdCe BOOL IsActive() const noexcept { return m_bActive; }
 	// 秒
@@ -91,7 +107,7 @@ public:
 		return PlayOrPause();
 	}
 	PlayErr Stop(BOOL bNoGap = FALSE);
-	PlayErr Next();
+	PlayErr Next(BOOL bNoLoop = FALSE);
 	PlayErr Prev();
 	PlayErr AutoNext();
 
@@ -106,9 +122,13 @@ public:
 		pBmp = m_pBmpCover;
 	}
 
+	AutoNextMode NextAutoNextMode();
+
 	EckInlineNdCe auto& GetMusicInfo() const noexcept { return m_MusicInfo; }
 	EckInlineNdCe DWORD GetLastHrOrBassErr() const noexcept { return m_dwLastHrOrBassErr; }
 	EckInlineNdCe BOOL IsPaused() const noexcept { return m_bPaused; }
 	EckInlineNdCe int GetCurrLrcIdx() const noexcept { return m_idxCurrLrc; }
 	EckInlineNd auto GetLrc() const noexcept { return m_pvLrc; }
+	EckInlineCe void SetAutoNextMode(AutoNextMode eMode) noexcept { m_eAutoNextMode = eMode; }
+	EckInlineNdCe AutoNextMode GetAutoNextMode() const noexcept { return m_eAutoNextMode; }
 };

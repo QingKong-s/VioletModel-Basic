@@ -7,17 +7,26 @@ void CPlayer::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	switch (e.eEvent)
 	{
 	case PlayEvt::CommTick:
-	{
 		m_lfCurrTime = m_Bass.GetPosition();
 		LrcUpdatePosition();
-	}
-	break;
+		break;
+	case PlayEvt::End:
+		AutoNext();
+		break;
 	}
 }
 
 CPlayer::~CPlayer()
 {
 	SafeRelease(m_pBmpCover);
+}
+
+void CPlayer::SetList(CPlayList* pPlayList) noexcept
+{
+	if (m_pPlayList == pPlayList)
+		return;
+	m_pPlayList = pPlayList;
+	GetSignal().Emit({ PlayEvt::ListChanged });
 }
 
 PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
@@ -177,7 +186,7 @@ PlayErr CPlayer::Stop(BOOL bNoGap)
 	return PlayErr::Ok;
 }
 
-PlayErr CPlayer::Next()
+PlayErr CPlayer::Next(BOOL bNoLoop)
 {
 	if (!m_pPlayList)
 		return PlayErr::NoPlayList;
@@ -191,6 +200,8 @@ PlayErr CPlayer::Next()
 		++idxItem;
 		if (idxItem >= cCurrGroupItem)
 		{
+			if (bNoLoop)
+				return PlayErr::ListEnd;
 			idxItem = 0;
 			++idxGroup;
 			if (idxGroup >= GetList()->GrGetGroupCount())
@@ -205,7 +216,11 @@ PlayErr CPlayer::Next()
 			return PlayErr::NoPlayList;
 		++idxItem;
 		if (idxItem >= GetList()->FlGetCount())
+		{
+			if (bNoLoop)
+				return PlayErr::ListEnd;
 			idxItem = 0;
+		}
 		return Play(idxItem);
 	}
 }
@@ -246,13 +261,39 @@ PlayErr CPlayer::Prev()
 
 PlayErr CPlayer::AutoNext()
 {
-	return PlayErr();
+	switch (m_eAutoNextMode)
+	{
+	case AutoNextMode::ListLoop:
+		return Next();
+	case AutoNextMode::List:
+	{
+		const auto r = Next(TRUE);
+		if (r == PlayErr::ListEnd)
+			return Stop();
+		return r;
+	}
+	case AutoNextMode::Radom:
+		break;// TODO 随机播放
+	case AutoNextMode::SingleLoop:
+		m_Bass.Play(TRUE);
+		return PlayErr::Ok;
+	case AutoNextMode::Single:
+		return Stop();
+	}
+	return PlayErr::Ok;
 }
 
 void CPlayer::SetPosition(double lfPos)
 {
 	m_Bass.SetPosition(lfPos);
 	m_lfCurrTime = m_Bass.GetPosition();
+}
+
+AutoNextMode CPlayer::NextAutoNextMode()
+{
+	if (++m_eAutoNextMode >= AutoNextMode::Max)
+		m_eAutoNextMode = AutoNextMode::Min;
+	return m_eAutoNextMode;
 }
 
 BOOL CPlayer::LrcUpdatePosition()

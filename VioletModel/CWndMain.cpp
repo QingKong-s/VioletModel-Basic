@@ -2,6 +2,19 @@
 
 #include "CWndMain.h"
 
+EckInlineNdCe GImg AutoNextModeToGImg(AutoNextMode eMode) noexcept
+{
+	switch (eMode)
+	{
+	case AutoNextMode::ListLoop: return GImg::Circle;
+	case AutoNextMode::List: return GImg::ArrowRight3;
+	case AutoNextMode::Radom: return GImg::ArrowCross;
+	case AutoNextMode::SingleLoop: return GImg::CircleOne;
+	case AutoNextMode::Single: return GImg::ArrowRight1;
+	}
+	ECK_UNREACHABLE;
+}
+
 void CWndMain::ClearRes()
 {
 	for (auto& e : m_vBmpRealization)
@@ -101,6 +114,13 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	m_BTNext.SetImage(RealizeImage(GImg::Next));
 	m_BTNext.SetCustomDraw(TRUE);
 	m_BTNext.SetTransparentBk(TRUE);
+	// 按钮 播放模式
+	m_BTAutoNext.Create(nullptr, Dui::DES_VISIBLE, 0,
+		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
+	m_BTAutoNext.SetImage(RealizeImage(
+		AutoNextModeToGImg(App->GetPlayer().GetAutoNextMode())));
+	m_BTAutoNext.SetCustomDraw(TRUE);
+	m_BTAutoNext.SetTransparentBk(TRUE);
 	// 按钮 歌词
 	m_BTLrc.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
@@ -188,10 +208,6 @@ void CWndMain::ClearPageAnimation()
 	m_pAnPage = nullptr;
 }
 
-CWndMain::~CWndMain()
-{
-}
-
 HWND CWndMain::Create(PCWSTR pszText, DWORD dwStyle, DWORD dwExStyle,
 	int x, int y, int cx, int cy, HWND hParent, HMENU hMenu, PCVOID pData)
 {
@@ -268,9 +284,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_TIMER:
 		if (wParam == IDT_COMM_TICK)
-		{
-			App->GetPlayer().GetSignal().Emit(PLAY_EVT_PARAM{ PlayEvt::CommTick });
-		}
+			App->GetPlayer().GetSignal().Emit({ PlayEvt::CommTick });
 		break;
 	case WM_SIZE:
 	{
@@ -407,6 +421,11 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 			App->GetPlayer().Prev();
 		else if (pElem == &m_BTNext)
 			App->GetPlayer().Next();
+		else if (pElem == &m_BTAutoNext)
+		{
+			const auto r = App->GetPlayer().NextAutoNextMode();
+			m_BTAutoNext.SetImage(RealizeImage(AutoNextModeToGImg(r)));
+		}
 		else if (pElem->GetID() == ELEID_PLAYPAGE_BACK)
 		{
 			ECK_DUILOCK;
@@ -578,7 +597,6 @@ void CWndMain::RePosButtonProgBar()
 	constexpr int XCenterButtonLeftLimit = DLeftMiniCover + CxyMiniCover +
 		CxPaddingPlayPanelText + CxMaxTitleAndArtist + CxPaddingPlayPanelText +
 		CxMaxTime + CxPaddingPlayPanelText;
-
 	const auto cxClient = GetClientWidthLog();
 	const auto cyClient = GetClientHeightLog();
 	// 移动右侧按钮
@@ -588,24 +606,20 @@ void CWndMain::RePosButtonProgBar()
 
 	m_BTVol.SetPos(x, y);
 	x -= (CxyCircleButton + CxPaddingCircleButton);
-
 	m_BTLrc.SetPos(x, y);
 	x -= (CxyCircleButton + CxPaddingCircleButton);
-
+	m_BTAutoNext.SetPos(x, y);
+	// 移动中间按钮
 	x = XCenterButtonLeftLimit + ((x - XCenterButtonLeftLimit) -
 		(CxyCircleButton * 2 + CxyCircleButtonBig + CxPaddingCircleButton * 2)) / 2;
 	const auto xCenter = (cxClient - (CxyCircleButton * 2 + CxyCircleButtonBig +
 		CxPaddingCircleButton * 2)) / 2;
 	x += int((xCenter - x) * m_kPalyPageAn);
-	// 移动中间按钮
 	m_BTPrev.SetPos(x, y);
 	x += (CxyCircleButton + CxPaddingCircleButton);
-
 	m_BTPlay.SetPos(x, cyClient - CyPlayPanel + (CyPlayPanel - CxyCircleButtonBig) / 2);
 	x += (CxyCircleButtonBig + CxPaddingCircleButton);
-
 	m_BTNext.SetPos(x, y);
-
 	// 移动进度条
 	const auto yPlayPanel = cyClient - CyPlayPanel;
 	const auto dTrackSpacing = m_TBProgress.GetTrackSpacing();

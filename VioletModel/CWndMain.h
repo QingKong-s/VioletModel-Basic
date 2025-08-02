@@ -45,12 +45,8 @@ private:
 
 	Dui::CTrackBar m_TBProgress{};
 
-	Dui::CCircleButton
-		m_BTPrev{},
-		m_BTPlay{},
-		m_BTNext{},
-		m_BTLrc{},
-		m_BTVol{};
+	Dui::CCircleButton m_BTPrev{}, m_BTPlay{}, m_BTNext{},
+		m_BTAutoNext{}, m_BTLrc{}, m_BTVol{};
 
 	ID2D1Bitmap1* m_vBmpRealization[(size_t)GImg::Max]{};
 	ID2D1SolidColorBrush* m_pBrush{};
@@ -128,8 +124,6 @@ private:
 	HRESULT SmtcUpdateState() noexcept;
 	void SmtcUnInit() noexcept;
 public:
-	~CWndMain();
-
 	HWND Create(PCWSTR pszText, DWORD dwStyle, DWORD dwExStyle,
 		int x, int y, int cx, int cy, HWND hParent, HMENU hMenu, PCVOID pData = nullptr) override;
 
