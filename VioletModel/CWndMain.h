@@ -114,7 +114,8 @@ private:
 	HRESULT TblUpdateToolBarIcon();
 	HRESULT TblCreateObjectAndInit();
 	BOOL TblOnCommand(WPARAM wParam);
-	HRESULT TblUpdatePalyPauseButtonIcon(BOOL bPlay);
+	HRESULT TblUpdateState();
+	HRESULT TblUpdateProgress();
 
 	HRESULT SmtcInit() noexcept;
 #if VIOLET_WINRT

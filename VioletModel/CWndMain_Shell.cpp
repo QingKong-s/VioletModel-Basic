@@ -127,13 +127,30 @@ BOOL CWndMain::TblOnCommand(WPARAM wParam)
 	return FALSE;
 }
 
-HRESULT CWndMain::TblUpdatePalyPauseButtonIcon(BOOL bPlay)
+HRESULT CWndMain::TblUpdateState()
 {
+	HRESULT hr;
+	const auto& Player = App->GetPlayer();
+	if (Player.IsActive())
+		hr = m_pTaskbarList->SetProgressState(
+			HWnd, Player.IsPaused() ? TBPF_PAUSED : TBPF_NORMAL);
+	else
+		hr = m_pTaskbarList->SetProgressState(HWnd, TBPF_NOPROGRESS);
+	if (FAILED(hr)) return hr;
 	THUMBBUTTON tb{};
 	tb.dwMask = THB_ICON;
 	tb.iId = IDTBB_PLAY;
-	tb.hIcon = bPlay ? m_hiTbPlay.get() : m_hiTbPause.get();
+	tb.hIcon = (Player.IsActive() && !Player.IsPaused()) ?
+		m_hiTbPause.get() : m_hiTbPlay.get();
 	return m_pTaskbarList->ThumbBarUpdateButtons(m_WndTbGhost.HWnd, 1, &tb);
+}
+
+HRESULT CWndMain::TblUpdateProgress()
+{
+	const auto& Player = App->GetPlayer();
+	return m_pTaskbarList->SetProgressValue(HWnd,
+		ULONGLONG(Player.GetCurrTime() * 1000.),
+		ULONGLONG(Player.GetTotalTime() * 1000.));
 }
 
 HRESULT CWndMain::SmtcInit() noexcept

@@ -262,7 +262,7 @@ BOOL CPlayer::LrcUpdatePosition()
 	const auto fPos = (float)m_lfCurrTime;
 	const auto& vLrc = *m_pvLrc;
 	const auto cLrc = (int)vLrc.size();
-	if (m_idxCurrLrc >= 0)
+	if (m_idxCurrLrc >= 0)// 尝试快速判断
 	{
 		if (m_idxCurrLrc + 1 < cLrc)
 		{

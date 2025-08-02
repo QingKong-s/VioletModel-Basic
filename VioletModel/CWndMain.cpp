@@ -215,6 +215,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		m_TBProgress.SetTrackPos(float(App->GetPlayer().GetCurrTime() * ProgBarScale));
 		m_TBProgress.InvalidateRect();
 		SmtcOnCommonTick();
+		TblUpdateProgress();
 	}
 	break;
 	case PlayEvt::Play:
@@ -222,6 +223,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		OnCoverUpdate();
 		SmtcUpdateTimeLineRange();
 		SmtcUpdateDisplay();
+		TblUpdateProgress();
 		if (m_PagePlaying.GetStyle() & Dui::DES_VISIBLE)
 			m_PagePlaying.InvalidateRect();
 		m_TBProgress.SetRange(0.f, float(App->GetPlayer().GetTotalTime() * ProgBarScale));
@@ -237,7 +239,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		SetTimer(HWnd, IDT_COMM_TICK, TE_COMM_TICK, nullptr);
 		m_BTPlay.SetImage(RealizeImage(GImg::Pause));
 		m_BTPlay.InvalidateRect();
-		TblUpdatePalyPauseButtonIcon(FALSE);
+		TblUpdateState();
 		SmtcUpdateState();
 	}
 	break;
@@ -245,6 +247,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	{
 		m_TBProgress.SetTrackPos(0.f);
 		m_TBProgress.InvalidateRect();
+		TblUpdateProgress();
 	}
 	[[fallthrough]];
 	case PlayEvt::Pause:
@@ -252,7 +255,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		KillTimer(HWnd, IDT_COMM_TICK);
 		m_BTPlay.SetImage(RealizeImage(GImg::Triangle));
 		m_BTPlay.InvalidateRect();
-		TblUpdatePalyPauseButtonIcon(TRUE);
+		TblUpdateState();
 		SmtcUpdateState();
 	}
 	break;
