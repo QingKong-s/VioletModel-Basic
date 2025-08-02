@@ -136,6 +136,11 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	// 标题栏
 	m_TitleBar.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
+	// 音量条
+	m_VolBar.Create(nullptr, 0, 0,
+		0, 0, CxVolBar, CyVolBar, nullptr, this);
+	m_VolBar.SetTextFormat(pTfCenter.Get());
+	//
 	UpdateButtonImageSize();
 	m_PagePlaying.UpdateBlurredCover();
 	OnCoverUpdate();
@@ -401,6 +406,12 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 				m_TBProgress.GetTrackPos() / ProgBarScale);
 			return 0;
 		}
+		else if (pElem->GetID() == ELEID_VOLBAR_TRACK)
+		{
+			const auto f = ((Dui::CTrackBar*)pElem)->GetTrackPos();
+			App->GetPlayer().GetBass().SetVolume(f / 100.f);
+			m_VolBar.OnVolChanged(f);
+		}
 	}
 	return 0;
 
@@ -425,6 +436,14 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 		{
 			const auto r = App->GetPlayer().NextAutoNextMode();
 			m_BTAutoNext.SetImage(RealizeImage(AutoNextModeToGImg(r)));
+			m_BTAutoNext.InvalidateRect();
+		}
+		else if (pElem == &m_BTVol)
+		{
+			const auto x = GetClientWidthLog() - CxVolBar - CxVolBarPadding;
+			const auto y = m_BTVol.GetRectInClient().top - CyVolBar;
+			m_VolBar.SetPos(x, y);
+			m_VolBar.ShowAnimation();
 		}
 		else if (pElem->GetID() == ELEID_PLAYPAGE_BACK)
 		{

@@ -107,9 +107,15 @@ enum :int
 	CyFontPageTitle = 20,
 	CyStdList = 32,
 	CyStdEdit = CyStdList,
-
 	CxyListCover = 40,
 	CyPlayListItem = 46,
+	CyVolTB = 16,
+	CyVolTrack = 10,
+	CxVolBar = 220,
+	CyVolBar = 32,
+	CxVolLabel = 30,
+	CxVolBarPadding = 8,
+	DVolAn = 10,
 };
 
 enum class GPal
@@ -118,6 +124,8 @@ enum class GPal
 	PlayPanelBk,
 	PlayPanelBlurMask,
 	PlayPanelWatermark,
+	VolBarBk,
+	VolBarBorder,
 
 	Max
 };
@@ -134,6 +142,7 @@ enum
 	IDTBB_NEXT,
 
 	ELEID_PLAYPAGE_BACK,
+	ELEID_VOLBAR_TRACK,
 
 	TE_COMM_TICK = 300,
 };

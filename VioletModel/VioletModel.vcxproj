@@ -200,6 +200,9 @@
     <ClInclude Include="CMediaLib.h" />
     <ClInclude Include="CPlayListFile.h" />
     <ClInclude Include="CPlayListMgr.h" />
+    <ClInclude Include="CVeDtLrc.h" />
+    <ClInclude Include="CVeVolumeBar.h" />
+    <ClInclude Include="CWndLrc.h" />
     <ClInclude Include="CWndTbGhost.h" />
     <ClInclude Include="CVeMiniCover.h" />
     <ClInclude Include="CPage.h" />
@@ -225,6 +228,9 @@
     <ClCompile Include="CMediaLib.cpp" />
     <ClCompile Include="CPlayListFile.cpp" />
     <ClCompile Include="CPlayListMgr.cpp" />
+    <ClCompile Include="CVeDtLrc.cpp" />
+    <ClCompile Include="CVeVolumeBar.cpp" />
+    <ClCompile Include="CWndLrc.cpp" />
     <ClCompile Include="CWndMain_Shell.cpp" />
     <ClCompile Include="CWndTbGhost.cpp" />
     <ClCompile Include="CVeMiniCover.cpp" />

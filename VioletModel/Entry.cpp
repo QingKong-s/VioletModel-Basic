@@ -32,12 +32,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	}
 
 	DWORD dwErr;
-	if (const auto iRetInit = eck::Init(hInstance, nullptr, &dwErr);
-		iRetInit != eck::InitStatus::Ok)
+	if (const auto r = eck::Init(hInstance, nullptr, &dwErr);
+		r != eck::InitStatus::Ok)
 	{
 		EckDbgPrintFormatMessage(dwErr);
-		eck::MsgBox(eck::Format(L"Init failed!\r\nInitStatus = %d\r\nError code = %08X",
-			(int)iRetInit, dwErr), L"Error", MB_ICONERROR);
+		eck::MsgBox(eck::Format(LR"(Init failed!
+InitStatus = %d
+ErrorCode = %08X
+Msg = %s)",
+(int)r, dwErr, eck::InitStatusToString(r)), L"Error", MB_ICONERROR);
 		return 0;
 	}
 

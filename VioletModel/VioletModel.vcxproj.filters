@@ -111,6 +111,15 @@
     <ClInclude Include="CWndTbGhost.h">
       <Filter>窗口</Filter>
     </ClInclude>
+    <ClInclude Include="CWndLrc.h">
+      <Filter>窗口</Filter>
+    </ClInclude>
+    <ClInclude Include="CVeDtLrc.h">
+      <Filter>UI\元素</Filter>
+    </ClInclude>
+    <ClInclude Include="CVeVolumeBar.h">
+      <Filter>UI\元素</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Entry.cpp">
@@ -184,6 +193,15 @@
     </ClCompile>
     <ClCompile Include="CWndMain_Shell.cpp">
       <Filter>窗口</Filter>
+    </ClCompile>
+    <ClCompile Include="CWndLrc.cpp">
+      <Filter>窗口</Filter>
+    </ClCompile>
+    <ClCompile Include="CVeDtLrc.cpp">
+      <Filter>UI\元素</Filter>
+    </ClCompile>
+    <ClCompile Include="CVeVolumeBar.cpp">
+      <Filter>UI\元素</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

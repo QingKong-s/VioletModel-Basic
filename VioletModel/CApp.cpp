@@ -63,18 +63,22 @@ constexpr PCWSTR ImgFile[]
 static_assert(ARRAYSIZE(ImgFile) == (size_t)GImg::Max, "ImgFile size error.");
 
 constexpr static D2D1_COLOR_F PalLight[]
-{
-	Dui::StMakeForegroundColorLight(0.5f),
-	Dui::StMakeForegroundColorLight(0.5f),
-	Dui::StMakeForegroundColorLight(0.3f),
-	{ 0.f,0.f,0.f,0.3f },
+{ 
+	Dui::StMakeBackgroundColorLight(0.5f),
+	Dui::StMakeBackgroundColorLight(0.5f),
+	Dui::StMakeBackgroundColorLight(0.3f),
+	Dui::StMakeBackgroundColorLight(0.3f),
+	Dui::StMakeBackgroundColorLight(0.5f),
+	Dui::StMakeForegroundColorLight(0.2f),
 };
 constexpr static D2D1_COLOR_F PalDark[]
 {
-	Dui::StMakeForegroundColorDark(0.5f),
-	Dui::StMakeForegroundColorDark(0.5f),
-	Dui::StMakeForegroundColorDark(0.3f),
-	{ 1.f,1.f,1.f,0.3f },
+	Dui::StMakeBackgroundColorDark(0.5f),
+	Dui::StMakeBackgroundColorDark(0.5f),
+	Dui::StMakeBackgroundColorDark(0.3f),
+	Dui::StMakeBackgroundColorDark(0.3f),
+	Dui::StMakeBackgroundColorDark(0.5f),
+	Dui::StMakeForegroundColorDark(0.2f),
 };
 
 
@@ -109,5 +113,5 @@ void CApp::Init()
 
 const D2D1_COLOR_F& CApp::GetColor(GPal n) const
 {
-	return m_bDarkMode ? PalLight[size_t(n)] : PalDark[size_t(n)];
+	return m_bDarkMode ? PalDark[size_t(n)] : PalLight[size_t(n)];
 }

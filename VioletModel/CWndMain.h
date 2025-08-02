@@ -10,6 +10,7 @@
 #include "CPlayPanel.h"
 #include "CCompPlayPageAn.h"
 #include "CWndTbGhost.h"
+#include "CVeVolumeBar.h"
 
 class CWndMain final :
 	public Dui::CDuiWnd,
@@ -47,6 +48,8 @@ private:
 
 	Dui::CCircleButton m_BTPrev{}, m_BTPlay{}, m_BTNext{},
 		m_BTAutoNext{}, m_BTLrc{}, m_BTVol{};
+
+	CVeVolumeBar m_VolBar{};
 
 	ID2D1Bitmap1* m_vBmpRealization[(size_t)GImg::Max]{};
 	ID2D1SolidColorBrush* m_pBrush{};
