@@ -162,7 +162,7 @@ float CVeLrc::ItmPaint(int idx)
 		m_pDC->SetTransform(D2D1::Matrix3x2F::Scale(k, k, ptScale) * Mat);
 		m_pBrush->SetColor(InterpolateColor(
 			m_Color[CriNormal], m_Color[CriHiLight], 1.f - m_fAnValue));
-		
+
 	}
 	else if (idx == m_idxCurrAnItem)
 	{
@@ -363,10 +363,13 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Dui::ELEMPAINTSTRU ps;
 		BeginPaint(ps, wParam, lParam);
 
-		if (m_vItem.empty())
+		if (IsEmpty())
 		{
 			if (m_pGrEmptyText)
+			{
+				m_pBrush->SetColor(m_Color[CriHiLight]);
 				m_pDC1->DrawGeometryRealization(m_pGrEmptyText, m_pBrush);
+			}
 		}
 		else
 		{
@@ -374,6 +377,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (m_bTopBtmFade)
 			{
 				D2D1_LAYER_PARAMETERS1 LyParam{ D2D1::LayerParameters1() };
+				LyParam.contentBounds = GetViewRectF();
 				LyParam.opacityBrush = m_pBrFade;
 				m_pDC->PushLayer(LyParam, nullptr);
 			}
@@ -663,7 +667,7 @@ HRESULT CVeLrc::LrcUpdateEmptyText(std::wstring_view svEmptyText)
 		(UINT32)svEmptyText.size(), m_pTextFormat,
 		GetWidthF(), GetHeightF(), &pLayout);
 	if (FAILED(hr)) return hr;
-	pLayout->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+	pLayout->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 	pLayout->SetWordWrapping(DWRITE_WORD_WRAPPING_WRAP);
 
 	ComPtr<ID2D1PathGeometry1> pPathGeometry;
@@ -902,6 +906,7 @@ void CVeLrc::ItmLayout()
 	m_psv->SetMax(int(y - yInit - m_cyLinePadding + cy / 3.f * 2.f));
 	m_psv->SetPage((int)cy);
 	m_psv->SetViewSize((int)cy);
+	m_SB.SetVisible(m_psv->IsVisible());
 }
 
 void CVeLrc::ScrManualScrolling()

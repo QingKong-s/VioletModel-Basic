@@ -190,6 +190,14 @@ void CPageList::UpdateDefCover()
 	m_pDC->CreateBitmapFromWicBitmap(pDefCover.Get(), BmpProp, &m_pBmpDefCover);
 }
 
+void CPageList::ReCreateImageList()
+{
+	SafeRelease(m_pIlList);
+	m_pIlList = new eck::CD2DImageList{ CxyListCover,CxyListCover };
+	m_pIlList->BindRenderTarget(m_pDC);
+	m_pIlList->AddImage(m_pBmpDefCover);
+}
+
 LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -349,10 +357,8 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_cxIl = Log2Phy(CxyListCover);
 		m_cyIl = m_cxIl;
-		m_pIlList = new eck::CD2DImageList{ CxyListCover,CxyListCover };
-		m_pIlList->BindRenderTarget(m_pDC);
 		UpdateDefCover();
-		m_pIlList->AddImage(m_pBmpDefCover);
+		ReCreateImageList();
 		{
 			m_EDSearch.TxSetProp(TXTBIT_MULTILINE, 0, FALSE);
 			m_EDSearch.Create(nullptr, Dui::DES_VISIBLE, 0,
@@ -384,10 +390,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_GLList.Create(nullptr, Dui::DES_VISIBLE, 0,
 				0, 0, 0, 0, this);
 			m_GLList.SetView(Dui::CListTemplate::Type::Report);
-			constexpr int Width[]
-			{
-				160, 150, 150, 50
-			};
+			constexpr int Width[]{ 270, 150, 150, 50 };
 			m_GLList.SetColumnCount(4, Width);
 			m_GLList.SetTopExtraSpace(Dui::CListTemplate::CyDefHeader);
 			m_GLList.SetBottomExtraSpace(CyPlayPanel);
@@ -420,13 +423,23 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				return 0;
 			});
+		m_TBLPlayList.SelectItemForClick(0);
 	}
 	break;
 	case WM_DPICHANGED:
 	{
 		m_cxIl = Log2Phy(CxyListCover);
 		m_cyIl = m_cxIl;
-		
+		UpdateDefCover();
+		ReCreateImageList();
+		((CWndMain*)GetWnd())->ThreadCtx()->Callback.EnQueueCallback([this]
+			{
+				ECK_DUILOCK;
+				const auto pPl = GetCurrPlayList();
+				if (pPl)
+					pPl->InvalidateImage();
+				m_GLList.SetImageList(m_pIlList);
+			});
 	}
 	break;
 	case WM_DESTROY:

@@ -87,7 +87,7 @@ private:
 	BOOLEAN m_bEnableItemAnDelay{};	// 启用项目动画延迟
 	BOOLEAN m_bItemAnDelay{};		// 当前正在运行项目动画延迟
 	BOOLEAN m_bDelayScrollUp{};		// 指示项目是否向上运动
-	BOOLEAN m_bTopBtmFade{1};		// 指示是否启用顶部和底部渐变
+	BOOLEAN m_bTopBtmFade{};		// 指示是否启用顶部和底部渐变
 
 
 	void ScrAnProc(int iPos, int iPrevPos);

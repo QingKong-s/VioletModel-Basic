@@ -125,4 +125,6 @@ public:
 
 	EckInline void SetTaskRunning(bool b) noexcept { m_bTaskRunning = b; }
 	EckInlineNd bool GetTaskRunning() const noexcept { return m_bTaskRunning; }
+
+	void InvalidateImage();
 };

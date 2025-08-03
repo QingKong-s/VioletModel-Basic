@@ -47,6 +47,12 @@ HRESULT CPlayList::InitFromListFile(PCWSTR pszFile)
 	return S_OK;
 }
 
+void CPlayList::InvalidateImage()
+{
+	for (auto& e : m_vItemPool)
+		e.idxIl = -1;
+}
+
 int CPlayList::FlInsert(const eck::CRefStrW& rsFile, int idx, ULONGLONG TskTag)
 {
 	int idxPool;

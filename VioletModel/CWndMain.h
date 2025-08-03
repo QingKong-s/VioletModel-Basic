@@ -28,8 +28,6 @@ public:
 	};
 	constexpr static double ProgBarScale = 100.;
 private:
-	constexpr static float MaxPPAnDuration = 700.f;
-
 	Dui::CTitleBar m_TitleBar{};
 	Dui::CLabel m_LAPageTitle{};
 
@@ -64,10 +62,11 @@ private:
 	BOOLEAN m_bPageAnUpToDown{};
 	Page m_eCurrPage{};
 
-	BOOLEAN m_bPPAnActive{};
 	BOOLEAN m_bPPAnReverse{};// TRUE = 小到大，FALSE = 大到小
-	float m_msPPTotalTime{};
-	float m_kPalyPageAn{};
+	BOOLEAN m_bPPAnActive{};
+	BOOLEAN m_bPPCornerAnActive[4]{};
+	eck::CEasingCurveLite<eck::Easing::FOutCubic> m_PlayPageAn;
+	eck::CEasingCurveLite<eck::Easing::FOutExpo> m_PPCornerAn[4]{};
 	D2D1_RECT_F m_rcPPMini{};
 	D2D1_RECT_F m_rcPPLarge{};
 	CCompPlayPageAn* m_pCompPlayPageAn{};

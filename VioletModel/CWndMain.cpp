@@ -161,6 +161,7 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	StSwitchStdThemeMode(ShouldAppsUseDarkMode());
 	App->SetDarkMode(ShouldAppsUseDarkMode());
 	ShowPage(Page::List, FALSE);
+	m_TabPanel.GetTabList().SelectItemForClick(1);
 	return TRUE;
 }
 
@@ -196,8 +197,8 @@ void CWndMain::ShowPage(Page ePage, BOOL bAnimate)
 			m_pecPage = new eck::CEasingCurve{};
 			RegisterTimeLine(m_pecPage);
 			m_pecPage->SetParam((LPARAM)this);
-			m_pecPage->SetDuration(160);
-			m_pecPage->SetAnProc(eck::Easing::OutExpo);
+			m_pecPage->SetDuration(250);
+			m_pecPage->SetAnProc(eck::Easing::OutCubic);
 			m_pecPage->SetCallBack([](float fCurrValue, float fOldValue, LPARAM lParam)
 				{
 					const auto p = (CWndMain*)lParam;
@@ -211,8 +212,7 @@ void CWndMain::ShowPage(Page ePage, BOOL bAnimate)
 							CyPageSwitchAnDelta + (int)fCurrValue);
 				});
 		}
-		m_pecPage->SetRange(0, CyPageSwitchAnDelta);
-		m_pecPage->Begin();
+		m_pecPage->Begin(0, (float)CyPageSwitchAnDelta);
 		WakeRenderThread();
 	}
 }
@@ -432,7 +432,6 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 	{
 		ECK_DUILOCK;
 		PreparePlayPageAnimation();
-		m_PagePlaying.SetVisible(TRUE);
 		WakeRenderThread();
 	}
 	return 0;
@@ -483,6 +482,8 @@ ID2D1Bitmap1* CWndMain::RealizeImage(GImg n)
 
 void CWndMain::Tick(int iMs)
 {
+	constexpr float MaxPPAnDuration = 700.f;
+	constexpr float DurOverlayOpacity = 150.f;
 	constexpr float Duration[]
 	{
 		MaxPPAnDuration,
@@ -497,11 +498,10 @@ void CWndMain::Tick(int iMs)
 		MaxPPAnDuration * 5 / 6,
 		MaxPPAnDuration,
 	};
-	m_msPPTotalTime += iMs;
-	if (m_msPPTotalTime >= MaxPPAnDuration || m_msPPTotalTime <= 0.f)
+	if (!(m_bPPAnActive = m_PlayPageAn.Tick((float)iMs, MaxPPAnDuration)))
 	{
-		m_msPPTotalTime = 0.f;
 		m_bPPAnActive = FALSE;
+		ZeroMemory(m_bPPCornerAnActive, sizeof(m_bPPCornerAnActive));
 		m_PagePlaying.SetCompositor(nullptr);
 		m_NormalPageContainer.SetCompositor(nullptr);
 		m_NormalPageContainer.SetStyle(m_NormalPageContainer.GetStyle() &
@@ -515,71 +515,39 @@ void CWndMain::Tick(int iMs)
 			m_PagePlaying.SetVisible(FALSE);
 		return;
 	}
-	float k;
-	m_kPalyPageAn = eck::Easing::OutCubic(m_msPPTotalTime, 0.f, 1.f, MaxPPAnDuration);
-	if (!m_bPPAnReverse)
-		m_kPalyPageAn = 1.f - m_kPalyPageAn;
 	// 移动底部的按钮
 	RePosButtonProgBar();
 	// 页面动画更新
-	m_pCompPlayPageAn->Opacity = m_kPalyPageAn;
-	m_pCompNormalPageAn->Scale = 1.f - (m_kPalyPageAn * 0.2f);
+	const auto kOverlay = std::clamp(m_PlayPageAn.Time / DurOverlayOpacity, 0.f, 1.f);
+	m_pCompPlayPageAn->Opacity = (m_bPPAnReverse ? (1.f - kOverlay) : kOverlay);
+	m_pCompNormalPageAn->Scale = 1.f - m_PlayPageAn.K * 0.2f;
 	m_pCompNormalPageAn->Update2DAffineTransform();
-	m_pCompNormalPageAn->SetBlurStdDeviation(20.f * m_kPalyPageAn);
-	m_pCompNormalPageAn->Opacity = 1.f - m_kPalyPageAn;
+	m_pCompNormalPageAn->SetBlurStdDeviation(20.f * m_PlayPageAn.K);
+	m_pCompNormalPageAn->Opacity = 1.f - m_PlayPageAn.K;
 	m_pCompNormalPageAn->UpdateOpacity();
 
-	D2D1_POINT_2F pt[4];
-	if (m_bPPAnReverse)
+	D2D1_POINT_2F pt[]
 	{
-		// 左上
-		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, DurationR[0]);
-		k = 1.f - k;
-		k = std::clamp(k, 0.f, 1.f);
-		eck::CalcPointFromLineScalePos(m_rcPPLarge.left, m_rcPPLarge.top,
-			m_rcPPMini.left, m_rcPPMini.top, k, pt[0].x, pt[0].y);
-		// 右上
-		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, DurationR[1]);
-		k = 1.f - k;
-		k = std::clamp(k, 0.f, 1.f);
-		eck::CalcPointFromLineScalePos(m_rcPPLarge.right, m_rcPPLarge.top,
-			m_rcPPMini.right, m_rcPPMini.top, k, pt[1].x, pt[1].y);
-		// 左下
-		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, DurationR[2]);
-		k = 1.f - k;
-		k = std::clamp(k, 0.f, 1.f);
-		eck::CalcPointFromLineScalePos(m_rcPPLarge.left, m_rcPPLarge.bottom,
-			m_rcPPMini.left, m_rcPPMini.bottom, k, pt[2].x, pt[2].y);
-		// 右下
-		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, DurationR[3]);
-		k = 1.f - k;
-		k = std::clamp(k, 0.f, 1.f);
-		eck::CalcPointFromLineScalePos(m_rcPPLarge.right, m_rcPPLarge.bottom,
-			m_rcPPMini.right, m_rcPPMini.bottom, k, pt[3].x, pt[3].y);
-	}
-	else
+		{ m_rcPPMini.left, m_rcPPMini.top },
+		{ m_rcPPMini.right, m_rcPPMini.top },
+		{ m_rcPPMini.left, m_rcPPMini.bottom },
+		{ m_rcPPMini.right, m_rcPPMini.bottom },
+	};
+	const D2D1_POINT_2F ptLarge[]
 	{
-		// 左上
-		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, Duration[0]);
-		k = std::clamp(k, 0.f, 1.f);
-		eck::CalcPointFromLineScalePos(m_rcPPLarge.left, m_rcPPLarge.top,
-			m_rcPPMini.left, m_rcPPMini.top, k, pt[0].x, pt[0].y);
-		// 右上
-		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, Duration[1]);
-		k = std::clamp(k, 0.f, 1.f);
-		eck::CalcPointFromLineScalePos(m_rcPPLarge.right, m_rcPPLarge.top,
-			m_rcPPMini.right, m_rcPPMini.top, k, pt[1].x, pt[1].y);
-		// 左下
-		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, Duration[2]);
-		k = std::clamp(k, 0.f, 1.f);
-		eck::CalcPointFromLineScalePos(m_rcPPLarge.left, m_rcPPLarge.bottom,
-			m_rcPPMini.left, m_rcPPMini.bottom, k, pt[2].x, pt[2].y);
-		// 右下
-		k = eck::Easing::OutExpo(m_msPPTotalTime, 0.f, 1.f, Duration[3]);
-		k = std::clamp(k, 0.f, 1.f);
-		eck::CalcPointFromLineScalePos(m_rcPPLarge.right, m_rcPPLarge.bottom,
-			m_rcPPMini.right, m_rcPPMini.bottom, k, pt[3].x, pt[3].y);
+		{ m_rcPPLarge.left, m_rcPPLarge.top },
+		{ m_rcPPLarge.right, m_rcPPLarge.top },
+		{ m_rcPPLarge.left, m_rcPPLarge.bottom },
+		{ m_rcPPLarge.right, m_rcPPLarge.bottom },
+	};
+	const auto pDur = m_bPPAnReverse ? DurationR : Duration;
+	EckCounter(4, i)
+	{
+		m_bPPCornerAnActive[i] = m_PPCornerAn[i].Tick((float)iMs, pDur[i]);
+		eck::CalcPointFromLineScalePos(pt[i].x, pt[i].y,
+			ptLarge[i].x, ptLarge[i].y, m_PPCornerAn[i].K, pt[i].x, pt[i].y);
 	}
+
 	m_pCompPlayPageAn->Mat = eck::CalcDistortMatrix(m_rcPPLarge, pt);
 	m_pCompPlayPageAn->MatR = eck::CalcInverseDistortMatrix(m_rcPPLarge, pt);
 	if (!m_PagePlaying.GetCompositor())
@@ -609,18 +577,22 @@ void CWndMain::UpdateButtonImageSize()
 void CWndMain::PreparePlayPageAnimation()
 {
 	ECKBOOLNOT(m_bPPAnReverse);
-	if (!m_bPPAnActive)
+	const auto kBegin = m_bPPAnReverse ? 0.f : 1.f;
+	const auto kEnd = m_bPPAnReverse ? 1.f : 0.f;
+	m_PlayPageAn.Start(kBegin, kEnd, m_bPPAnActive);
+	EckCounter(4, i)
 	{
-		m_msPPTotalTime = m_bPPAnReverse ? MaxPPAnDuration : 0.f;
-		m_msPPTotalTime = 0.f;
+		m_PPCornerAn[i].Start(kBegin, kEnd, m_bPPCornerAnActive[i]);
+		m_bPPCornerAnActive[i] = TRUE;
 	}
 	m_bPPAnActive = TRUE;
-	m_PlayPanel.m_Cover.SetVisible(!m_bPPAnReverse);
 	if (!m_bPPAnReverse)
 	{
 		m_NormalPageContainer.SetVisible(TRUE);
+		m_PlayPanel.m_Cover.SetVisible(TRUE);
 		m_PlayPanel.SetVisible(TRUE);
 	}
+	m_PagePlaying.SetVisible(TRUE);
 	WakeRenderThread();
 }
 
@@ -634,7 +606,7 @@ void CWndMain::RePosButtonProgBar()
 	// 移动右侧按钮
 	const auto y = cyClient - CyPlayPanel + (CyPlayPanel - CxyCircleButton) / 2;
 	int x = cxClient - CxyCircleButton - CxPaddingCircleButtonRightEdge;
-	x += int((x - (cxClient - CxPaddingCtrlBtnWithPlayPage)) * m_kPalyPageAn);
+	x += int((x - (cxClient - CxPaddingCtrlBtnWithPlayPage)) * m_PlayPageAn.K);
 
 	m_BTVol.SetPos(x, y);
 	x -= (CxyCircleButton + CxPaddingCircleButton);
@@ -646,7 +618,7 @@ void CWndMain::RePosButtonProgBar()
 		(CxyCircleButton * 2 + CxyCircleButtonBig + CxPaddingCircleButton * 2)) / 2;
 	const auto xCenter = (cxClient - (CxyCircleButton * 2 + CxyCircleButtonBig +
 		CxPaddingCircleButton * 2)) / 2;
-	x += int((xCenter - x) * m_kPalyPageAn);
+	x += int((xCenter - x) * m_PlayPageAn.K);
 	m_BTPrev.SetPos(x, y);
 	x += (CxyCircleButton + CxPaddingCircleButton);
 	m_BTPlay.SetPos(x, cyClient - CyPlayPanel + (CyPlayPanel - CxyCircleButtonBig) / 2);
@@ -655,7 +627,7 @@ void CWndMain::RePosButtonProgBar()
 	// 移动进度条
 	const auto yPlayPanel = cyClient - CyPlayPanel;
 	const auto dTrackSpacing = m_TBProgress.GetTrackSpacing();
-	const auto oxIndent = int((float)CxPaddingProgBarWithPlayPage * m_kPalyPageAn);
+	const auto oxIndent = int((float)CxPaddingProgBarWithPlayPage * m_PlayPageAn.K);
 	m_TBProgress.SetRect({
 		-(int)dTrackSpacing + oxIndent,
 		yPlayPanel - CyProgress / 2,

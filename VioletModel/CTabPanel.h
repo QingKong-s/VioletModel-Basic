@@ -7,4 +7,6 @@ private:
 	Dui::CTabList m_TAB{};
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+	EckInlineNdCe auto& GetTabList() { return m_TAB; }
 };

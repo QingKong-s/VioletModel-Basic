@@ -25,7 +25,6 @@ LRESULT CVeVolumeBar::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_pecShowing = new eck::CEasingCurve{};
 		InitEasingCurve(m_pecShowing);
-		m_pecShowing->SetRange(0.f, 1.f);
 		m_pecShowing->SetDuration(300);
 		m_pecShowing->SetAnProc(eck::Easing::OutCubic);
 		m_pecShowing->SetCallBack([](float fCurrValue, float fOldValue, LPARAM lParam)
@@ -76,8 +75,10 @@ void CVeVolumeBar::ShowAnimation()
 	ECKBOOLNOT(m_bShow);
 	SetStyle(GetStyle() | Dui::DES_VISIBLE);
 	SetCompositor(m_pPageAn);
-	m_pecShowing->SetReverse(!m_bShow);
-	m_pecShowing->Begin(eck::ECBF_CONTINUE);
+	if (m_bShow)
+		m_pecShowing->Begin(0.f, 1.f);
+	else
+		m_pecShowing->Begin(1.f, 0.f);
 	GetWnd()->WakeRenderThread();
 }
 

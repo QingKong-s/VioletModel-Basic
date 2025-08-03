@@ -22,6 +22,8 @@ private:
 	void UpdateBlurredCover();
 
 	void OnPlayEvent(const PLAY_EVT_PARAM& e);
+
+	void SetEmptyText();
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

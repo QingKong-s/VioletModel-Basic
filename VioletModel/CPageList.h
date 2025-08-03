@@ -53,6 +53,7 @@ private:
 	HRESULT OnMenuAddFile(std::shared_ptr<LISTFILE> pListFile, int idxInsert = -1);
 	void OnPlayEvent(const PLAY_EVT_PARAM& e);
 	void UpdateDefCover();
+	void ReCreateImageList();
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 };

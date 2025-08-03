@@ -54,8 +54,7 @@ LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (!m_bHover)
 		{
 			m_bHover = TRUE;
-			m_pec->SetReverse(FALSE);
-			m_pec->Begin();
+			m_pec->Begin(0.f, CoverAnEndValue);
 			GetWnd()->WakeRenderThread();
 		}
 	}
@@ -65,8 +64,7 @@ LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (m_bHover)
 		{
 			m_bHover = FALSE;
-			m_pec->SetReverse(TRUE);
-			m_pec->Begin(eck::ECBF_CONTINUE);
+			m_pec->Begin(CoverAnEndValue, 0.f);
 			GetWnd()->WakeRenderThread();
 		}
 	}
@@ -102,7 +100,6 @@ LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_pec = new eck::CEasingCurve{};
 		InitEasingCurve(m_pec);
 		m_pec->SetAnProc(eck::Easing::OutCubic);
-		m_pec->SetRange(0.f, CoverAnEndValue);
 		m_pec->SetDuration(200.f);
 		m_pec->SetCallBack([](float fCurrValue, float fOldValue, LPARAM lParam)
 			{

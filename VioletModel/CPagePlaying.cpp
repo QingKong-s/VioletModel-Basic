@@ -91,9 +91,18 @@ void CPagePlaying::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	case PlayEvt::Stop:
 	{
 		m_Lrc.LrcClear();
+		SetEmptyText();
 	}
 	break;
 	}
+}
+
+void CPagePlaying::SetEmptyText()
+{
+	m_LATitle.SetText(L"Violet Model");
+	m_LAArtist.SetText(L"AuroraStudio");
+	m_LAAlbum.SetText(L"VC++/Win32");
+	m_Lrc.LrcUpdateEmptyText(L"Violet Model");
 }
 
 LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -217,6 +226,8 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_BTBack.SetID(ELEID_PLAYPAGE_BACK);
 
 		m_pDC->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White, 0.5f), &m_pBrBkg);
+
+		SetEmptyText();
 	}
 	break;
 	case WM_DESTROY:
