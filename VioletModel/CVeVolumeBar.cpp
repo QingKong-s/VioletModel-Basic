@@ -64,6 +64,7 @@ LRESULT CVeVolumeBar::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		SafeRelease(m_pBrush);
 		SafeRelease(m_pPageAn);
+		SafeRelease(m_pecShowing);
 		break;
 	}
 	return __super::OnEvent(uMsg, wParam, lParam);

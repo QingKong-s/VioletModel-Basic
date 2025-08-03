@@ -116,7 +116,7 @@ enum :int
 	CxVolLabel = 30,
 	CxVolBarPadding = 8,
 	DVolAn = 10,
-	DLrcTop = 30,
+	DLrcTop = 50,
 	DLrcBottom = 135,
 	CxyBackBtn = 40,
 	CyPlayPageLabelCoverPadding = 24,

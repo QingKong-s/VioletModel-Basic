@@ -45,6 +45,7 @@ private:
 	ID2D1DeviceContext1* m_pDC1{};
 	ID2D1SolidColorBrush* m_pBrush{};
 	ID2D1GeometryRealization* m_pGrEmptyText{};
+	ID2D1LinearGradientBrush* m_pBrFade{};
 
 	IDWriteTextFormat* m_pTextFormatTrans{};
 
@@ -74,7 +75,7 @@ private:
 	int m_idxDelayEnd{ -1 };
 
 	float m_msItemAnDelay{ 200.f };		// 当前行发生更改时歌词行之间开始动画的延迟
-	float m_cyLinePadding{ 6.f };		// 项目间距
+	float m_cyLinePadding{ 10.f };		// 项目间距
 	float m_fPlayingItemScale{ 1.1f };	// 正在播放的歌词行缩放比例
 	float m_cxyLineMargin{ 8.f };		// 项目内容边距
 	eck::Align m_eAlignH{ eck::Align::Near };	// 水平对齐
@@ -86,6 +87,7 @@ private:
 	BOOLEAN m_bEnableItemAnDelay{};	// 启用项目动画延迟
 	BOOLEAN m_bItemAnDelay{};		// 当前正在运行项目动画延迟
 	BOOLEAN m_bDelayScrollUp{};		// 指示项目是否向上运动
+	BOOLEAN m_bTopBtmFade{1};		// 指示是否启用顶部和底部渐变
 
 
 	void ScrAnProc(int iPos, int iPrevPos);
@@ -129,6 +131,8 @@ private:
 		return m_bItemAnDelay && m_idxDelayBegin >= 0 &&
 			m_idxDelayEnd >= m_idxDelayBegin;
 	}
+
+	void ReCreateFadeBrush();
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

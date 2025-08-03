@@ -162,6 +162,7 @@ float CVeLrc::ItmPaint(int idx)
 		m_pDC->SetTransform(D2D1::Matrix3x2F::Scale(k, k, ptScale) * Mat);
 		m_pBrush->SetColor(InterpolateColor(
 			m_Color[CriNormal], m_Color[CriHiLight], 1.f - m_fAnValue));
+		
 	}
 	else if (idx == m_idxCurrAnItem)
 	{
@@ -192,7 +193,7 @@ float CVeLrc::ItmPaint(int idx)
 		D2D1::ColorF::Green : D2D1::ColorF::Red });
 	m_pDC->DrawTextW(szDbg, cchDbg, GetTextFormat(), rcDbg, m_pBrush);
 #endif
-	return y;
+	return Item.y + Item.cy + m_cyLinePadding;
 }
 
 void CVeLrc::MiBeginDetect()
@@ -242,7 +243,7 @@ int CVeLrc::ItmIndexFromY(float y)
 	{
 		for (int i = (int)m_vItem.size() - 1; i >= 0; --i)
 		{
-			if (y > m_vItem[i].y)
+			if (y > m_vItem[i].y - m_cyLinePadding)
 				return i;
 		}
 		return 0;
@@ -250,7 +251,7 @@ int CVeLrc::ItmIndexFromY(float y)
 	else
 	{
 		const auto it = std::lower_bound(m_vItem.begin(), m_vItem.end(), y,
-			[](const ITEM& r, float f) { return r.y < f; });
+			[=](const ITEM& r, float f) { return r.y - m_cyLinePadding < f; });
 		if (it == m_vItem.end())
 			return -1;
 		if (it == m_vItem.begin())
@@ -331,6 +332,28 @@ void CVeLrc::ItmDelayComplete()
 	m_bItemAnDelay = FALSE;
 }
 
+void CVeLrc::ReCreateFadeBrush()
+{
+	SafeRelease(m_pBrFade);
+	if (!m_bTopBtmFade)
+		return;
+	constexpr float CyLrcGradient = 50.f;
+	const auto k = CyLrcGradient / GetHeightF();
+	const D2D1_GRADIENT_STOP Stop[]
+	{
+		{},
+		{ k,{.a = 1.f } },
+		{ 1.f - k,{.a = 1.f } },
+		{ 1.f },
+	};
+	ComPtr<ID2D1GradientStopCollection> pStopCollection;
+	m_pDC->CreateGradientStopCollection(EckArrAndLen(Stop), &pStopCollection);
+	D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES Prop;
+	Prop.startPoint = {};
+	Prop.endPoint = { 0.f,GetHeightF() };
+	m_pDC->CreateLinearGradientBrush(Prop, pStopCollection.Get(), &m_pBrFade);
+}
+
 LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -346,11 +369,22 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_pDC1->DrawGeometryRealization(m_pGrEmptyText, m_pBrush);
 		}
 		else
+		{
+			// 可以优化为不使用图层，但是太麻烦了不做了
+			if (m_bTopBtmFade)
+			{
+				D2D1_LAYER_PARAMETERS1 LyParam{ D2D1::LayerParameters1() };
+				LyParam.opacityBrush = m_pBrFade;
+				m_pDC->PushLayer(LyParam, nullptr);
+			}
 			for (int i = m_idxTop; i < (int)m_vItem.size(); ++i)
 			{
 				if (ItmPaint(i) > GetHeightF())
 					break;
 			}
+			if (m_bTopBtmFade)
+				m_pDC->PopLayer();
+		}
 		ECK_DUI_DBG_DRAW_FRAME;
 		EndPaint(ps);
 	}
@@ -407,6 +441,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		if (!MiIsIdle())
 			SeBeginExpand(TRUE);
+		ItmDelayComplete();
 		ScrManualScrolling();
 		m_psv->OnMouseWheel2(-GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA);
 		GetWnd()->WakeRenderThread();
@@ -508,6 +543,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				ECK_DUILOCK;
 				if (!MiIsIdle())
 					SeBeginExpand(TRUE);
+				ItmDelayComplete();
 				ScrManualScrolling();
 				m_psv->InterruptAnimation();
 				ScrDoItemScroll(m_psv->GetPos());
@@ -540,6 +576,8 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SIZE:
 	{
+		ReCreateFadeBrush();
+
 		ItmDelayComplete();
 		ItmLayout();
 		RECT rc;
@@ -602,6 +640,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 	{
 		SafeRelease(m_pBrush);
+		SafeRelease(m_pBrFade);
 		SafeRelease(m_pTextFormat);
 		SafeRelease(m_psv);
 		SafeRelease(m_pDC1);
