@@ -52,10 +52,13 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	ComPtr<IDWriteTextFormat> pTfPageTitle, pTfLeft, pTfCenter;
 	App->GetFontFactory().NewFont(pTfPageTitle.RefOf(), eck::Align::Near,
 		eck::Align::Center, (float)CyFontPageTitle, 600);
+	pTfPageTitle->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	App->GetFontFactory().NewFont(pTfLeft.RefOf(), eck::Align::Near,
 		eck::Align::Center, (float)CyFontNormal);
+	pTfLeft->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	App->GetFontFactory().NewFont(pTfCenter.RefOf(), eck::Align::Center,
 		eck::Align::Center, (float)CyFontNormal);
+	pTfCenter->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
 	m_NormalPageContainer.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
@@ -88,9 +91,18 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 		0, 0, 0, 0, nullptr, this);
 	m_PlayPanel.SetTextFormat(pTfLeft.Get());
 	// 页 播放
+	ComPtr<IDWriteTextFormat> pTfPP;
 	m_PagePlaying.Create(nullptr, 0, 0,
 		0, 0, 0, 0, nullptr, this);
 	m_PagePlaying.SetTextFormat(pTfLeft.Get());
+	App->GetFontFactory().NewFont(pTfPP.RefOfClear(), eck::Align::Near,
+		eck::Align::Center, (float)CyFontPlayPageLabel, 600);
+	pTfPP->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+	m_PagePlaying.SetLabelTextFormatTitle(pTfPP.Get());
+	App->GetFontFactory().NewFont(pTfPP.RefOfClear(), eck::Align::Near,
+		eck::Align::Center, (float)CyFontPlayPageLabel);
+	pTfPP->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+	m_PagePlaying.SetLabelTextFormat(pTfPP.Get());
 	// 进度条
 	m_TBProgress.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, 0, 0, nullptr, this);
@@ -252,6 +264,7 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		m_TBProgress.InvalidateRect();
 		m_PlayPanel.InvalidateRect();
 		m_WndTbGhost.InvalidateThumbnailCache();
+		m_WndTbGhost.InvalidateDwmThumbnail();
 		m_WndTbGhost.SetIconicThumbnail();
 	}
 	[[fallthrough]];

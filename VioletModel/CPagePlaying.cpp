@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "CPagePlaying.h"
 #include "CApp.h"
+#include "CWndMain.h"
 
 
 void CPagePlaying::UpdateBlurredCover()
@@ -79,6 +80,10 @@ void CPagePlaying::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	{
 		UpdateBlurredCover();
 		InvalidateRect();
+		const auto& mi = App->GetPlayer().GetMusicInfo();
+		m_LATitle.SetText(mi.rsTitle.Data());
+		m_LAAlbum.SetText(mi.rsAlbum.Data());
+		m_LAArtist.SetText(mi.GetArtistStr().Data());
 
 		m_Lrc.LrcInit(App->GetPlayer().GetLrc());
 	}
@@ -107,24 +112,55 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SIZE:
 	{
-		const auto cx = GetWidthF();
-		const auto cy = GetHeightF();
+		const auto cxF = GetWidthF();
+		const auto cyF = GetHeightF();
 		if (m_pBmpBlurredCover)
 		{
 			const auto size = m_pBmpBlurredCover->GetSize();
-			if (!(size.width < cx || size.width / 2.f > cx ||
-				size.height < cy || size.height / 2.f > cy))
+			if (!(size.width < cxF || size.width / 2.f > cxF ||
+				size.height < cyF || size.height / 2.f > cyF))
 				goto Update;
 			SafeRelease(m_pBmpBlurredCover);
-			GetWnd()->BmpNewLogSize(cx, cy, m_pBmpBlurredCover);
+			GetWnd()->BmpNewLogSize(cxF, cyF, m_pBmpBlurredCover);
 		}
 		else
-			GetWnd()->BmpNewLogSize(cx, cy, m_pBmpBlurredCover);
+			GetWnd()->BmpNewLogSize(cxF, cyF, m_pBmpBlurredCover);
 	Update:;
 		UpdateBlurredCover();
+		const auto cx = GetWidth();
+		const auto cy = GetHeight();
+		const auto cxMinGap = cx * 1 / 20;
+		const RECT rcLrc{ cx * 9 / 20, DLrcTop, cx * 19 / 20, cy - DLrcBottom };
+		m_Lrc.SetRect(rcLrc);
 
-		m_Lrc.SetRect({
-			300, 50, GetWidth() - 20, GetHeight() - 150 });
+		RECT rcCover;
+		rcCover.left = cx * 1 / 10;
+		rcCover.top = cy * 15 / 100;
+		const auto cxyCover = std::min(
+			int(rcLrc.left - cxMinGap - rcCover.left),
+			cy * 4 / 10);
+		rcCover.right = rcCover.left + cxyCover;
+		rcCover.bottom = rcCover.top + cxyCover;
+		m_Cover.SetRect(rcCover);
+
+		RECT rcLabel{ rcCover };
+		rcLabel.top = rcCover.bottom + CyPlayPageLabelCoverPadding;
+		rcLabel.bottom = rcLabel.top + CyPlayPageLabel;
+		m_LATitle.SetRect(rcLabel);
+		rcLabel.top = rcLabel.bottom + CyPlayPageLabelPadding;
+		rcLabel.bottom = rcLabel.top + CyPlayPageLabel;
+		m_LAAlbum.SetRect(rcLabel);
+		rcLabel.top = rcLabel.bottom + CyPlayPageLabelPadding;
+		rcLabel.bottom = rcLabel.top + CyPlayPageLabel;
+		m_LAArtist.SetRect(rcLabel);
+
+		const auto dBackBtnMar = (CxyMiniCover - CxyBackBtn) / 2;
+		RECT rcBackBtn;
+		rcBackBtn.left = DLeftMiniCover + dBackBtnMar;
+		rcBackBtn.top = cy - CyPlayPanel + DTopMiniCover + dBackBtnMar;
+		rcBackBtn.right = rcBackBtn.left + CxyBackBtn;
+		rcBackBtn.bottom = rcBackBtn.top + CxyBackBtn;
+		m_BTBack.SetRect(rcBackBtn);
 	}
 	break;
 	case WM_DPICHANGED:
@@ -136,7 +172,14 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		UpdateBlurredCover();
 	}
 	break;
-
+	case WM_SETFONT:
+	{
+		const auto pTf = GetTextFormat();
+		m_LATitle.SetTextFormat(pTf);
+		m_LAAlbum.SetTextFormat(pTf);
+		m_LAArtist.SetTextFormat(pTf);
+	}
+	break;
 	case WM_CREATE:
 	{
 		App->GetPlayer().GetSignal().Connect(this, &CPagePlaying::OnPlayEvent);
@@ -145,6 +188,12 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			50, 50, 200, 200, this);
 		m_Lrc.Create(nullptr, Dui::DES_VISIBLE, 0,
 			50, 260, 200, 100, this);
+		m_LATitle.Create(nullptr, Dui::DES_VISIBLE, 0,
+			0, 0, 0, 0, this);
+		m_LAAlbum.Create(nullptr, Dui::DES_VISIBLE, 0,
+			0, 0, 0, 0, this);
+		m_LAArtist.Create(nullptr, Dui::DES_VISIBLE, 0,
+			0, 0, 0, 0, this);
 
 		D2D1_COLOR_F crLrc[CVeLrc::CriMax]
 		{
@@ -164,6 +213,7 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		m_BTBack.Create(nullptr, Dui::DES_VISIBLE | Dui::DES_NOTIFY_TO_WND, 0,
 			100, 100, 70, 20, this);
+		m_BTBack.SetBitmap(((CWndMain*)GetWnd())->RealizeImage(GImg::PlayPageDown));
 		m_BTBack.SetID(ELEID_PLAYPAGE_BACK);
 
 		m_pDC->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White, 0.5f), &m_pBrBkg);

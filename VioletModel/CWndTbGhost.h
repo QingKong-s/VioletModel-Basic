@@ -18,6 +18,10 @@ public:
 	void InvalidateLivePreviewCache();
 
 	void InvalidateThumbnailCache();
+	EckInline HRESULT InvalidateDwmThumbnail()
+	{
+		return DwmInvalidateIconicBitmaps(HWnd);
+	}
 
 	// 使用播放器当前封面更新任务栏缩略图，若尺寸设为UINT_MAX则使用上次记录的最适尺寸
 	// 封面变化后必须立即更新一次

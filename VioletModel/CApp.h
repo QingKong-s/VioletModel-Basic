@@ -116,6 +116,13 @@ enum :int
 	CxVolLabel = 30,
 	CxVolBarPadding = 8,
 	DVolAn = 10,
+	DLrcTop = 30,
+	DLrcBottom = 135,
+	CxyBackBtn = 40,
+	CyPlayPageLabelCoverPadding = 24,
+	CyPlayPageLabelPadding = 4,
+	CyPlayPageLabel = 26,
+	CyFontPlayPageLabel = 18,
 };
 
 enum class GPal

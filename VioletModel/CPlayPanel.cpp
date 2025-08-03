@@ -86,6 +86,7 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			eck::Align::Far, (float)CyFontNormal);
 		App->GetFontFactory().NewFont(pTfTitle.RefOf(), eck::Align::Near,
 			eck::Align::Center, (float)CyFontNormal, 700);
+		pTfTitle->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
 		m_LAWatermark.SetTextFormat(pTfWatermark.Get());
 		m_LAWatermark.SetUseThemeColor(FALSE);
