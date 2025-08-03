@@ -58,7 +58,7 @@ private:
 	int m_idxTop{ -1 };
 	int m_idxHot{ -1 };
 	int m_idxMark{ -1 };
-	int m_idxPrevCurr{ -1 };
+	int m_idxCurr{ -1 };
 
 	eck::CEasingAn<eck::Easing::FOutCubic> m_AnEnlarge{};
 	int m_idxPrevAnItem{ -1 },
@@ -85,7 +85,7 @@ private:
 	BOOLEAN m_bSeEnlarging{};	// 指示ScrollExpand的操作是否为放大
 	BOOLEAN m_bEnableItemAnDelay{};	// 启用项目动画延迟
 	BOOLEAN m_bItemAnDelay{};		// 当前正在运行项目动画延迟
-	BOOLEAN m_bDelayScrollUp{};		// 指示是否向上滚动
+	BOOLEAN m_bDelayScrollUp{};		// 指示项目是否向上运动
 
 
 	void ScrAnProc(int iPos, int iPrevPos);
@@ -105,6 +105,7 @@ private:
 	void ScrAutoScrolling();
 	void ScrManualScrolling();
 	void ScrDoItemScroll(int iPos);
+	void ScrFixItemPosition();
 
 	void IsbWakeRenderThread()
 	{

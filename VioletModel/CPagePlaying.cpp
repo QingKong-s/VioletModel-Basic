@@ -5,12 +5,15 @@
 
 void CPagePlaying::UpdateBlurredCover()
 {
+	ECK_DUILOCK;
+	const auto cxElem = Log2PhyF(GetWidthF());
+	const auto cyElem = Log2PhyF(GetHeightF());
+	if (!cxElem ||!cyElem)
+		return;
 	ComPtr<IWICBitmap> pWicCover;
 	App->GetPlayer().GetCover(pWicCover.RefOf());
 	if (!pWicCover.Get())
-		return;
-	ECK_DUILOCK;
-
+		pWicCover = App->GetImg(GImg::DefaultCover);
 	ComPtr<ID2D1Image> pOldTarget;
 	m_pDC->GetTarget(&pOldTarget);
 	m_pDC->SetTarget(m_pBmpBlurredCover);
@@ -18,8 +21,6 @@ void CPagePlaying::UpdateBlurredCover()
 	m_pDC->BeginDraw();
 	m_pDC->Clear(D2D1::ColorF(D2D1::ColorF::White));// TODO:主题色
 
-	const auto cxElem = Log2PhyF(GetWidthF());
-	const auto cyElem = Log2PhyF(GetHeightF());
 	UINT cx0, cy0;	// 原始大小
 	float cyRgn;	// 截取区域高
 	float cx;		// 缩放后图片宽
@@ -123,7 +124,7 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		UpdateBlurredCover();
 
 		m_Lrc.SetRect({
-			300, 50, GetWidth() - 20, GetHeight() - 150});
+			300, 50, GetWidth() - 20, GetHeight() - 150 });
 	}
 	break;
 	case WM_DPICHANGED:
@@ -139,7 +140,7 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 	{
 		App->GetPlayer().GetSignal().Connect(this, &CPagePlaying::OnPlayEvent);
-		
+
 		m_Cover.Create(nullptr, Dui::DES_VISIBLE, 0,
 			50, 50, 200, 200, this);
 		m_Lrc.Create(nullptr, Dui::DES_VISIBLE, 0,

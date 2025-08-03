@@ -75,7 +75,7 @@ void CVeLrc::ItmReCalcTop()
 float CVeLrc::ItmPaint(int idx)
 {
 	EckAssert(idx >= 0 && idx < (int)m_vItem.size());
-	auto& Item = m_vItem[idx];
+	const auto& Item = m_vItem[idx];
 	const auto y = Item.y;
 	D2D1_MATRIX_3X2_F Mat0;
 	m_pDC->GetTransform(&Mat0);
@@ -100,6 +100,7 @@ float CVeLrc::ItmPaint(int idx)
 
 	if (!Item.bCacheValid)
 	{
+		auto& Item = m_vItem[idx];
 		constexpr float cyPadding[]{ 5.f,0.f };
 
 		float x[2]{};
@@ -178,7 +179,7 @@ float CVeLrc::ItmPaint(int idx)
 		}
 		else
 			m_pDC->SetTransform(Mat);
-		m_pBrush->SetColor(m_Color[m_idxPrevCurr == idx ? CriHiLight : CriNormal]);
+		m_pBrush->SetColor(m_Color[m_idxCurr == idx ? CriHiLight : CriNormal]);
 	}
 	m_pDC1->DrawGeometryRealization(Item.pGr.Get(), m_pBrush);
 	m_pDC->SetTransform(Mat0);
@@ -187,7 +188,8 @@ float CVeLrc::ItmPaint(int idx)
 	const auto cchDbg = swprintf_s(szDbg, L"%d", idx);
 	D2D1_RECT_F rcDbg;
 	ItmGetRect(idx, rcDbg);
-	m_pBrush->SetColor(D2D1::ColorF{ D2D1::ColorF::Red });
+	m_pBrush->SetColor(D2D1::ColorF{ (ItmIsDelaying() && ItmInDelayRange(idx)) ?
+		D2D1::ColorF::Green : D2D1::ColorF::Red });
 	m_pDC->DrawTextW(szDbg, cchDbg, GetTextFormat(), rcDbg, m_pBrush);
 #endif
 	return y;
@@ -285,15 +287,14 @@ void CVeLrc::ItmDelayPrepare(float dy)
 {
 	float y;
 	m_bItemAnDelay = TRUE;// 马上要启动滚动条时间线，无需唤醒渲染线程
-	const int idxCurr = m_idxPrevCurr;
 	m_bDelayScrollUp = (dy > 0.f);
 	int i;
-	const auto& ItemCurr = m_vItem[idxCurr];
+	const auto& ItemCurr = m_vItem[m_idxCurr];
 	// 当前（含）以上
 	y = ItmGetCurrentItemTarget() - ItemCurr.cy / 2.f
 		+ ItemCurr.cy + m_cyLinePadding;
 	m_idxDelayBegin = 0;
-	for (int i = idxCurr; i >= 0; --i)
+	for (int i = m_idxCurr; i >= 0; --i)
 	{
 		auto& e = m_vItem[i];
 		y -= (e.cy + m_cyLinePadding);
@@ -309,7 +310,7 @@ void CVeLrc::ItmDelayPrepare(float dy)
 	// 当前以下
 	y = ItemCurr.yAnDelayDst + ItemCurr.cy + m_cyLinePadding;
 	m_idxDelayEnd = (int)m_vItem.size() - 1;
-	for (i = idxCurr + 1; i < (int)m_vItem.size(); ++i)
+	for (i = m_idxCurr + 1; i < (int)m_vItem.size(); ++i)
 	{
 		auto& e = m_vItem[i];
 		e.yAnDelayDst = y;
@@ -539,6 +540,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SIZE:
 	{
+		ItmDelayComplete();
 		ItmLayout();
 		RECT rc;
 		rc.left = GetWidth() - m_SB.GetWidth();
@@ -546,6 +548,33 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		rc.right = rc.left + m_SB.GetWidth();
 		rc.bottom = rc.top + GetHeight();
 		m_SB.SetRect(rc);
+		if (!IsEmpty())
+		{
+			if (MiIsIdle())
+				ScrFixItemPosition();
+			else
+			{
+				const auto idxCurr = m_idxCurr < 0 ? 0 : m_idxCurr;
+				const auto& CurrItem = m_vItem[idxCurr];
+				float y = ItmGetCurrentItemTarget() - CurrItem.cy / 2.f
+					+ CurrItem.cy + m_cyLinePadding;
+				for (int i = idxCurr; i >= 0; --i)
+				{
+					auto& e = m_vItem[i];
+					y -= (e.cy + m_cyLinePadding);
+					e.y = e.yNoDelay = y;
+				}
+				m_psv->SetPos(-(int)m_vItem.front().y);
+				y = CurrItem.yNoDelay + CurrItem.cy + m_cyLinePadding;
+				for (int i = idxCurr + 1; i < (int)m_vItem.size(); ++i)
+				{
+					auto& e = m_vItem[i];
+					e.y = e.yNoDelay = y;
+					y += (e.cy + m_cyLinePadding);
+				}
+			}
+			ItmReCalcTop();
+		}
 	}
 	break;
 
@@ -615,7 +644,7 @@ HRESULT CVeLrc::LrcSetCurrentLine(int idxCurr)
 {
 	if (idxCurr < 0)
 		return E_BOUNDS;
-	if (m_idxPrevCurr == idxCurr)
+	if (m_idxCurr == idxCurr)
 		return S_FALSE;
 #ifdef _DEBUG
 	if (idxCurr >= (int)m_vItem.size())
@@ -625,22 +654,22 @@ HRESULT CVeLrc::LrcSetCurrentLine(int idxCurr)
 	}
 #endif
 	ECK_DUILOCK;
-	const int idxPrev = m_idxPrevCurr;
-	m_idxPrevCurr = idxCurr;
+	const int idxPrev = m_idxCurr;
+	m_idxCurr = idxCurr;
 	if (MiIsIdle())
 	{
 		if (idxPrev >= 0)
 			ItmInvalidate(idxPrev);
-		if (m_idxPrevCurr >= 0)
-			ItmInvalidate(m_idxPrevCurr);
+		if (m_idxCurr >= 0)
+			ItmInvalidate(m_idxCurr);
 	}
 	else
 	{
 		m_bEnlarging = TRUE;
 		m_idxPrevAnItem = idxPrev;
-		m_idxCurrAnItem = m_idxPrevCurr;
+		m_idxCurrAnItem = m_idxCurr;
 		m_AnEnlarge.Begin(1.f, m_fPlayingItemScale - 1.f, (float)m_psv->GetDuration());
-		const auto& e = m_vItem[m_idxPrevCurr];
+		const auto& e = m_vItem[m_idxCurr];
 		const auto dy = (e.yNoDelay + e.cy / 2.f) - ItmGetCurrentItemTarget();
 		m_psv->InterruptAnimation();
 		m_psv->SmoothScrollDelta((int)dy);
@@ -654,11 +683,14 @@ HRESULT CVeLrc::LrcInit(std::shared_ptr<std::vector<eck::LRCINFO>> pvLrc)
 {
 	ECK_DUILOCK;
 	m_pvLrc = pvLrc;
-	m_idxPrevCurr = -1;
+	m_idxCurr = -1;
 	ItmLayout();
-	m_psv->SetPos(m_psv->GetMin());
+	ItmDelayComplete();
+	if (!IsEmpty())
+		ScrFixItemPosition();
 	ItmReCalcTop();
 	InvalidateRect();
+	//ScrAutoScrolling();
 	return S_OK;
 }
 
@@ -670,7 +702,7 @@ void CVeLrc::LrcClear()
 	m_idxTop = -1;
 	m_idxHot = -1;
 	m_idxMark = -1;
-	m_idxPrevCurr = -1;
+	m_idxCurr = -1;
 	m_idxPrevAnItem = -1;
 	m_idxCurrAnItem = -1;
 	m_fAnValue = 1.f;
@@ -756,19 +788,19 @@ void CVeLrc::Tick(int iMs)
 
 void CVeLrc::ScrAutoScrolling()
 {
-	if (m_idxPrevCurr != m_idxCurrAnItem && m_idxCurrAnItem >= 0)
+	if (m_idxCurr != m_idxCurrAnItem && m_idxCurrAnItem >= 0)
 	{
 		m_idxPrevAnItem = m_idxCurrAnItem;
-		m_idxCurrAnItem = m_idxPrevCurr;
+		m_idxCurrAnItem = m_idxCurr;
 		m_bEnlarging = TRUE;
 		m_AnEnlarge.Begin(1.f, m_fPlayingItemScale - 1.f, (float)m_psv->GetDuration());
 	}
-	const auto& CurrItem = m_idxPrevCurr < 0 ? m_vItem.front() : m_vItem[m_idxPrevCurr];
+	const auto& CurrItem = m_idxCurr < 0 ? m_vItem.front() : m_vItem[m_idxCurr];
 	const auto dy = (CurrItem.yNoDelay + CurrItem.cy / 2.f) - ItmGetCurrentItemTarget();
 	m_psv->InterruptAnimation();
 	m_psv->SmoothScrollDelta((int)dy);
 	SeBeginExpand(FALSE);
-	if (m_idxPrevCurr >= 0)
+	if (m_idxCurr >= 0)
 		ItmDelayPrepare(dy);
 	GetWnd()->WakeRenderThread();
 }
@@ -788,7 +820,8 @@ void CVeLrc::ItmLayout()
 	m_vItem.resize(vLrc.size());
 	const float cxMax = (cx - m_cxyLineMargin * 2.f) / m_fPlayingItemScale;
 	DWRITE_TEXT_METRICS Metrics;
-	float y = 0.f;
+	const auto yInit = (float)-m_psv->GetPos();
+	float y = yInit;
 	EckCounter(vLrc.size(), i)
 	{
 		auto& e = m_vItem[i];
@@ -827,8 +860,9 @@ void CVeLrc::ItmLayout()
 	}
 
 	m_psv->SetMin(int(-cy / 3.f - m_vItem.front().cy));
-	m_psv->SetMax(int(y - m_cyLinePadding + cy / 3.f * 2.f));
+	m_psv->SetMax(int(y - yInit - m_cyLinePadding + cy / 3.f * 2.f));
 	m_psv->SetPage((int)cy);
+	m_psv->SetViewSize((int)cy);
 }
 
 void CVeLrc::ScrManualScrolling()
@@ -843,7 +877,9 @@ void CVeLrc::ScrDoItemScroll(int iPos)
 {
 	float y = (float)-iPos;
 	auto& Front = m_vItem.front();
-	Front.y = Front.yNoDelay = y;
+	Front.yNoDelay = y;
+	if (!(m_bItemAnDelay && ItmInDelayRange(0)))
+		Front.y = y;
 	for (int i = 1; i < (int)m_vItem.size(); ++i)
 	{
 		const auto& Prev = m_vItem[i - 1];
@@ -852,6 +888,16 @@ void CVeLrc::ScrDoItemScroll(int iPos)
 			m_vItem[i].y = y;
 		m_vItem[i].yNoDelay = y;
 	}
+}
+
+void CVeLrc::ScrFixItemPosition()
+{
+	const auto& e = m_vItem.front();
+	const auto iRealPos = (int)-e.y;
+	if (iRealPos < m_psv->GetMin())
+		ScrDoItemScroll(m_psv->GetPos());
+	else if (iRealPos > m_psv->GetMaxWithPage())
+		ScrDoItemScroll(m_psv->GetPos());
 }
 
 
