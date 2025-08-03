@@ -28,14 +28,17 @@ void CVeLrc::ScrAnProc(int iPos, int iPrevPos)
 	if (IsEmpty())
 		return;
 	const auto iMs = m_psv->GetCurrTickInterval();
-	if (m_AnEnlarge.IsEnd())
+	if (m_psv->IsStop())
 	{
 		m_bEnlarging = FALSE;
 		m_idxPrevAnItem = -1;
 		m_fAnValue = m_fPlayingItemScale;
 	}
 	else
-		m_fAnValue = m_AnEnlarge.Tick((float)iMs);
+	{
+		m_fAnValue = eck::Easing::OutCubic(m_psv->GetCurrTime(),
+			1.f, m_fPlayingItemScale - 1.f, m_psv->GetDuration());
+	}
 
 	EckAssert(AnDurLrcScrollExpand < (float)m_psv->GetDuration());
 	if (m_bScrollExpand)
@@ -711,7 +714,6 @@ HRESULT CVeLrc::LrcSetCurrentLine(int idxCurr)
 		m_bEnlarging = TRUE;
 		m_idxPrevAnItem = idxPrev;
 		m_idxCurrAnItem = m_idxCurr;
-		m_AnEnlarge.Begin(1.f, m_fPlayingItemScale - 1.f, (float)m_psv->GetDuration());
 		const auto& e = m_vItem[m_idxCurr];
 		const auto dy = (e.yNoDelay + e.cy / 2.f) - ItmGetCurrentItemTarget();
 		m_psv->InterruptAnimation();
@@ -836,7 +838,6 @@ void CVeLrc::ScrAutoScrolling()
 		m_idxPrevAnItem = m_idxCurrAnItem;
 		m_idxCurrAnItem = m_idxCurr;
 		m_bEnlarging = TRUE;
-		m_AnEnlarge.Begin(1.f, m_fPlayingItemScale - 1.f, (float)m_psv->GetDuration());
 	}
 	const auto& CurrItem = m_idxCurr < 0 ? m_vItem.front() : m_vItem[m_idxCurr];
 	const auto dy = (CurrItem.yNoDelay + CurrItem.cy / 2.f) - ItmGetCurrentItemTarget();

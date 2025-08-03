@@ -2,6 +2,8 @@
 
 #include "CWndMain.h"
 
+const UINT MsgTaskbarButtonCreated{ RegisterWindowMessageW(L"TaskbarButtonCreated") };
+
 EckInlineNdCe GImg AutoNextModeToGImg(AutoNextMode eMode) noexcept
 {
 	switch (eMode)
@@ -298,6 +300,17 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 
 LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (uMsg == MsgTaskbarButtonCreated)
+	{
+		if (m_pTaskbarList.Get())
+		{
+			TblSetup();
+			TblUpdateToolBarIcon();
+			TblUpdateState();
+			TblUpdateProgress();
+		}
+		return 0;
+	}
 	switch (uMsg)
 	{
 	case WM_TIMER:

@@ -61,7 +61,6 @@ private:
 	int m_idxMark{ -1 };
 	int m_idxCurr{ -1 };
 
-	eck::CEasingAn<eck::Easing::FOutCubic> m_AnEnlarge{};
 	int m_idxPrevAnItem{ -1 },
 		m_idxCurrAnItem{ -1 };
 	float m_fAnValue{ 1.f };
