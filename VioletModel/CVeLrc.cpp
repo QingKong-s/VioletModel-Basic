@@ -28,16 +28,16 @@ void CVeLrc::ScrAnProc(int iPos, int iPrevPos)
 	if (IsEmpty())
 		return;
 	const auto iMs = m_psv->GetCurrTickInterval();
-	if (m_psv->IsStop())
-	{
-		m_bEnlarging = FALSE;
-		m_idxPrevAnItem = -1;
-		m_fAnValue = m_fPlayingItemScale;
-	}
-	else
+	if (m_bEnlarging)
 	{
 		m_fAnValue = eck::Easing::OutCubic(m_psv->GetCurrTime(),
 			1.f, m_fPlayingItemScale - 1.f, m_psv->GetDuration());
+		if (m_psv->GetCurrTime() >= m_psv->GetDuration())
+		{
+			m_bEnlarging = FALSE;
+			m_idxPrevAnItem = -1;
+			m_fAnValue = m_fPlayingItemScale;
+		}
 	}
 
 	EckAssert(AnDurLrcScrollExpand < (float)m_psv->GetDuration());
