@@ -72,7 +72,13 @@ void CVeLrc::ItmReCalcTop()
 		return;
 	}
 	m_idxTop = ItmIndexFromY(0.f);
-	EckAssert(m_idxTop >= 0);
+	// VLTBUG 250804
+	// 先前调整过ItmIndexFromY使坐标实际上命中项目顶边减去行间距，
+	// 可能导致项目顶边可见，但减去行间距后不可见
+	// 追加：即使未调整此函数，仍有可能出现项目顶边不可见的情况
+	// 此处命中不到任何项目的情况下，总使顶端项目为最后一个项目
+	if (m_idxTop < 0)
+		m_idxTop = (int)m_vItem.size() - 1;
 }
 
 float CVeLrc::ItmPaint(int idx)
