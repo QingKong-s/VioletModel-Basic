@@ -37,15 +37,15 @@
     <Filter Include="窗口">
       <UniqueIdentifier>{d0e20229-bd56-4899-b4fd-4761ce841c0b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="程序">
+      <UniqueIdentifier>{f6ff8827-a3b2-4fbf-aeff-54be55dc2447}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Resource.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CApp.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
@@ -105,9 +105,6 @@
     <ClInclude Include="CPlayListMgr.h">
       <Filter>逻辑</Filter>
     </ClInclude>
-    <ClInclude Include="CPlayListFile.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="CWndTbGhost.h">
       <Filter>窗口</Filter>
     </ClInclude>
@@ -120,14 +117,17 @@
     <ClInclude Include="CVeVolumeBar.h">
       <Filter>UI\元素</Filter>
     </ClInclude>
+    <ClInclude Include="CPlayListFile.h">
+      <Filter>逻辑</Filter>
+    </ClInclude>
+    <ClInclude Include="CApp.h">
+      <Filter>程序</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>程序</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Entry.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CApp.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="MyEck.cpp">
       <Filter>eck</Filter>
     </ClCompile>
@@ -185,9 +185,6 @@
     <ClCompile Include="CPlayListMgr.cpp">
       <Filter>逻辑</Filter>
     </ClCompile>
-    <ClCompile Include="CPlayListFile.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="CWndTbGhost.cpp">
       <Filter>窗口</Filter>
     </ClCompile>
@@ -202,6 +199,18 @@
     </ClCompile>
     <ClCompile Include="CVeVolumeBar.cpp">
       <Filter>UI\元素</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayListFile.cpp">
+      <Filter>逻辑</Filter>
+    </ClCompile>
+    <ClCompile Include="CApp.cpp">
+      <Filter>程序</Filter>
+    </ClCompile>
+    <ClCompile Include="Entry.cpp">
+      <Filter>程序</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>程序</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

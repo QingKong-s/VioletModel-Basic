@@ -60,6 +60,8 @@ private:
 
 	ITEM& ImAllocItem(_Out_ int& idx);
 public:
+	void ImReserve(int cItem) { m_vItemPool.reserve(cItem); }
+
 	ITEM* FindTag(ULONGLONG TskTag) noexcept;
 
 	EckInlineNdCe auto& FlAt(int idx) noexcept { return m_vItemPool[m_vFlat[idx].idxInPool]; }

@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "CWndMain.h"
+#include "Utils.h"
 
 constexpr std::wstring_view ColumnName[]
 {
@@ -25,7 +26,6 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFi
 	auto UiThread{ eck::CoroCaptureUiThread(((CWndMain*)GetWnd())->ThreadCtx()) };
 	auto Token{ co_await eck::CoroGetPromiseToken() };
 	co_await eck::CoroResumeBackground();
-	//co_await eck::CoroSleep(1000);
 	std::vector<TMP> vTmp(vItem.size());
 	EckCounter(vItem.size(), i)
 	{
@@ -34,30 +34,28 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFi
 		const auto& e = vItem[i];
 		auto& f = vTmp[i];
 		CBass Bass{};
-		auto h = Bass.Open(e.rsFile.Data(), BASS_STREAM_DECODE,
+		const auto h = Bass.Open(e.rsFile.Data(), BASS_STREAM_DECODE,
 			BASS_STREAM_DECODE, BASS_STREAM_DECODE);
+#ifdef _DEBUG
 		if (!h)
 			EckDbgPrintFmt(L"%s打开失败", e.rsFile.Data());
+#endif
 		const UINT uSecTime = (UINT)round(Bass.GetLength());
 		Bass.Close();
 
-		Tag::CMediaFile File{ e.rsFile.Data() };
-		File.DetectTag();
 		Tag::MUSICINFO mi{};
-		mi.uMask = Tag::MIM_ALL;
-		mi.uFlag = Tag::MIF_JOIN_ARTIST;
-		if (File.GetTagType() & (Tag::TAG_ID3V2_3 | Tag::TAG_ID3V2_4))
-		{
-			Tag::CID3v2 Id3v2{ File };
-			Id3v2.ReadTag(0);
-			Id3v2.SimpleExtractMove(mi);
-		}
+		mi.uMask = Tag::MIM_TITLE | Tag::MIM_ARTIST |
+			Tag::MIM_ALBUM | Tag::MIM_COVER;
+		Tag::SIMPLE_OPT Opt{};
+		Opt.svArtistDiv = Opt.svCommDiv = {};
+		VltGetMusicInfo(e.rsFile.Data(), mi, Opt);
 		f.rsTitle = std::move(mi.rsTitle);
-		if (mi.Artist.index() == 1u)
-			f.rsArtist = mi.GetArtistStr();
+		f.rsArtist = std::move(mi.slArtist.Str);
+		if (!f.rsArtist.IsEmpty())
+			f.rsArtist.Erase(0);
 		f.rsAlbum = std::move(mi.rsAlbum);
 		f.uSecTime = uSecTime;
-		const auto pCover = mi.GetMainCover();
+		const auto pCover = (Tag::MUSICPIC*)mi.GetMainCover();
 		if (pCover)
 		{
 			f.Pic = std::move(*pCover);
@@ -68,7 +66,7 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFi
 					STGM_READ, 0, FALSE, nullptr, &pStream);
 			}
 			else
-				pStream = new eck::CStreamView{ std::get<eck::CRefBin>(f.Pic.varPic) };
+				pStream.Attach(new eck::CStreamView{ std::get<eck::CRefBin>(f.Pic.varPic) });
 			eck::CreateWicBitmap(f.pWicBitmap.RefOf(), pStream.Get(),
 				m_cxIl, m_cyIl, eck::DefWicPixelFormat,
 				WICBitmapInterpolationModeHighQualityCubic);

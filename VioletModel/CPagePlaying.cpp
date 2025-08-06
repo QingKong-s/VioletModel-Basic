@@ -83,7 +83,7 @@ void CPagePlaying::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		const auto& mi = App->GetPlayer().GetMusicInfo();
 		m_LATitle.SetText(mi.rsTitle.Data());
 		m_LAAlbum.SetText(mi.rsAlbum.Data());
-		m_LAArtist.SetText(mi.GetArtistStr().Data());
+		m_LAArtist.SetText(mi.slArtist.FrontData());
 
 		m_Lrc.LrcInit(App->GetPlayer().GetLrc());
 	}

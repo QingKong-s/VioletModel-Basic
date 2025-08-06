@@ -237,7 +237,7 @@ eck::CoroTask<> CWndMain::SmtcpCoroUpdateDisplay()
 	u.ClearAll();
 	u.Type(WinMedia::MediaPlaybackType::Music);
 	auto MusicProp = u.MusicProperties();
-	MusicProp.Artist(mi.GetArtistStr().Data());
+	MusicProp.Artist(mi.slArtist.FrontData());
 	MusicProp.Title(mi.rsTitle.Data());
 	MusicProp.AlbumTitle(mi.rsAlbum.Data());
 	if (!mi.rsGenre.IsEmpty())

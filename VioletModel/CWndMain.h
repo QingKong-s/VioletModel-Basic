@@ -65,7 +65,7 @@ private:
 	BOOLEAN m_bPPAnReverse{};// TRUE = 小到大，FALSE = 大到小
 	BOOLEAN m_bPPAnActive{};
 	BOOLEAN m_bPPCornerAnActive[4]{};
-	eck::CEasingCurveLite<eck::Easing::FOutCubic> m_PlayPageAn;
+	eck::CEasingCurveLite<eck::Easing::FOutExpo> m_PlayPageAn;
 	eck::CEasingCurveLite<eck::Easing::FOutExpo> m_PPCornerAn[4]{};
 	D2D1_RECT_F m_rcPPMini{};
 	D2D1_RECT_F m_rcPPLarge{};

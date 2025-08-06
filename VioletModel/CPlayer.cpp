@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "CApp.h"
 #include "CPlayList.h"
+#include "Utils.h"
 
 void CPlayer::OnPlayEvent(const PLAY_EVT_PARAM& e)
 {
@@ -51,35 +52,11 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 					App->GetPlayer().m_Sig.Emit({ PlayEvt::End });
 				});
 		}, eck::GetThreadCtx());
-
-	Tag::CMediaFile mf{ e.rsFile.Data(),STGM_READ };
-	const auto uTag = mf.DetectTag();
-	m_MusicInfo.uFlag = Tag::MIF_JOIN_ARTIST;
 	m_MusicInfo.uMask = Tag::MIM_ALL;
-	if (uTag & (Tag::TAG_ID3V2_3 | Tag::TAG_ID3V2_4))
-	{
-		Tag::CID3v2 Id3v2{ mf };
-		Id3v2.ReadTag(0);
-		Id3v2.SimpleExtract(m_MusicInfo);
-	}
-	else if (uTag & Tag::TAG_FLAC)
-	{
-		Tag::CFlac Flac{ mf };
-		Flac.ReadTag(0);
-		Flac.SimpleExtract(m_MusicInfo);
-	}
-	else if (uTag & Tag::TAG_APE)
-	{
-		Tag::CApe Ape{ mf };
-		Ape.ReadTag(0);
-		Ape.SimpleExtract(m_MusicInfo);
-	}
-	else if (uTag & Tag::TAG_ID3V1)
-	{
-		Tag::CID3v1 Id3v1{ mf };
-		Id3v1.ReadTag(0);
-		Id3v1.SimpleExtract(m_MusicInfo);
-	}
+	Tag::SIMPLE_OPT Opt{};
+	Opt.svArtistDiv = {};
+	Opt.svCommDiv = {};
+	VltGetMusicInfo(e.rsFile.Data(), m_MusicInfo, Opt);
 	const auto pPic = m_MusicInfo.GetMainCover();
 	SafeRelease(m_pBmpCover);
 	if (pPic)
