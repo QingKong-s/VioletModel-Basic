@@ -31,6 +31,9 @@ void CWndMain::ClearRes()
 
 BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 {
+	StSwitchStdThemeMode(ShouldAppsUseDarkMode());
+	App->SetDarkMode(ShouldAppsUseDarkMode());
+
 	m_ptcUiThread = eck::GetThreadCtx();
 	CBass::Init();
 	App->GetPlayer().GetSignal().Connect(this, &CWndMain::OnPlayEvent);
@@ -159,8 +162,6 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	OnCoverUpdate();
 
 	StUpdateColorizationColor();
-	StSwitchStdThemeMode(ShouldAppsUseDarkMode());
-	App->SetDarkMode(ShouldAppsUseDarkMode());
 	ShowPage(Page::List, FALSE);
 	m_TabPanel.GetTabList().SelectItemForClick(1);
 	return TRUE;

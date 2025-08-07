@@ -20,26 +20,22 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case 0:
 					p->pszText = L"主页";
 					p->cchText = 2;
-					p->pImage = pWnd->RealizeImage(
-						ShouldAppsUseDarkMode() ? GImg::HomeW : GImg::Home);
+					p->pImage = pWnd->RealizeImage(GImg::Home);
 					break;
 				case 1:
 					p->pszText = L"列表";
 					p->cchText = 2;
-					p->pImage = pWnd->RealizeImage(
-						ShouldAppsUseDarkMode() ? GImg::ListW : GImg::List);
+					p->pImage = pWnd->RealizeImage(GImg::List);
 					break;
 				case 2:
 					p->pszText = L"效果";
 					p->cchText = 2;
-					p->pImage = pWnd->RealizeImage(
-						ShouldAppsUseDarkMode() ? GImg::PluginW : GImg::Plugin);
+					p->pImage = pWnd->RealizeImage(GImg::Plugin);
 					break;
 				case 3:
 					p->pszText = L"设置";
 					p->cchText = 2;
-					p->pImage = pWnd->RealizeImage(
-						ShouldAppsUseDarkMode() ? GImg::SettingsW : GImg::Settings);
+					p->pImage = pWnd->RealizeImage(GImg::Settings);
 					break;
 				default:
 					p->pszText = L"...";

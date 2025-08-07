@@ -5,31 +5,17 @@
 enum class GImg
 {
 	About,
-	AboutBg,
-	AboutLogo,
-	AboutLogo12,
 	Add,
-	ArrowLeft,
-	ArrowLeftW,
-	ArrowRight,
-	ArrowRightW,
-	Aurorast,
-	AurorastDark,
 	BigLogo,
 	Copy,
 	DefaultCover,
 	Delete,
 	File,
-	FileW,
 	Folder,
-	FolderW,
-	FoundryOymyakon,
 	Home,
-	HomeW,
 	License,
 	List,
 	ListPlayList,
-	ListW,
 	PlayerVolume0,
 	PlayerVolume1,
 	PlayerVolume2,
@@ -37,13 +23,8 @@ enum class GImg
 	PlayerVolumeMute,
 	PlayPageDown,
 	PlayPageUp,
-	PlayW,
 	Plugin,
-	PluginW,
 	Settings,
-	SettingsW,
-	SmallLogo,
-	Test,
 	WindowLogo,
 	ArrowCross,
 	ArrowRight3,
@@ -59,6 +40,16 @@ enum class GImg
 	PrevSolid,
 	PauseSolid,
 	TriangleSolid,
+
+	Priv_InvertEnd,
+
+	AboutBg = Priv_InvertEnd,
+	AboutLogo,
+	AboutLogo12,
+	Aurorast,
+	AurorastDark,
+	SmallLogo,
+	Test,
 
 	Max
 };
@@ -178,12 +169,16 @@ enum
 class CApp
 {
 private:
-	IWICBitmap* m_Img[(size_t)GImg::Max];
+	IWICBitmap* m_Img[(size_t)GImg::Max]{};
 	BOOL m_bDarkMode{};
 	CPlayer m_Player{};
 	CPlayListMgr m_ListMgr{};
 	eck::CDWriteFontFactory m_FontFactory{};
 	eck::THREADCTX* m_ptcUiThread{};
+
+	IWICBitmap* InvertSkin(IWICBitmap* pBmp);
+
+	void LoadSkin(BOOL bLoadAll);
 public:
 	CApp();
 
@@ -195,11 +190,7 @@ public:
 
 	EckInlineNdCe IWICBitmap* GetImg(GImg n) const { return m_Img[size_t(n)]; }
 
-	EckInlineCe void SetDarkMode(BOOL bDarkMode)
-	{
-		if (m_bDarkMode != bDarkMode)
-			m_bDarkMode = bDarkMode;
-	}
+	void SetDarkMode(BOOL bDarkMode);
 
 	EckInlineNdCe auto& GetPlayer() { return m_Player; }
 	EckInlineNdCe auto& GetListMgr() { return m_ListMgr; }

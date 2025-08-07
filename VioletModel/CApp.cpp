@@ -4,45 +4,26 @@
 constexpr PCWSTR ImgFile[]
 {
 	LR"(About.png)",
-	LR"(AboutBg.png)",
-	LR"(AboutLogo.png)",
-	LR"(AboutLogo12.png)",
 	LR"(Add.png)",
-	LR"(ArrowLeft.png)",
-	LR"(ArrowLeftW.png)",
-	LR"(ArrowRight.png)",
-	LR"(ArrowRightW.png)",
-	LR"(Aurorast.png)",
-	LR"(AurorastDark.png)",
 	LR"(BigLogo.png)",
 	LR"(Copy.png)",
-	LR"(Default_Cover.png)",
+	LR"(DefaultCover.png)",
 	LR"(Delete.png)",
 	LR"(File.png)",
-	LR"(FileW.png)",
 	LR"(Folder.png)",
-	LR"(FolderW.png)",
-	LR"(FoundryOymyakon.png)",
 	LR"(Home.png)",
-	LR"(HomeW.png)",
 	LR"(License.png)",
 	LR"(List.png)",
-	LR"(List_PlayList.png)",
-	LR"(ListW.png)",
-	LR"(Player_Volume_0.png)",
-	LR"(Player_Volume_1.png)",
-	LR"(Player_Volume_2.png)",
-	LR"(Player_Volume_3.png)",
-	LR"(Player_Volume_Mute.png)",
-	LR"(PlayPage_Down.png)",
-	LR"(PlayPage_Up.png)",
-	LR"(PlayW.png)",
+	LR"(ListPlayList.png)",
+	LR"(PlayerVol0.png)",
+	LR"(PlayerVol1.png)",
+	LR"(PlayerVol2.png)",
+	LR"(PlayerVol3.png)",
+	LR"(PlayerVolMute.png)",
+	LR"(PlayPageDown.png)",
+	LR"(PlayPageUp.png)",
 	LR"(Plugin.png)",
-	LR"(PluginW.png)",
 	LR"(Settings.png)",
-	LR"(SettingsW.png)",
-	LR"(SmallLogo.png)",
-	LR"(Test.jpg)",
 	LR"(WindowLogo.png)",
 	LR"(ArrowCross.png)",
 	LR"(ArrowRight3.png)",
@@ -58,9 +39,17 @@ constexpr PCWSTR ImgFile[]
 	LR"(PrevSolid.png)",
 	LR"(PauseSolid.png)",
 	LR"(TriangleSolid.png)",
+
+	LR"(AboutBg.png)",
+	LR"(AboutLogo.png)",
+	LR"(AboutLogo12.png)",
+	LR"(Aurorast.png)",
+	LR"(AurorastDark.png)",
+	LR"(SmallLogo.png)",
+	LR"(Test.jpg)",
 };
 
-static_assert(ARRAYSIZE(ImgFile) == (size_t)GImg::Max, "ImgFile size error.");
+static_assert(ARRAYSIZE(ImgFile) == (size_t)GImg::Max);
 
 constexpr static D2D1_COLOR_F PalLight[]
 {
@@ -110,26 +99,78 @@ constexpr static D2D1_COLOR_F PalDark[]
 
 CApp* App{};
 
+IWICBitmap* CApp::InvertSkin(IWICBitmap* pBmp)
+{
+	constexpr D2D1_RENDER_TARGET_PROPERTIES Prop
+	{
+		D2D1_RENDER_TARGET_TYPE_DEFAULT,
+		{ DXGI_FORMAT_B8G8R8A8_UNORM,D2D1_ALPHA_MODE_PREMULTIPLIED },
+		96.f,96.f,
+		D2D1_RENDER_TARGET_USAGE_NONE,
+		D2D1_FEATURE_LEVEL_DEFAULT
+	};
+	ID2D1RenderTarget* pRT;
+	ID2D1Bitmap* pD2dBitmap;
+
+	ID2D1DeviceContext* pDC;
+	ID2D1Effect* pEffect;
+	IWICBitmap* pNewBitmap;
+
+	UINT cx, cy;
+
+	pBmp->GetSize(&cx, &cy);
+	eck::g_pWicFactory->CreateBitmap(cx, cy, eck::DefWicPixelFormat,
+		WICBitmapCacheOnLoad, &pNewBitmap);
+	eck::g_pD2dFactory->CreateWicBitmapRenderTarget(pNewBitmap, &Prop, &pRT);
+	pRT->CreateBitmapFromWicBitmap(pBmp, &pD2dBitmap);
+
+	pRT->QueryInterface(&pDC);
+	pDC->CreateEffect(CLSID_D2D1ColorMatrix, &pEffect);
+	EckAssert(pEffect);
+	pEffect->SetInput(0, pD2dBitmap);
+	auto mat = D2D1::Matrix5x4F(
+		-1, 0, 0, 0, 0,
+		-1, 0, 0, 0, 0,
+		-1, 0, 0, 0, 0,
+		1, 0.999f, 0.999f, 0.999f, 0);
+	pEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX, mat);
+
+	pDC->BeginDraw();
+	pDC->Clear({});
+	pDC->DrawImage(pEffect);
+	pDC->EndDraw();
+
+	pEffect->Release();
+	pD2dBitmap->Release();
+	pDC->Release();
+	pRT->Release();
+	return pNewBitmap;
+}
+
+void CApp::LoadSkin(BOOL bLoadAll)
+{
+	auto rsPath{ eck::GetRunningPath() };
+	rsPath.PushBack(LR"(\Skin\)");
+	const auto pszFileName = rsPath.PushBack(48);
+	const auto iEnd = bLoadAll ? ARRAYSIZE(ImgFile) : (size_t)GImg::Priv_InvertEnd;
+	for (size_t i{}; i < iEnd; ++i)
+	{
+		wcscpy(pszFileName, ImgFile[i]);
+		SafeRelease(m_Img[i]);
+		if (FAILED(eck::CreateWicBitmap(m_Img[i], rsPath.Data())))
+		{
+			eck::MsgBox(eck::Format(L"缺少资源文件：%s", ImgFile[i]));
+			abort();
+		}
+	}
+}
+
 CApp::CApp()
 {
 	m_ptcUiThread = eck::GetThreadCtx();
 	EckAssert(m_ptcUiThread);
-
 	m_ListMgr.LoadList();
-
-	auto rsPath{ eck::GetRunningPath() };
-	rsPath.PushBack(LR"(\Skin\)");
-	const auto pszFileName = rsPath.PushBack(48);
-	for (size_t i{}; const auto e : ImgFile)
-	{
-		wcscpy(pszFileName, e);
-		if (FAILED(eck::CreateWicBitmap(m_Img[i], rsPath.Data())))
-		{
-			eck::MsgBox(eck::Format(L"缺少资源文件：%s", e).Data());
-			abort();
-		}
-		++i;
-	}
+	LoadSkin(TRUE);
 }
 
 CApp::~CApp()
@@ -143,4 +184,22 @@ void CApp::Init() {}
 const D2D1_COLOR_F& CApp::GetColor(GPal n) const
 {
 	return m_bDarkMode ? PalDark[size_t(n)] : PalLight[size_t(n)];
+}
+
+void CApp::SetDarkMode(BOOL bDarkMode)
+{
+	if (m_bDarkMode == bDarkMode)
+		return;
+	m_bDarkMode = bDarkMode;
+	if (m_bDarkMode)
+	{
+		for (auto& e : m_Img)
+		{
+			const auto p = InvertSkin(e);
+			e->Release();
+			e = p;
+		}
+	}
+	else
+		LoadSkin(FALSE);
 }
