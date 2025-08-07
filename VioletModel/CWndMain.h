@@ -11,6 +11,7 @@
 #include "CCompPlayPageAn.h"
 #include "CWndTbGhost.h"
 #include "CVeVolumeBar.h"
+#include "CVioletTheme.h"
 
 class CWndMain final :
 	public Dui::CDuiWnd,
@@ -81,6 +82,8 @@ private:
 	ComPtr<ITaskbarList4> m_pTaskbarList{};
 	CWndTbGhost m_WndTbGhost{ *this };
 
+	CVioletTheme* m_pVioletTheme{ new CVioletTheme{} };
+
 #if VIOLET_WINRT
 	WinMedia::SystemMediaTransportControls m_Smtc{ nullptr };
 	WinMedia::SystemMediaTransportControlsTimelineProperties m_SmtcTimeline{};
@@ -141,4 +144,5 @@ public:
 	//
 
 	EckInlineNdCe auto ThreadCtx() const noexcept { return m_ptcUiThread; }
+	EckInlineNdCe auto GetVioletTheme() const noexcept { return m_pVioletTheme; }
 };

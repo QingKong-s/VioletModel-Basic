@@ -93,7 +93,7 @@ enum :int
 	DTopTitle = 24,
 	CyPlayPanelText = 20,
 	CyPaddingTitleAndArtist = 14,
-	CxMaxTitleAndArtist = 100,
+	CxMaxTitleAndArtist = 130,
 	DTopTime = 40,
 	CxMaxTime = 110,
 	CxyCircleButton = 34,
@@ -129,11 +129,24 @@ enum :int
 enum class GPal
 {
 	TabPanelBk,
+
 	PlayPanelBk,
 	PlayPanelBlurMask,
 	PlayPanelWatermark,
+
 	VolBarBk,
 	VolBarBorder,
+
+	PlayBtnBkNormal,
+	PlayBtnBkHot,
+	PlayBtnBkSelected,
+
+	PlayPageOverlay,
+
+	ScrollBarThumb,
+
+	LrcTextNormal,
+	LrcTextHighlight,
 
 	Max
 };

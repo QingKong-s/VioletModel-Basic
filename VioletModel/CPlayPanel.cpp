@@ -41,12 +41,6 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 
-	case WM_NOTIFY:
-	{
-
-	}
-	break;
-
 	case WM_SIZE:
 		m_LAWatermark.SetRect({ GetWidth() / 2,0,GetWidth() - 10,GetHeight() - 10 });
 		return 0;
@@ -58,18 +52,25 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 
+	case Dui::EWM_COLORSCHEMECHANGED:
+	{
+		m_LAWatermark.SetColor(App->GetColor(GPal::PlayPanelWatermark));
+		D2D1_COLOR_F cr;
+		GetTheme()->GetSysColor(Dui::SysColor::Text, cr);
+		m_LATitle.SetColor(cr);
+		m_LATitle.UpdateFadeColor();
+		m_LAArtist.SetColor(cr);
+		m_LAArtist.UpdateFadeColor();
+	}
+	break;
+
 	case WM_CREATE:
 	{
 		App->GetPlayer().GetSignal().Connect(this, &CPlayPanel::OnPlayEvent);
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 		const auto pWnd = (CWndMain*)GetWnd();
 
-		constexpr static WCHAR Watermark[]
-		{
-			L"VioletModel\n"
-			L"内部测试"
-		};
-		m_LAWatermark.Create(Watermark, Dui::DES_VISIBLE, 0,
+		m_LAWatermark.Create(L"VioletModel\r\n内部测试", Dui::DES_VISIBLE, 0,
 			0, 0, 10, 10, this, pWnd);
 		ComPtr<IDWriteTextFormat> pTfWatermark, pTfTitle;
 		App->GetFontFactory().NewFont(pTfWatermark.RefOf(), eck::Align::Far,
@@ -77,7 +78,8 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		App->GetFontFactory().NewFont(pTfTitle.RefOf(), eck::Align::Near,
 			eck::Align::Center, (float)CyFontNormal, 700);
 		pTfTitle->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-
+		m_LAWatermark.SetUserColor(TRUE);
+		m_LAWatermark.SetColor(App->GetColor(GPal::PlayPanelWatermark));
 		m_LAWatermark.SetTextFormat(pTfWatermark.Get());
 
 		int x = DLeftMiniCover;
@@ -85,14 +87,20 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			x, DTopMiniCover, CxyMiniCover, CxyMiniCover, this, pWnd);
 		x += (CxyMiniCover + CxPaddingPlayPanelText);
 
+		D2D1_COLOR_F crText;
+		GetTheme()->GetSysColor(Dui::SysColor::Text, crText);
 		int y = DTopTitle;
 		m_LATitle.Create(L"Violet", Dui::DES_VISIBLE, 0,
 			x, y, CxMaxTitleAndArtist, CyPlayPanelText, this, pWnd);
-		y += (CyPlayPanelText + CyPaddingTitleAndArtist);
+		m_LATitle.SetColor(crText);
+		m_LATitle.SetFade(TRUE);
 		m_LATitle.SetTextFormat(pTfTitle.Get());
+		y += (CyPlayPanelText + CyPaddingTitleAndArtist);
 
 		m_LAArtist.Create(L"Player", Dui::DES_VISIBLE, 0,
 			x, y, CxMaxTitleAndArtist, CyPlayPanelText, this, pWnd);
+		m_LAArtist.SetColor(crText);
+		m_LAArtist.SetFade(TRUE);
 		x += (CxMaxTitleAndArtist + CxPaddingPlayPanelText);
 
 		m_LATime.Create(L"00:00/00:00", Dui::DES_VISIBLE, 0,

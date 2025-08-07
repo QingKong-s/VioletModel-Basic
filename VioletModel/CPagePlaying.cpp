@@ -9,7 +9,7 @@ void CPagePlaying::UpdateBlurredCover()
 	ECK_DUILOCK;
 	const auto cxElem = Log2PhyF(GetWidthF());
 	const auto cyElem = Log2PhyF(GetHeightF());
-	if (!cxElem ||!cyElem)
+	if (!cxElem || !cyElem)
 		return;
 	ComPtr<IWICBitmap> pWicCover;
 	App->GetPlayer().GetCover(pWicCover.RefOf());
@@ -61,6 +61,7 @@ void CPagePlaying::UpdateBlurredCover()
 	GetWnd()->Phy2Log(pt);
 	m_pDC->DrawImage(pEffect.Get(), pt);
 	//---半透明遮罩
+	m_pBrBkg->SetColor(App->GetColor(GPal::PlayPageOverlay));
 	m_pDC->FillRectangle(GetViewRectF(), m_pBrBkg);
 
 	m_pDC->EndDraw();
@@ -139,7 +140,7 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		const auto cx = GetWidth();
 		const auto cy = GetHeight();
 		const auto cxMinGap = cx * 1 / 20;
-		const RECT rcLrc{ cx * 9 / 20, DLrcTop, cx * 19 / 20, cy - DLrcBottom };
+		const RECT rcLrc{ cx * 10 / 20, DLrcTop, cx * 18 / 20, cy - DLrcBottom };
 		m_Lrc.SetRect(rcLrc);
 
 		RECT rcCover;
@@ -189,6 +190,29 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_LAArtist.SetTextFormat(pTf);
 	}
 	break;
+	case Dui::EWM_COLORSCHEMECHANGED:
+	{
+		D2D1_COLOR_F crText;
+		GetTheme()->GetSysColor(Dui::SysColor::Text, crText);
+
+		m_LATitle.SetColor(crText);
+		m_LATitle.UpdateFadeColor();
+		m_LAAlbum.SetColor(crText);
+		m_LAAlbum.UpdateFadeColor();
+		m_LAArtist.SetColor(crText);
+		m_LAArtist.UpdateFadeColor();
+
+		const D2D1_COLOR_F crLrc[CVeLrc::CriMax]
+		{
+			App->GetColor(GPal::LrcTextNormal),
+			App->GetColor(GPal::LrcTextHighlight),
+		};
+		m_Lrc.SetColor(crLrc);
+
+		UpdateBlurredCover();
+		InvalidateRect();
+	}
+	break;
 	case WM_CREATE:
 	{
 		App->GetPlayer().GetSignal().Connect(this, &CPagePlaying::OnPlayEvent);
@@ -197,17 +221,26 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			50, 50, 200, 200, this);
 		m_Lrc.Create(nullptr, Dui::DES_VISIBLE, 0,
 			50, 260, 200, 100, this);
+
+		D2D1_COLOR_F crText;
+		GetTheme()->GetSysColor(Dui::SysColor::Text, crText);
 		m_LATitle.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, 0, 0, this);
+		m_LATitle.SetFade(TRUE);
+		m_LATitle.SetColor(crText);
 		m_LAAlbum.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, 0, 0, this);
+		m_LAAlbum.SetFade(TRUE);
+		m_LAAlbum.SetColor(crText);
 		m_LAArtist.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, 0, 0, this);
+		m_LAArtist.SetFade(TRUE);
+		m_LAArtist.SetColor(crText);
 
-		D2D1_COLOR_F crLrc[CVeLrc::CriMax]
+		const D2D1_COLOR_F crLrc[CVeLrc::CriMax]
 		{
-			{.a = 0.6f },
-			{.a = 1.f },
+			App->GetColor(GPal::LrcTextNormal),
+			App->GetColor(GPal::LrcTextHighlight),
 		};
 		m_Lrc.SetColor(crLrc);
 
@@ -219,13 +252,15 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		FontFactory.NewFont(pTfLrc.RefOfClear(),
 			eck::Align::Near, eck::Align::Near, 21, 500);
 		m_Lrc.SetTextFormatTrans(pTfLrc.Get());
+		m_Lrc.GetScrollBar().SetTheme(((CWndMain*)GetWnd())->GetVioletTheme());
 
 		m_BTBack.Create(nullptr, Dui::DES_VISIBLE | Dui::DES_NOTIFY_TO_WND, 0,
 			100, 100, 70, 20, this);
 		m_BTBack.SetBitmap(((CWndMain*)GetWnd())->RealizeImage(GImg::PlayPageDown));
 		m_BTBack.SetID(ELEID_PLAYPAGE_BACK);
+		m_BTBack.SetTheme(((CWndMain*)GetWnd())->GetVioletTheme());
 
-		m_pDC->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White, 0.5f), &m_pBrBkg);
+		m_pDC->CreateSolidColorBrush({}, &m_pBrBkg);
 
 		SetEmptyText();
 	}

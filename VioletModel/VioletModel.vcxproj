@@ -202,6 +202,7 @@
     <ClInclude Include="CPlayListMgr.h" />
     <ClInclude Include="CVeDtLrc.h" />
     <ClInclude Include="CVeVolumeBar.h" />
+    <ClInclude Include="CVioletTheme.h" />
     <ClInclude Include="CWndLrc.h" />
     <ClInclude Include="CWndTbGhost.h" />
     <ClInclude Include="CVeMiniCover.h" />
@@ -231,6 +232,7 @@
     <ClCompile Include="CPlayListMgr.cpp" />
     <ClCompile Include="CVeDtLrc.cpp" />
     <ClCompile Include="CVeVolumeBar.cpp" />
+    <ClCompile Include="CVioletTheme.cpp" />
     <ClCompile Include="CWndLrc.cpp" />
     <ClCompile Include="CWndMain_Shell.cpp" />
     <ClCompile Include="CWndTbGhost.cpp" />

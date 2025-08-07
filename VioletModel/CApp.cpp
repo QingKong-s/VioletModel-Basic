@@ -63,22 +63,48 @@ constexpr PCWSTR ImgFile[]
 static_assert(ARRAYSIZE(ImgFile) == (size_t)GImg::Max, "ImgFile size error.");
 
 constexpr static D2D1_COLOR_F PalLight[]
-{ 
+{
 	Dui::StMakeBackgroundColorLight(0.5f),
+
 	Dui::StMakeBackgroundColorLight(0.5f),
 	Dui::StMakeBackgroundColorLight(0.3f),
-	Dui::StMakeBackgroundColorLight(0.3f),
+	Dui::StMakeForegroundColorLight(0.2f),
+
 	Dui::StMakeBackgroundColorLight(0.5f),
 	Dui::StMakeForegroundColorLight(0.2f),
+
+	Dui::StMakeForegroundColorLight(0.15f),
+	Dui::StMakeForegroundColorLight(0.2f),
+	Dui::StMakeForegroundColorLight(0.3f),
+
+	Dui::StMakeBackgroundColorLight(0.5f),
+
+	Dui::StMakeForegroundColorLight(0.6f),
+
+	Dui::StMakeForegroundColorLight(0.6f),
+	Dui::StMakeForegroundColorLight(1.0f),
 };
 constexpr static D2D1_COLOR_F PalDark[]
 {
 	Dui::StMakeBackgroundColorDark(0.5f),
+
 	Dui::StMakeBackgroundColorDark(0.5f),
 	Dui::StMakeBackgroundColorDark(0.3f),
-	Dui::StMakeBackgroundColorDark(0.3f),
+	Dui::StMakeForegroundColorDark(0.2f),
+
 	Dui::StMakeBackgroundColorDark(0.5f),
 	Dui::StMakeForegroundColorDark(0.2f),
+
+	Dui::StMakeForegroundColorDark(0.4f),
+	Dui::StMakeForegroundColorDark(0.5f),
+	Dui::StMakeForegroundColorDark(0.6f),
+
+	Dui::StMakeBackgroundColorDark(0.5f),
+
+	Dui::StMakeForegroundColorDark(0.6f),
+
+	Dui::StMakeForegroundColorDark(0.6f),
+	Dui::StMakeForegroundColorDark(1.0f),
 };
 
 
@@ -112,9 +138,7 @@ CApp::~CApp()
 		SafeRelease(e);
 }
 
-void CApp::Init()
-{
-}
+void CApp::Init() {}
 
 const D2D1_COLOR_F& CApp::GetColor(GPal n) const
 {

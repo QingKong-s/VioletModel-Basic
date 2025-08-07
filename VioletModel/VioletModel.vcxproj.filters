@@ -40,6 +40,9 @@
     <Filter Include="程序">
       <UniqueIdentifier>{f6ff8827-a3b2-4fbf-aeff-54be55dc2447}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI\主题">
+      <UniqueIdentifier>{a7bedadb-6b6b-4067-8919-08eb26c3e001}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -126,6 +129,9 @@
     <ClInclude Include="Utils.h">
       <Filter>程序</Filter>
     </ClInclude>
+    <ClInclude Include="CVioletTheme.h">
+      <Filter>UI\主题</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MyEck.cpp">
@@ -211,6 +217,9 @@
     </ClCompile>
     <ClCompile Include="Utils.cpp">
       <Filter>程序</Filter>
+    </ClCompile>
+    <ClCompile Include="CVioletTheme.cpp">
+      <Filter>UI\主题</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -26,6 +26,7 @@ void CWndMain::ClearRes()
 	SafeRelease(m_pBrush);
 	SafeRelease(m_pCompPlayPageAn);
 	SafeRelease(m_pCompNormalPageAn);
+	SafeRelease(m_pVioletTheme);
 }
 
 BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
@@ -39,6 +40,9 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	m_pCompNormalPageAn->InitAsScaleBlur();
 	m_pCompNormalPageAn->InitAsScaleOpacity();
 	GetDeviceContext()->CreateSolidColorBrush({}, &m_pBrush);
+
+	m_pVioletTheme->Init(GetDeviceContext(), GetStdTheme());
+
 	RegisterTimeLine(this);
 
 	eck::GetThreadCtx()->UpdateDefColor();
@@ -115,37 +119,32 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	m_BTPrev.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
 	m_BTPrev.SetImage(RealizeImage(GImg::Prev));
-	m_BTPrev.SetCustomDraw(TRUE);
 	m_BTPrev.SetTransparentBk(TRUE);
 	// 按钮 播放/暂停
 	m_BTPlay.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButtonBig, CxyCircleButtonBig, nullptr, this);
 	m_BTPlay.SetImage(RealizeImage(GImg::Triangle));
-	m_BTPlay.SetCustomDraw(TRUE);
+	m_BTPlay.SetTheme(m_pVioletTheme);
 	// 按钮 下一曲
 	m_BTNext.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
 	m_BTNext.SetImage(RealizeImage(GImg::Next));
-	m_BTNext.SetCustomDraw(TRUE);
 	m_BTNext.SetTransparentBk(TRUE);
 	// 按钮 播放模式
 	m_BTAutoNext.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
 	m_BTAutoNext.SetImage(RealizeImage(
 		AutoNextModeToGImg(App->GetPlayer().GetAutoNextMode())));
-	m_BTAutoNext.SetCustomDraw(TRUE);
 	m_BTAutoNext.SetTransparentBk(TRUE);
 	// 按钮 歌词
 	m_BTLrc.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
 	m_BTLrc.SetImage(RealizeImage(GImg::Lrc));
-	m_BTLrc.SetCustomDraw(TRUE);
 	m_BTLrc.SetTransparentBk(TRUE);
 	// 按钮 音量
 	m_BTVol.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
 	m_BTVol.SetImage(RealizeImage(GImg::PlayerVolume3));
-	m_BTVol.SetCustomDraw(TRUE);
 	m_BTVol.SetTransparentBk(TRUE);
 	// 标题栏
 	m_TitleBar.Create(nullptr, Dui::DES_VISIBLE, 0,

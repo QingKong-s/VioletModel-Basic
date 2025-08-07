@@ -167,4 +167,6 @@ public:
 	BOOL IsValid() override { return m_bAnSelBkg || m_bItemAnDelay; }
 
 	EckInlineNdCe BOOL IsEmpty() const { return m_vItem.empty(); }
+
+	EckInlineNdCe auto& GetScrollBar() { return m_SB; }
 };
