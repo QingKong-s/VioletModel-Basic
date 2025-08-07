@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#pragma region 版本0
 //--------For compatibility--------
 struct LISTFILEHEADER_0	// 播放列表文件头
 {
@@ -44,11 +45,9 @@ enum
 *		时间\0
 * }
 */
+#pragma endregion 版本0
+#pragma region 版本1
 //--------For compatibility--------
-
-constexpr inline int
-PNLFVER_0 = 0,
-PNBMVER_0 = 0;
 struct LISTFILEHEADER_1	// 播放列表文件头
 {
 	CHAR chHeader[4];	// 文件起始标记，ASCII字符串"PNPL"
@@ -58,6 +57,10 @@ struct LISTFILEHEADER_1	// 播放列表文件头
 	int cchCreator;		// 创建者署名长度
 	// WCHAR szCreator[];
 };
+
+constexpr inline int
+PNLFVER_0 = 0,
+PNBMVER_0 = 0;
 
 struct PLUPUREDATA// 结构稳定，不能修改
 {
@@ -76,6 +79,7 @@ struct PLUPUREDATA// 结构稳定，不能修改
 	BYTE bNeedUpdated : 1{};// 信息需要更新
 	BYTE bMarked : 1{};		// 项目已标记
 };
+static_assert(sizeof(PLUPUREDATA) <= sizeof(PLDATA));
 
 struct LISTFILEITEM_1	// 播放列表文件项目头
 {
@@ -120,6 +124,8 @@ struct BOOKMARKITEM		// 书签信息项目头
 * 	BOOKMARKITEM
 * }
 */
+#pragma endregion 版本1
+#pragma region 版本2
 //--------当前版本--------
 enum :int
 {
@@ -137,7 +143,7 @@ struct LISTFILEHEADER_2
 	int cItem;			// 项目数
 	int cBookmark;		// 书签数
 	int cGroup;			// 组数
-	int cFlat;			// 平面项目数
+	int cFlat;			// 平面项目数，目前总与cItem相同
 };
 struct LISTFILEITEM_2	// 实际项目
 {
@@ -178,7 +184,7 @@ struct LISTFILE_VIEWQUERY	// 视图查询
 };
 /*
 * LISTFILEHEADER_2
-* {
+* { // 与平面列表的顺序相同
 * 	LISTFILEITEM_2
 * }
 *
@@ -189,7 +195,7 @@ struct LISTFILE_VIEWQUERY	// 视图查询
 *   	LISTFILE_IDXITEM
 *   }
 * }
-* {	// 平面视图
+* {	// 平面视图，目前未用，不写入该节
 * 	LISTFILE_IDXITEM
 * }
 * {	// 书签
@@ -202,6 +208,7 @@ struct LISTFILE_VIEWQUERY	// 视图查询
 * //---PlType::View*后跟下列结构
 * LISTFILE_VIEWQUERY
 */
+#pragma endregion 版本2
 
 // 此结构引用的字符串必须以NULL字符结尾
 struct LISTFILE_STRINFO
@@ -214,13 +221,15 @@ struct LISTFILE_STRINFO
 	std::wstring_view svGenre;
 };
 
-class CPlayListFileReader
+class CPlayList;
+
+class CPlayListFileReader final
 {
 private:
 	eck::CMappingFile m_File{};
-	LISTFILEHEADER_0* m_pHeader0 = nullptr;
-	LISTFILEHEADER_1* m_pHeader1 = nullptr;
-	eck::CRefStrW m_rsCreator{};
+	LISTFILEHEADER_0* m_pHeader0{};
+	LISTFILEHEADER_1* m_pHeader1{};
+	LISTFILEHEADER_2* m_pHeader2{};
 public:
 	using FItemProcessor = std::function<BOOL(const LISTFILEITEM_1* pItem,
 		PCWSTR pszName, PCWSTR pszFile, PCWSTR pszTitle,
@@ -228,20 +237,15 @@ public:
 	using FBookmarkProcessor = std::function<BOOL(const BOOKMARKITEM* pItem, PCWSTR pszName)>;
 	ECK_DISABLE_COPY_MOVE_DEF_CONS(CPlayListFileReader)
 public:
-	CPlayListFileReader(PCWSTR pszFile)
-	{
-		Open(pszFile);
-	}
+	CPlayListFileReader(PCWSTR pszFile) { Open(pszFile); }
 
 	BOOL Open(PCWSTR pszFile);
 
+	void Load(CPlayList* pList);
+
 	int GetItemCount();
 
-	void For(const FItemProcessor& fnProcessor);
-
 	void ForBookmark(const FBookmarkProcessor& fnProcessor);
-
-	const auto& GetCreatorName() const { return m_rsCreator; }
 };
 
 

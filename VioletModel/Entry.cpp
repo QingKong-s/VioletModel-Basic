@@ -46,6 +46,9 @@ Msg = %s)",
 
 	App = new CApp{};
 	CApp::Init();
+#ifdef _DEBUG
+	App->GetListMgr().Add()->SetName(L"测试列表"sv);
+#endif
 
 	const auto pWnd = new CWndMain{};
 	const auto hMon = eck::GetOwnerMonitor(nullptr);
@@ -56,6 +59,7 @@ Msg = %s)",
 	pWnd->SetUserDpi(iDpi);
 	pWnd->SetPresentMode(Dui::PresentMode::DCompositionSurface);
 	pWnd->SetTransparent(TRUE);
+	//pWnd->SetDrawDirtyRect(1);
 	pWnd->Create(L"示例Win32程序", WS_POPUP | WS_VISIBLE | WS_CAPTION |
 		WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX, 0,
 		pt.x, pt.y, size.cx, size.cy, nullptr, 0);

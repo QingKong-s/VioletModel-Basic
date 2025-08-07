@@ -1,38 +1,30 @@
 ﻿#include "pch.h"
 #include "CPlayList.h"
 #include "CApp.h"
+#include "CPlayListFile.h"
 
-CPlayList::ITEM& CPlayList::ImAllocItem(_Out_ int& idx)
+
+void CPlayList::ImFixGroupIndex(int idxFlatBegin, int nDelta)
 {
-	if (m_idxFirstFree >= 0)
-	{
-		idx = m_idxFirstFree;
-		auto& e = m_vItemPool[idx];
-		m_idxFirstFree = e.idxNextFree;
-		e.idxNextFree = -1;
-		e.s.bFree = FALSE;
-		return e;
-	}
-	else
-	{
-		idx = (int)m_vItemPool.size();
-		return m_vItemPool.emplace_back();
-	}
 }
 
-CPlayList::ITEM* CPlayList::FindTag(ULONGLONG TskTag) noexcept
+void CPlayList::SetListFile(std::wstring_view svPath, std::wstring_view svFileName)
 {
-	for (auto& e : m_vItemPool)
-	{
-		if (e.TskTag == TskTag)
-			return &e;
-	}
-	return nullptr;
+	m_rsListFile = svPath;
+	m_rsListFile.PushBackChar(L'\\');
+	m_rsListFile.PushBack(svFileName);
+	m_rsName = svFileName;
+	m_rsName.PazRemoveExtension();
 }
 
-CPlayList::GROUPIDX CPlayList::GrInsert(const eck::CRefStrW& rsFile, int idxItem, int idxGroup)
+void CPlayList::ImEnsureLoaded()
 {
-	return GROUPIDX();
+	if (m_bNeedInit)
+	{
+		m_bNeedInit = FALSE;
+		CPlayListFileReader r{ m_rsListFile.Data() };
+		r.Load(this);
+	}
 }
 
 BOOL CPlayList::IsActive() noexcept
@@ -49,28 +41,38 @@ HRESULT CPlayList::InitFromListFile(PCWSTR pszFile)
 
 void CPlayList::InvalidateImage()
 {
-	for (auto& e : m_vItemPool)
-		e.idxIl = -1;
+	for (auto& e : m_vFlat)
+	{
+		e.idxIl = 0;
+		e.s.bCoverUpdated = FALSE;
+	}
 }
 
-int CPlayList::FlInsert(const eck::CRefStrW& rsFile, int idx, ULONGLONG TskTag)
+int CPlayList::FlInsert(const eck::CRefStrW& rsFile, int idx)
 {
-	int idxPool;
-	auto& e = ImAllocItem(idxPool);
+	idx = FlInsertEmpty(idx);
+	auto& e = FlAt(idx);
 	e.rsFile = rsFile;
 	e.rsName = eck::GetFileNameFromPath(rsFile.Data(), rsFile.Size());
-	e.TskTag = TskTag;
+	return idx;
+}
+
+int CPlayList::FlInsertEmpty(int idx)
+{
+	EckAssert(idx <= (int)m_vFlat.size());
+	auto& e = (idx < 0 ? m_vFlat.emplace_back() :
+		*m_vFlat.emplace(m_vFlat.begin() + idx));
 	if (idx < 0)
-	{
-		m_vFlat.emplace_back(idxPool);
 		idx = (int)m_vFlat.size() - 1;
-	}
-	else
-		m_vFlat.emplace(m_vFlat.begin() + idx, idxPool);
 	return idx;
 }
 
 int CPlayList::GrInsertGroup(const eck::CRefStrW& rsName, int idx)
 {
 	return 0;
+}
+
+CPlayList::GROUPIDX CPlayList::GrInsert(const eck::CRefStrW& rsFile, int idxItem, int idxGroup)
+{
+	return GROUPIDX();
 }

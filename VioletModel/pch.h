@@ -79,9 +79,9 @@ struct PLDATA// 结构稳定，不能修改
 	BYTE byRating{};		// 【元数据】分级
 	BYTE bIgnore : 1{};		// 项目被忽略
 	BYTE bBookmark : 1{};	// 项目含书签
-	BYTE bUpdated : 1{};	// 信息已更新
 	BYTE bMarked : 1{};		// 项目已标记
-	BYTE bFree : 1{};		// 项目空闲
+	BYTE bUpdated : 1{};	// 信息已更新
+	BYTE bCoverUpdated : 1{};	// 封面已更新
 };
 
 enum class PlType : UINT

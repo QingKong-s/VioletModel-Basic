@@ -1,8 +1,8 @@
 ﻿#pragma once
-
 class CPlayList
 {
 	friend class CPlayer;
+	friend class CPlayListMgr;
 public:
 	struct GROUPIDX
 	{
@@ -21,21 +21,13 @@ private:
 		eck::CRefStrW rsGenre{};	// 流派
 
 		PLDATA s{};
-		union
-		{
-			int idxSortMapping{ -1 };// 【排序时用】映射到的项
-			int idxNextFree;		// 【仅当项目空闲时】下一个空闲项
-		};
-		ULONGLONG TskTag{};			// 与该项关联的信息获取任务
+		int idxSortMapping{ -1 };	// 【排序时用】映射到的项
 		int idxIl{ 0 };				// 图像列表索引，供UI使用
 	};
-	struct FLAT
-	{
-		int idxInPool;
-	};
+
 	struct GROUPSUB
 	{
-		int idxInPool;
+		int idxFlat;
 	};
 	struct GROUP
 	{
@@ -43,8 +35,10 @@ private:
 		std::vector<GROUPSUB> vItem{};
 	};
 
-	std::vector<ITEM> m_vItemPool{};
-	std::vector<FLAT> m_vFlat{};
+	eck::CRefStrW m_rsListFile{};
+	eck::CRefStrW m_rsName{};
+
+	std::vector<ITEM> m_vFlat{};
 	std::vector<GROUP> m_vGroup{};
 
 	int m_idxCurrFlat{};
@@ -54,17 +48,26 @@ private:
 
 	BITBOOL m_bGroup : 1{};
 	BITBOOL m_bSort : 1{};
+	BITBOOL m_bNeedInit : 1{};
 	PlType m_eType{};
 
-	std::atomic_bool m_bTaskRunning{};
+	int m_cTaskRef{};
 
-	ITEM& ImAllocItem(_Out_ int& idx);
+
+	void ImFixGroupIndex(int idxFlatBegin, int nDelta);
+
+	void ImMarkNeedInit() noexcept { m_bNeedInit = TRUE; }
 public:
-	void ImReserve(int cItem) { m_vItemPool.reserve(cItem); }
+	void SetListFile(std::wstring_view svPath, std::wstring_view svFileName);
+	void SetName(std::wstring_view svName) { m_rsName = svName; }
+	auto& GetName() const noexcept { return m_rsName; }
 
-	ITEM* FindTag(ULONGLONG TskTag) noexcept;
+	void ImReserve(int cItem) { m_vFlat.reserve(cItem); }
+	void ImReserveIncrement(int cItem) { m_vFlat.reserve(m_vFlat.size() + cItem); }
 
-	EckInlineNdCe auto& FlAt(int idx) noexcept { return m_vItemPool[m_vFlat[idx].idxInPool]; }
+	void ImEnsureLoaded();
+
+	EckInlineNdCe auto& FlAt(int idx) noexcept { return m_vFlat[idx]; }
 
 	/// <summary>
 	/// 插入项目。
@@ -73,12 +76,13 @@ public:
 	/// <param name="rsFile">文件全路径</param>
 	/// <param name="idx">插入位置，-1表示末尾</param>
 	/// <returns>索引</returns>
-	int FlInsert(const eck::CRefStrW& rsFile, int idx = -1, ULONGLONG TskTag = 0);
+	int FlInsert(const eck::CRefStrW& rsFile, int idx = -1);
+	int FlInsertEmpty(int idx = -1);
 
 	EckInlineNdCe int FlGetCount() const noexcept { return (int)m_vFlat.size(); }
 
 	EckInlineNdCe auto& GrAtGroup(int idxGroup) noexcept { return m_vGroup[idxGroup]; }
-	EckInlineNdCe auto& GrAt(int idxGroup, int idxItem) noexcept { return m_vItemPool[m_vGroup[idxGroup].vItem[idxItem].idxInPool]; }
+	EckInlineNdCe auto& GrAt(int idxGroup, int idxItem) noexcept { return m_vFlat[m_vGroup[idxGroup].vItem[idxItem].idxFlat]; }
 
 	/// <summary>
 	/// 插入组
@@ -125,8 +129,11 @@ public:
 
 	HRESULT InitFromListFile(PCWSTR pszFile);
 
-	EckInline void SetTaskRunning(bool b) noexcept { m_bTaskRunning = b; }
-	EckInlineNd bool GetTaskRunning() const noexcept { return m_bTaskRunning; }
+	// 下列函数必须在UI线程调用
+
+	EckInlineNd BOOL TskIsRunning() const noexcept{return !!&m_cTaskRef;}
+	EckInlineCe void TskIncRef() noexcept{ ++m_cTaskRef; }
+	EckInlineCe void TskDecRef() noexcept{ --m_cTaskRef; }
 
 	void InvalidateImage();
 };

@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "CPlayer.h"
+#include "CPlayListMgr.h"
 
 enum class GImg
 {
@@ -167,7 +168,9 @@ private:
 	IWICBitmap* m_Img[(size_t)GImg::Max];
 	BOOL m_bDarkMode{};
 	CPlayer m_Player{};
+	CPlayListMgr m_ListMgr{};
 	eck::CDWriteFontFactory m_FontFactory{};
+	eck::THREADCTX* m_ptcUiThread{};
 public:
 	CApp();
 
@@ -186,7 +189,10 @@ public:
 	}
 
 	EckInlineNdCe auto& GetPlayer() { return m_Player; }
+	EckInlineNdCe auto& GetListMgr() { return m_ListMgr; }
 	EckInlineNdCe auto& GetFontFactory() { return m_FontFactory; }
+
+	EckInlineNdCe auto UiThreadCtx() const { return m_ptcUiThread; }
 };
 
 extern CApp* App;

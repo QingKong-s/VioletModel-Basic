@@ -86,6 +86,11 @@ CApp* App{};
 
 CApp::CApp()
 {
+	m_ptcUiThread = eck::GetThreadCtx();
+	EckAssert(m_ptcUiThread);
+
+	m_ListMgr.LoadList();
+
 	auto rsPath{ eck::GetRunningPath() };
 	rsPath.PushBack(LR"(\Skin\)");
 	const auto pszFileName = rsPath.PushBack(48);

@@ -2,7 +2,7 @@
 
 #include "CWndMain.h"
 
-const UINT MsgTaskbarButtonCreated{ RegisterWindowMessageW(L"TaskbarButtonCreated") };
+const static UINT MsgTaskbarButtonCreated{ RegisterWindowMessageW(L"TaskbarButtonCreated") };
 
 EckInlineNdCe GImg AutoNextModeToGImg(AutoNextMode eMode) noexcept
 {

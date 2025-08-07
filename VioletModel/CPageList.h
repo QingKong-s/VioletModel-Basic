@@ -3,22 +3,9 @@ class CPageList : public CPage
 {
 private:
 	constexpr static int DefCoverIndex{};
-	struct LOAD_DATA_ITEM
+	struct LIST_INFO
 	{
-		eck::CRefStrW rsFile{};
-		ULONGLONG Tag{};
-		int idxFlat{};
-	};
-	struct LOAD_DATA_TASK
-	{
-		eck::CoroTask<void> Task{};
-		int idxFlatBegin{};
-		int idxFlatEnd{};
-	};
-
-	struct LISTFILE
-	{
-		CPlayList PlayList{};
+		ComPtr<eck::CD2DImageList> pIl;
 	};
 
 	Dui::CEdit m_EDSearch{};
@@ -31,29 +18,34 @@ private:
 
 	eck::CLinearLayoutH m_Lyt{};
 
-	std::vector<std::shared_ptr<LISTFILE>> m_vListFile{};
-
 	eck::CRefStrW m_rsDispInfoBuf{};
 
 	int m_cxIl{}, m_cyIl{};
 	ID2D1Bitmap1* m_pBmpDefCover{};
-	eck::CD2DImageList* m_pIlList{};
-
-	std::vector<LOAD_DATA_TASK> m_vLoadDataTask{};
+	std::vector<LIST_INFO> m_vListInfo{};
 
 	/// <summary>
 	/// 加载歌曲数据
 	/// </summary>
-	/// <param name="pListFile">歌曲列表</param>
-	/// <param name="pszFile">文件全路径，协程保留其所有权，并在不需要时使用CoTaskMemFree释放</param>
-	/// <param name="Tag">任务标记</param>
-	eck::CoroTask<void> TskLoadSongData(std::shared_ptr<LISTFILE> pListFile,
-		std::vector<LOAD_DATA_ITEM> vItem);
+	/// <param name="pList">列表</param>
+	/// <param name="vItem">待加载的歌曲索引，协程移动此参数使自己拥有所有权</param>
+	eck::CoroTask<void> TskLoadSongData(std::shared_ptr<CPlayList> pList,
+		ComPtr<eck::CD2DImageList> pIl, std::vector<int>&& vItem);
+
 	CPlayList* GetCurrPlayList();
-	HRESULT OnMenuAddFile(std::shared_ptr<LISTFILE> pListFile, int idxInsert = -1);
+	std::shared_ptr<CPlayList> GetCurrPlayListShared();
+
+	HRESULT OnMenuAddFile(CPlayList* pList, int idxInsert = -1);
+
 	void OnPlayEvent(const PLAY_EVT_PARAM& e);
+
 	void UpdateDefCover();
-	void ReCreateImageList();
+
+	void ReCreateImageList(int idx, BOOL bForce);
+
+	void LoadMetaData(int idxBegin, int idxEnd, int idxList = -1);
+
+	void CheckVisibleItemMetaData(int idxList);
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 };

@@ -10,28 +10,47 @@ constexpr std::wstring_view ColumnName[]
 	L"时长"sv,
 };
 
-eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFile,
-	std::vector<LOAD_DATA_ITEM> vItem)
+eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<CPlayList> pList,
+	ComPtr<eck::CD2DImageList> pIl, std::vector<int>&& vItem)
 {
 	struct TMP
 	{
-		eck::CRefStrW rsTitle;
-		eck::CRefStrW rsArtist;
-		eck::CRefStrW rsAlbum;
-		ComPtr<IWICBitmap> pWicBitmap;
-		ComPtr<ID2D1Bitmap1> pD2DBitmap;
-		Tag::MUSICPIC Pic;
-		UINT uSecTime;
+		Tag::MUSICINFO mi{};
+		ComPtr<IWICBitmap> pWicBitmap{};
+		ComPtr<ID2D1Bitmap1> pD2DBitmap{};
+		UINT uSecTime{};
 	};
-	auto UiThread{ eck::CoroCaptureUiThread(((CWndMain*)GetWnd())->ThreadCtx()) };
-	auto Token{ co_await eck::CoroGetPromiseToken() };
-	co_await eck::CoroResumeBackground();
-	std::vector<TMP> vTmp(vItem.size());
-	EckCounter(vItem.size(), i)
+	auto UiThread{ eck::CoroCaptureUiThread() };
+
+	const auto vIdx{ std::move(vItem) };
+	std::vector<TMP> vTmp(vIdx.size());
+	pList->TskIncRef();
+	EckCounter(vIdx.size(), i)
 	{
-		if (Token.GetPromise().IsCanceled())
-			co_return;
-		const auto& e = vItem[i];
+		auto& e = pList->FlAt(vIdx[i]);
+		vTmp[i].mi.uMask = Tag::MIM_NONE;
+		if (!e.s.bUpdated)
+		{
+			vTmp[i].mi.uMask |= Tag::MIM_TITLE | Tag::MIM_ARTIST |
+				Tag::MIM_ALBUM;
+			e.s.bUpdated = TRUE;
+		}
+		if (!e.s.bCoverUpdated)
+		{
+			vTmp[i].mi.uMask |= Tag::MIM_COVER;
+			e.s.bCoverUpdated = TRUE;
+		}
+	}
+	auto ptc = eck::GetThreadCtx();
+	EckAssert(eck::GetThreadCtx() == App->UiThreadCtx());
+
+	co_await eck::CoroResumeBackground();
+	Tag::SIMPLE_OPT Opt{};
+	Opt.svArtistDiv = Opt.svCommDiv = {};
+	EckCounter(vIdx.size(), i)
+	{
+		const auto idxFlat = vIdx[i];
+		const auto& e = pList->FlAt(idxFlat);
 		auto& f = vTmp[i];
 		CBass Bass{};
 		const auto h = Bass.Open(e.rsFile.Data(), BASS_STREAM_DECODE,
@@ -40,33 +59,17 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFi
 		if (!h)
 			EckDbgPrintFmt(L"%s打开失败", e.rsFile.Data());
 #endif
-		const UINT uSecTime = (UINT)round(Bass.GetLength());
+		const auto uSecTime = h ? (UINT)round(Bass.GetLength()) : 0u;
 		Bass.Close();
 
-		Tag::MUSICINFO mi{};
-		mi.uMask = Tag::MIM_TITLE | Tag::MIM_ARTIST |
-			Tag::MIM_ALBUM | Tag::MIM_COVER;
-		Tag::SIMPLE_OPT Opt{};
-		Opt.svArtistDiv = Opt.svCommDiv = {};
-		VltGetMusicInfo(e.rsFile.Data(), mi, Opt);
-		f.rsTitle = std::move(mi.rsTitle);
-		f.rsArtist = std::move(mi.slArtist.Str);
-		if (!f.rsArtist.IsEmpty())
-			f.rsArtist.Erase(0);
-		f.rsAlbum = std::move(mi.rsAlbum);
+		VltGetMusicInfo(e.rsFile.Data(), f.mi, Opt);
+
 		f.uSecTime = uSecTime;
-		const auto pCover = (Tag::MUSICPIC*)mi.GetMainCover();
+		const auto pCover = (Tag::MUSICPIC*)f.mi.GetMainCover();
 		if (pCover)
 		{
-			f.Pic = std::move(*pCover);
 			ComPtr<IStream> pStream;
-			if (pCover->bLink)
-			{
-				SHCreateStreamOnFileEx(std::get<eck::CRefStrW>(f.Pic.varPic).Data(),
-					STGM_READ, 0, FALSE, nullptr, &pStream);
-			}
-			else
-				pStream.Attach(new eck::CStreamView{ std::get<eck::CRefBin>(f.Pic.varPic) });
+			pCover->CreateStream(pStream.RefOf());
 			eck::CreateWicBitmap(f.pWicBitmap.RefOf(), pStream.Get(),
 				m_cxIl, m_cyIl, eck::DefWicPixelFormat,
 				WICBitmapInterpolationModeHighQualityCubic);
@@ -82,40 +85,31 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<LISTFILE> pListFi
 		}
 	}
 	co_await UiThread;
-	if (Token.GetPromise().IsCanceled())
-		co_return;
 	ECK_DUILOCK;
-	for (auto it = m_vLoadDataTask.begin(); it != m_vLoadDataTask.end(); ++it)
-		if (&it->Task.GetPromise() == &Token.GetPromise())
-		{
-			m_vLoadDataTask.erase(it);
-			break;
-		}
-	EckCounter(vItem.size(), i)
+
+	EckCounter(vIdx.size(), i)
 	{
-		const auto Tag = vItem[i].Tag;
-		//EckDbgPrint(Tag);
+		auto& e = pList->FlAt(vIdx[i]);
 		auto& f = vTmp[i];
-		const auto pItem = pListFile->PlayList.FindTag(Tag);
-		if (!pItem)
-			co_return;
 		if (f.pD2DBitmap.Get())
 		{
-			const auto idxImg = m_pIlList->AddImage(f.pD2DBitmap.Get());
+			const auto idxImg = pIl->AddImage(f.pD2DBitmap.Get());
 			if (idxImg >= 0)
-				pItem->idxIl = idxImg;
+				e.idxIl = idxImg;
 		}
-		pItem->rsTitle = std::move(f.rsTitle);
-		pItem->rsArtist = std::move(f.rsArtist);
-		pItem->rsAlbum = std::move(f.rsAlbum);
-		if (!pItem->rsTitle.IsEmpty())
-			pItem->rsName = pItem->rsTitle;
-		pItem->s.uSecTime = f.uSecTime;
-		pItem->s.bUpdated = TRUE;
-		pItem->TskTag = 0ull;
-		m_GLList.InvalidateCache(vItem[i].idxFlat);
+		e.rsTitle = std::move(f.mi.rsTitle);
+		e.rsArtist = std::move(f.mi.slArtist.Str);
+		if (!e.rsArtist.IsEmpty())
+			e.rsArtist.Erase(0);
+		e.rsAlbum = std::move(f.mi.rsAlbum);
+		if (f.mi.uMaskChecked & Tag::MIM_TITLE)
+			e.rsName = e.rsTitle;
+		e.s.uSecTime = f.uSecTime;
+		e.s.bUpdated = TRUE;
+		m_GLList.InvalidateCache(vIdx[i]);
 	}
 	m_GLList.InvalidateRect();
+	pList->TskDecRef();
 }
 
 CPlayList* CPageList::GetCurrPlayList()
@@ -123,10 +117,18 @@ CPlayList* CPageList::GetCurrPlayList()
 	const auto idx = m_TBLPlayList.GetCurrSel();
 	if (idx < 0)
 		return nullptr;
-	return &m_vListFile[idx]->PlayList;
+	return App->GetListMgr().AtList(idx).get();
 }
 
-HRESULT CPageList::OnMenuAddFile(std::shared_ptr<LISTFILE> pListFile, int idxInsert)
+std::shared_ptr<CPlayList> CPageList::GetCurrPlayListShared()
+{
+	const auto idx = m_TBLPlayList.GetCurrSel();
+	if (idx < 0)
+		return {};
+	return App->GetListMgr().AtList(idx);
+}
+
+HRESULT CPageList::OnMenuAddFile(CPlayList* pList, int idxInsert)
 {
 	ComPtr<IFileOpenDialog> pfod;
 	HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfod));
@@ -136,9 +138,9 @@ HRESULT CPageList::OnMenuAddFile(std::shared_ptr<LISTFILE> pListFile, int idxIns
 	pfod->SetOptions(FOS_ALLOWMULTISELECT | FOS_FORCEFILESYSTEM | FOS_FILEMUSTEXIST);
 	constexpr COMDLG_FILTERSPEC FilterSpec[]
 	{
-		{L"音频文件(*.mp1;*.mp2;*.xm;*.mp3;*.flac;*.wma;*.wav;*.m4a;*.ogg;*.acc;*.ape;*.aiff)",
-			L"*.mp1;*.mp2;*.xm;*.mp3;*.flac;*.wma;*.wav;*.m4a;*.ogg;*.acc;*.ape;*.aiff"},
-		{L"所有文件",L"*.*"}
+		{ L"音频文件(*.mp1;*.mp2;*.xm;*.mp3;*.flac;*.wma;*.wav;*.m4a;*.ogg;*.acc;*.ape;*.aiff)",
+			L"*.mp1;*.mp2;*.xm;*.mp3;*.flac;*.wma;*.wav;*.m4a;*.ogg;*.acc;*.ape;*.aiff" },
+		{ L"所有文件",L"*.*" }
 	};
 	pfod->SetFileTypes(ARRAYSIZE(FilterSpec), FilterSpec);
 
@@ -155,14 +157,14 @@ HRESULT CPageList::OnMenuAddFile(std::shared_ptr<LISTFILE> pListFile, int idxIns
 		return hr;
 	ComPtr<IShellItem> psi;
 	PWSTR pszFile;
-	eck::CCsGuard _{ GetCriticalSection() };
+	ECK_DUILOCK;
 	EckCounter(cItems, i)
 	{
 		psia->GetItemAt(i, psi.AddrOfClear());
 		psi->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFile);
 		if (pszFile)
 		{
-			pListFile->PlayList.FlInsert(pszFile, idxInsert);
+			pList->FlInsert(pszFile, idxInsert);
 			if (idxInsert >= 0)
 				++idxInsert;
 		}
@@ -188,12 +190,42 @@ void CPageList::UpdateDefCover()
 	m_pDC->CreateBitmapFromWicBitmap(pDefCover.Get(), BmpProp, &m_pBmpDefCover);
 }
 
-void CPageList::ReCreateImageList()
+void CPageList::ReCreateImageList(int idx, BOOL bForce)
 {
-	SafeRelease(m_pIlList);
-	m_pIlList = new eck::CD2DImageList{ CxyListCover,CxyListCover };
-	m_pIlList->BindRenderTarget(m_pDC);
-	m_pIlList->AddImage(m_pBmpDefCover);
+	if (idx < 0)
+		return;
+	auto& e = App->GetListMgr().At(idx);
+	if (e.pImageList.Get() && !bForce)
+		return;
+	e.pImageList.Attach(new eck::CD2DImageList{ CxyListCover,CxyListCover });
+	e.pImageList->BindRenderTarget(m_pDC);
+	e.pImageList->AddImage(m_pBmpDefCover);
+}
+
+void CPageList::LoadMetaData(int idxBegin, int idxEnd, int idxList)
+{
+	if (idxList < 0)
+		idxList = m_TBLPlayList.GetCurrSel();
+	if (idxList < 0)
+		return;
+	const auto& e = App->GetListMgr().At(idxList);
+	std::vector<int> vIdx{};
+	for (int i = idxBegin; i <= idxEnd; ++i)
+	{
+		auto& f = e.pList->FlAt(i);
+		if (f.s.bUpdated && f.s.bCoverUpdated)
+			continue;
+		vIdx.emplace_back(i);
+	}
+	if (!vIdx.empty())
+		TskLoadSongData(e.pList, e.pImageList, std::move(vIdx));
+}
+
+void CPageList::CheckVisibleItemMetaData(int idxList)
+{
+	int idx0, idx1;
+	m_GLList.GetVisibleRange(idx0, idx1);
+	LoadMetaData(idx0, idx1, idxList);
 }
 
 LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -209,18 +241,29 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				const auto p = (Dui::NMTBLDISPINFO*)lParam;
 				if (p->uMask & eck::DIM_TEXT)
-					p->cchText = swprintf((PWSTR)p->pszText, L"播放列表 %d", p->idx);
+				{
+					const auto pList = App->GetListMgr().AtList(p->idx);
+					const auto& rsName = pList->GetName();
+					p->cchText = rsName.CopyTo((PWSTR)p->pszText, p->cchText);
+				}
 				if (p->uMask & eck::DIM_IMAGE)
 					p->pImage = ((CWndMain*)GetWnd())->RealizeImage(GImg::List);
 			}
 			return 0;
 			case Dui::TBLE_SELCHANGED:
 			{
-				const auto p = (Dui::NMTBLITEMINDEX*)lParam;
-				const auto& e = *m_vListFile[p->idx];
-				m_GLList.SetItemCount(e.PlayList.FlGetCount());
+				const auto* const p = (Dui::NMTBLITEMINDEX*)lParam;
+				if (p->idx < 0)
+					break;
+				ReCreateImageList(p->idx, FALSE);
+				const auto& e = App->GetListMgr().At(p->idx);
+				e.pList->ImEnsureLoaded();
+				m_GLList.SetItemCount(0);
+				m_GLList.SetItemCount(e.pList->FlGetCount());
+				m_GLList.SetImageList(e.pImageList.Get());
 				m_GLList.ReCalc();
 				m_GLList.InvalidateRect();
+				CheckVisibleItemMetaData(p->idx);
 			}
 			return 0;
 			}
@@ -278,45 +321,15 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return 0;
 			case Dui::LTE_SCROLLED:
 			{
-				const auto idx = m_TBLPlayList.GetCurrSel();
-				if (idx < 0)
-					break;
-				const auto pListFile = m_vListFile[idx];
 				const auto p = (Dui::NMLTSCROLLED*)lParam;
-				if (!m_vLoadDataTask.empty())
-					for (size_t i{ m_vLoadDataTask.size() - 1 }; i; --i)
-					{
-						auto& e = m_vLoadDataTask[i];
-						if (!(std::max(e.idxFlatBegin, p->idxBegin) <=
-							std::min(e.idxFlatEnd, p->idxEnd)))
+				if (eck::GetThreadCtx() != App->UiThreadCtx())
+					App->UiThreadCtx()->Callback.EnQueueCallback(
+						[this, idx0 = p->idxBegin, idx1 = p->idxEnd]
 						{
-							e.Task.TryCancel();
-							for (int i = e.idxFlatBegin; i <= e.idxFlatEnd; ++i)
-								pListFile->PlayList.FlAt(i).TskTag = 0ull;
-							m_vLoadDataTask.erase(m_vLoadDataTask.begin() + i);
-						}
-					}
-				std::vector<LOAD_DATA_ITEM> vItem;
-				eck::CTimeIdGenerator IdGen{};
-
-				for (int i = p->idxBegin; i <= p->idxEnd; ++i)
-				{
-					auto& e = pListFile->PlayList.FlAt(i);
-					if (e.TskTag || e.s.bUpdated)
-						continue;
-					e.TskTag = IdGen.Generate();
-					auto& f = vItem.emplace_back();
-					f.rsFile = e.rsFile;
-					f.Tag = e.TskTag;
-					f.idxFlat = i;
-				}
-				if (!vItem.empty())
-				{
-					auto& e = m_vLoadDataTask.emplace_back();
-					e.idxFlatBegin = p->idxBegin;
-					e.idxFlatEnd = p->idxEnd;
-					e.Task = TskLoadSongData(pListFile, vItem);
-				}
+							LoadMetaData(idx0, idx1);
+						});
+				else
+					LoadMetaData(p->idxBegin, p->idxEnd);
 			}
 			return 0;
 			}
@@ -325,12 +338,11 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 			case Dui::EE_COMMAND:
 			{
-				const auto idx = m_TBLPlayList.GetCurrSel();
-				if (idx < 0)
+				const auto pList = GetCurrPlayList();
+				if (!pList)
 					break;
-				const auto e = m_vListFile[idx];
-				OnMenuAddFile(e, -1);
-				m_GLList.SetItemCount(e->PlayList.FlGetCount());
+				OnMenuAddFile(pList, -1);
+				m_GLList.SetItemCount(pList->FlGetCount());
 				m_GLList.ReCalc();
 				m_GLList.InvalidateRect();
 			}
@@ -341,6 +353,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SIZE:
 		m_Lyt.Arrange(0, 0, GetWidth(), GetHeight());
+		CheckVisibleItemMetaData(-1);
 		break;
 
 	case WM_SETFONT:
@@ -356,7 +369,6 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_cxIl = Log2Phy(CxyListCover);
 		m_cyIl = m_cxIl;
 		UpdateDefCover();
-		ReCreateImageList();
 		{
 			m_EDSearch.TxSetProp(TXTBIT_MULTILINE, 0, FALSE);
 			m_EDSearch.Create(nullptr, Dui::DES_VISIBLE, 0,
@@ -365,12 +377,9 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			m_TBLPlayList.Create(nullptr, Dui::DES_VISIBLE, 0,
 				0, 0, CxListFileList, 0, this, GetWnd());
-			m_TBLPlayList.SetItemCount(40);
+			m_TBLPlayList.SetItemCount(App->GetListMgr().GetCount());
 			m_TBLPlayList.SetBottomExtraSpace(CyPlayPanel);
 			m_TBLPlayList.ReCalc();
-			m_vListFile.resize(40);
-			for (auto& e : m_vListFile)
-				e = std::make_shared<LISTFILE>();
 			m_LytPlayList.Add(&m_TBLPlayList, {}, eck::LF_FILL, 1);
 		}
 		m_Lyt.Add(&m_LytPlayList, { .cxRightWidth = CxPageIntPadding },
@@ -395,8 +404,8 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_GLList.SetItemHeight(CyPlayListItem);
 			m_GLList.SetSingleSel(FALSE);
 			m_GLList.SetTextFormat(pTextFormat.Get());
-			m_GLList.SetImageList(m_pIlList);
 			m_GLList.GetHeader().SetTextFormat(pTextFormat.Get());
+			m_GLList.SetDbgIndex(TRUE);
 			m_LytList.Add(&m_GLList, {}, eck::LF_FILL, 1);
 		}
 		m_Lyt.Add(&m_LytList, { .cxRightWidth = CxPageIntPadding }, eck::LF_FILL, 1);
@@ -421,7 +430,13 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				return 0;
 			});
-		m_TBLPlayList.SelectItemForClick(0);
+		if (App->GetListMgr().GetCount())
+		{
+			ReCreateImageList(0, TRUE);
+			m_GLList.SetImageList(App->GetListMgr().At(0).pImageList.Get());
+			m_TBLPlayList.SelectItemForClick(0);
+			CheckVisibleItemMetaData(0);
+		}
 	}
 	break;
 	case WM_DPICHANGED:
@@ -429,24 +444,22 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_cxIl = Log2Phy(CxyListCover);
 		m_cyIl = m_cxIl;
 		UpdateDefCover();
-		ReCreateImageList();
 		((CWndMain*)GetWnd())->ThreadCtx()->Callback.EnQueueCallback([this]
 			{
 				ECK_DUILOCK;
-				const auto pPl = GetCurrPlayList();
-				if (pPl)
-					pPl->InvalidateImage();
-				m_GLList.SetImageList(m_pIlList);
+				App->GetListMgr().InvalidateImageList();
+				const auto idx = m_TBLPlayList.GetCurrSel();
+				if (idx < 0)
+					return;
+				ReCreateImageList(idx, TRUE);
+				const auto& e = App->GetListMgr().At(idx);
+				m_GLList.SetImageList(e.pImageList.Get());
 			});
 	}
 	break;
 	case WM_DESTROY:
-	{
-		m_vListFile.clear();
-		SafeRelease(m_pIlList);
 		SafeRelease(m_pBmpDefCover);
-	}
-	break;
+		break;
 	}
 	return __super::OnEvent(uMsg, wParam, lParam);
 }
