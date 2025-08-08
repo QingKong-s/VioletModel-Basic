@@ -37,8 +37,6 @@ private:
 
 	HRESULT OnMenuAddFile(CPlayList* pList, int idxInsert = -1);
 
-	void OnPlayEvent(const PLAY_EVT_PARAM& e);
-
 	void UpdateDefCover();
 
 	void ReCreateImageList(int idx, BOOL bForce);

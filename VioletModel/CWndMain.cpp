@@ -58,6 +58,7 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 
 	BlurInit();
 	BlurSetUseLayer(TRUE);
+
 	ComPtr<IDWriteTextFormat> pTfPageTitle, pTfLeft, pTfCenter;
 	App->GetFontFactory().NewFont(pTfPageTitle.RefOf(), eck::Align::Near,
 		eck::Align::Center, (float)CyFontPageTitle, 600);
@@ -121,33 +122,26 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	// 按钮 上一曲
 	m_BTPrev.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
-	m_BTPrev.SetImage(RealizeImage(GImg::Prev));
 	m_BTPrev.SetTransparentBk(TRUE);
 	// 按钮 播放/暂停
 	m_BTPlay.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButtonBig, CxyCircleButtonBig, nullptr, this);
-	m_BTPlay.SetImage(RealizeImage(GImg::Triangle));
 	m_BTPlay.SetTheme(m_pVioletTheme);
 	// 按钮 下一曲
 	m_BTNext.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
-	m_BTNext.SetImage(RealizeImage(GImg::Next));
 	m_BTNext.SetTransparentBk(TRUE);
 	// 按钮 播放模式
 	m_BTAutoNext.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
-	m_BTAutoNext.SetImage(RealizeImage(
-		AutoNextModeToGImg(App->GetPlayer().GetAutoNextMode())));
 	m_BTAutoNext.SetTransparentBk(TRUE);
 	// 按钮 歌词
 	m_BTLrc.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
-	m_BTLrc.SetImage(RealizeImage(GImg::Lrc));
 	m_BTLrc.SetTransparentBk(TRUE);
 	// 按钮 音量
 	m_BTVol.Create(nullptr, Dui::DES_VISIBLE, 0,
 		0, 0, CxyCircleButton, CxyCircleButton, nullptr, this);
-	m_BTVol.SetImage(RealizeImage(GImg::PlayerVolume3));
 	m_BTVol.SetTransparentBk(TRUE);
 	// 标题栏
 	m_TitleBar.Create(nullptr, Dui::DES_VISIBLE, 0,
@@ -161,6 +155,7 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 	m_PagePlaying.UpdateBlurredCover();
 	OnCoverUpdate();
 
+	OnColorSchemeChanged();
 	StUpdateColorizationColor();
 	ShowPage(Page::List, FALSE);
 	m_TabPanel.GetTabList().SelectItemForClick(1);
@@ -388,9 +383,15 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		if (eck::MsgOnSettingChangeMainWnd(hWnd, wParam, lParam, TRUE))
 		{
+			InvalidateRealizedImage();
 			const auto bDark = ShouldAppsUseDarkMode();
 			App->SetDarkMode(bDark);
 			StSwitchStdThemeMode(bDark);
+			OnColorSchemeChanged();
+			TblUpdateToolBarIcon();
+			m_WndTbGhost.InvalidateDwmThumbnail();
+			m_WndTbGhost.InvalidateThumbnailCache();
+			m_WndTbGhost.SetIconicThumbnail();
 			Redraw();
 		}
 	}
@@ -484,6 +485,7 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 
 ID2D1Bitmap1* CWndMain::RealizeImage(GImg n)
 {
+	ECK_DUILOCKWND;
 	if (!m_vBmpRealization[(size_t)n])
 	{
 		GetDeviceContext()->CreateBitmapFromWicBitmap(App->GetImg(n),
@@ -656,4 +658,22 @@ void CWndMain::OnCoverUpdate()
 		m_pCompPlayPageAn->SetOverlayBitmap(pBmp);
 		m_PlayPanel.m_Cover.SetBitmap(pBmp);
 	}
+}
+
+void CWndMain::OnColorSchemeChanged()
+{
+	m_BTPrev.SetImage(RealizeImage(GImg::Prev));
+	m_BTPlay.SetImage(RealizeImage(GImg::Triangle));
+	m_BTNext.SetImage(RealizeImage(GImg::Next));
+	m_BTAutoNext.SetImage(RealizeImage(
+		AutoNextModeToGImg(App->GetPlayer().GetAutoNextMode())));
+	m_BTLrc.SetImage(RealizeImage(GImg::Lrc));
+	m_BTVol.SetImage(RealizeImage(GImg::PlayerVolume3));
+}
+
+void CWndMain::InvalidateRealizedImage()
+{
+	ECK_DUILOCKWND;
+	for (auto& e : m_vBmpRealization)
+		SafeRelease(e);
 }

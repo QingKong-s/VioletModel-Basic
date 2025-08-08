@@ -137,11 +137,16 @@ HRESULT CWndMain::TblUpdateState()
 	else
 		hr = m_pTaskbarList->SetProgressState(HWnd, TBPF_NOPROGRESS);
 	if (FAILED(hr)) return hr;
+
+	const auto bPauseIcon = (Player.IsActive() && !Player.IsPaused());
 	THUMBBUTTON tb{};
-	tb.dwMask = THB_ICON;
+	tb.dwMask = THB_ICON | THB_TOOLTIP;
 	tb.iId = IDTBB_PLAY;
-	tb.hIcon = (Player.IsActive() && !Player.IsPaused()) ?
-		m_hiTbPause.get() : m_hiTbPlay.get();
+	tb.hIcon = bPauseIcon ? m_hiTbPause.get() : m_hiTbPlay.get();
+	if (bPauseIcon)
+		eck::TcsCopyLen(tb.szTip, EckArrAndLen(L"暂停"));
+	else
+		eck::TcsCopyLen(tb.szTip, EckArrAndLen(L"播放"));
 	return m_pTaskbarList->ThumbBarUpdateButtons(m_WndTbGhost.HWnd, 1, &tb);
 }
 

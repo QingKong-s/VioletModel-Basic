@@ -110,6 +110,10 @@ private:
 
 	void OnCoverUpdate();
 
+	void OnColorSchemeChanged();
+
+	void InvalidateRealizedImage();
+
 	HRESULT TblCreateGhostWindow(PCWSTR pszText);
 	HRESULT TblSetup();
 	HRESULT TblUpdateToolBarIcon();

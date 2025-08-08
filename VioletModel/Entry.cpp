@@ -46,14 +46,14 @@ Msg = %s)",
 
 	App = new CApp{};
 	CApp::Init();
-#ifdef _DEBUG
+//#ifdef _DEBUG
 	App->GetListMgr().Add()->SetName(L"测试列表"sv);
-#endif
+//#endif
 
 	const auto pWnd = new CWndMain{};
 	const auto hMon = eck::GetOwnerMonitor(nullptr);
 	const auto iDpi = eck::GetMonitorDpi(hMon);
-	auto size = SIZE{ 900,640 };
+	auto size = SIZE{ 910,620 };
 	eck::DpiScale(size, iDpi);
 	const auto pt = eck::CalcCenterWndPos(nullptr, size.cx, size.cy, FALSE);
 	pWnd->SetUserDpi(iDpi);

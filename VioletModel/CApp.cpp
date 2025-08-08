@@ -192,14 +192,12 @@ void CApp::SetDarkMode(BOOL bDarkMode)
 		return;
 	m_bDarkMode = bDarkMode;
 	if (m_bDarkMode)
-	{
-		for (auto& e : m_Img)
+		for (size_t i{}; i < (size_t)GImg::Priv_InvertEnd; ++i)
 		{
-			const auto p = InvertSkin(e);
-			e->Release();
-			e = p;
+			const auto p = InvertSkin(m_Img[i]);
+			m_Img[i]->Release();
+			m_Img[i] = p;
 		}
-	}
 	else
 		LoadSkin(FALSE);
 }

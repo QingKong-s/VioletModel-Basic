@@ -1,8 +1,5 @@
 ﻿#pragma once
-struct VEN_MINICOVER_CLICK : Dui::DUINMHDR
-{
-
-};
+struct VEN_MINICOVER_CLICK : Dui::DUINMHDR {};
 
 class CVeMiniCover : public Dui::CElem
 {
@@ -13,6 +10,8 @@ private:
 	eck::CEasingCurve* m_pec{};
 	BOOLEAN m_bHover{};
 	BOOLEAN m_bLBtnDown{};
+
+	void OnColorSchemeChanged(BOOL bForceUpdateCover);
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

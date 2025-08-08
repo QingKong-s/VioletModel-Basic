@@ -61,6 +61,7 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 	SafeRelease(m_pBmpCover);
 	if (pPic)
 	{
+		m_bDefCover = FALSE;
 		if (pPic->bLink)
 			m_dwLastHrOrBassErr = eck::CreateWicBitmap(
 				m_pBmpCover, std::get<1>(pPic->varPic).Data());
@@ -71,10 +72,12 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 			pStream->Release();
 		}
 		if (FAILED(m_dwLastHrOrBassErr))
-			return PlayErr::ErrHResult;
+			goto UseDefCover;
 	}
 	else
 	{
+	UseDefCover:
+		m_bDefCover = TRUE;
 		m_pBmpCover = App->GetImg(GImg::DefaultCover);
 		m_pBmpCover->AddRef();
 	}
@@ -153,6 +156,7 @@ PlayErr CPlayer::Stop(BOOL bNoGap)
 	m_idxCurrLrc = m_idxLastLrc = -1;
 	if (!bNoGap)
 	{
+		m_bDefCover = TRUE;
 		m_bActive = FALSE;
 		m_Sig.Emit({ PlayEvt::Stop });
 		if (GetList()->IsGroupEnabled())

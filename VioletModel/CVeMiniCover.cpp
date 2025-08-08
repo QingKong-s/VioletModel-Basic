@@ -4,6 +4,23 @@
 
 constexpr static float CoverAnEndValue = 6.f;
 
+void CVeMiniCover::OnColorSchemeChanged(BOOL bForceUpdateCover)
+{
+	if (App->GetPlayer().IsDefaultCover() ||
+		bForceUpdateCover)
+	{
+		if (m_pBmp)
+			m_pBmp->Release();
+		m_pBmp = ((CWndMain*)GetWnd())->RealizeImage(GImg::DefaultCover);
+		m_pBmp->AddRef();
+	}
+
+	if (m_pBmpCoverUp)
+		m_pBmpCoverUp->Release();
+	m_pBmpCoverUp = ((CWndMain*)GetWnd())->RealizeImage(GImg::PlayPageUp);
+	m_pBmpCoverUp->AddRef();
+}
+
 LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -94,7 +111,9 @@ LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 	}
 	break;
-
+	case Dui::EWM_COLORSCHEMECHANGED:
+		OnColorSchemeChanged(FALSE);
+		break;
 	case WM_CREATE:
 	{
 		m_pec = new eck::CEasingCurve{};
@@ -107,23 +126,7 @@ LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				p->InvalidateRect();
 			});
 
-		m_pBmp = ((CWndMain*)GetWnd())->RealizeImage(GImg::DefaultCover);
-		m_pBmp->AddRef();
-		/*GetWnd()->BmpNewLogSize(GetWidthF(), GetHeightF(), m_pBmp);
-		const auto pOrg = ((CWndMain*)GetWnd())->RealizeImage(GImg::DefaultCover);*/
-		m_pBmpCoverUp = ((CWndMain*)GetWnd())->RealizeImage(GImg::PlayPageUp);
-		m_pBmpCoverUp->AddRef();
-
-		//ID2D1Image* pOldTarget;
-		//m_pDC->GetTarget(&pOldTarget);
-		//m_pDC->BeginDraw();
-		//m_pDC->SetTarget(m_pBmp);
-		//m_pDC->SetTransform(D2D1::Matrix3x2F::Identity());
-		//m_pDC->DrawBitmap(pOrg, GetViewRectF());
-		//m_pDC->EndDraw();
-		//m_pDC->SetTarget(pOldTarget);
-		//if (pOldTarget)
-		//	pOldTarget->Release();
+		OnColorSchemeChanged(TRUE);
 	}
 	break;
 

@@ -172,11 +172,6 @@ HRESULT CPageList::OnMenuAddFile(CPlayList* pList, int idxInsert)
 	return S_OK;
 }
 
-void CPageList::OnPlayEvent(const PLAY_EVT_PARAM& e)
-{
-
-}
-
 void CPageList::UpdateDefCover()
 {
 	SafeRelease(m_pBmpDefCover);
@@ -364,6 +359,22 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 
+	case Dui::EWM_COLORSCHEMECHANGED:
+	{
+		UpdateDefCover();
+		const auto idx = m_TBLPlayList.GetCurrSel();
+		if (idx < 0)
+			break;
+		auto& Lm = App->GetListMgr();
+		EckCounter(Lm.GetCount(), i)
+		{
+			const auto pIl = Lm.At(idx).pImageList.Get();
+			if (!pIl)
+				continue;
+			pIl->ReplaceImage(0, m_pBmpDefCover);
+		}
+	}
+	break;
 	case WM_CREATE:
 	{
 		m_cxIl = Log2Phy(CxyListCover);

@@ -1,6 +1,12 @@
 ﻿#include "pch.h"
 #include "CWndMain.h"
 
+
+void CTabPanel::OnColorSchemeChanged()
+{
+	m_LAIcon.SetBitmap(((CWndMain*)GetWnd())->RealizeImage(GImg::WindowLogo));
+}
+
 LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -80,19 +86,23 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 
+	case Dui::EWM_COLORSCHEMECHANGED:
+		OnColorSchemeChanged();
+		break;
+
 	case WM_CREATE:
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 		m_LAIcon.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, GetWidth(), GetWidth(), this, GetWnd());
 		m_LAIcon.SetOnlyBitmap(TRUE);
-		m_LAIcon.SetBitmap(((CWndMain*)GetWnd())->RealizeImage(GImg::WindowLogo));
 		m_LAIcon.SetBkImgMode(eck::BkImgMode::StretchKeepAspectRatio);
 		m_LAIcon.SetFullElem(TRUE);
 
 		m_TAB.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, 0, 0, this, GetWnd());
-
 		m_TAB.SetItemCount(4);
+
+		OnColorSchemeChanged();
 		break;
 
 	case WM_DESTROY:

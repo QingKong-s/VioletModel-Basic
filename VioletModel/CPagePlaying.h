@@ -24,6 +24,8 @@ private:
 	void OnPlayEvent(const PLAY_EVT_PARAM& e);
 
 	void SetEmptyText();
+
+	void OnColorSchemeChanged();
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

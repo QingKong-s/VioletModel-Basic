@@ -70,6 +70,7 @@ private:
 
 	BITBOOL m_bActive : 1{};
 	BITBOOL m_bPaused : 1{};	// 是否暂停
+	BITBOOL m_bDefCover : 1{ TRUE };	// 是否使用默认封面
 
 
 	PlayErr PlayWorker(CPlayList::ITEM& e);
@@ -131,4 +132,5 @@ public:
 	EckInlineNd auto GetLrc() const noexcept { return m_pvLrc; }
 	EckInlineCe void SetAutoNextMode(AutoNextMode eMode) noexcept { m_eAutoNextMode = eMode; }
 	EckInlineNdCe AutoNextMode GetAutoNextMode() const noexcept { return m_eAutoNextMode; }
+	EckInlineNdCe BOOL IsDefaultCover() const noexcept { return m_bDefCover; }
 };

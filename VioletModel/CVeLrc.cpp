@@ -636,9 +636,9 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_pDC->QueryInterface(&m_pDC1);
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 
-		m_SB.Create(nullptr, Dui::DES_VISIBLE, 0,
+		m_SB.Create(nullptr, 0, 0,
 			0, 0, (int)GetTheme()->GetMetrics(Dui::Metrics::CxVScroll), 0,
-			this, GetWnd());
+			this);
 		m_psv = m_SB.GetScrollView();
 		m_psv->AddRef();
 		m_psv->SetMinThumbSize(Dui::CxyMinScrollThumb);
@@ -741,7 +741,6 @@ HRESULT CVeLrc::LrcInit(std::shared_ptr<std::vector<eck::LRCINFO>> pvLrc)
 		ScrFixItemPosition();
 	ItmReCalcTop();
 	InvalidateRect();
-	//ScrAutoScrolling();
 	return S_OK;
 }
 
@@ -758,6 +757,7 @@ void CVeLrc::LrcClear()
 	m_idxCurrAnItem = -1;
 	m_fAnValue = 1.f;
 	m_bEnlarging = FALSE;
+	m_SB.SetVisible(FALSE);
 	InvalidateRect();
 }
 
@@ -859,10 +859,16 @@ void CVeLrc::ItmLayout()
 {
 	const float cx = GetWidthF(), cy = GetHeightF();
 	if (cx <= 0.f || cy <= 0.f)
+	{
+		m_SB.SetVisible(FALSE);
 		return;
+	}
 	m_vItem.clear();
 	if (!m_pvLrc || m_pvLrc->empty())
+	{
+		m_SB.SetVisible(FALSE);
 		return;
+	}
 	const auto& vLrc = *m_pvLrc;
 
 	constexpr auto cyMainTransPadding = 5.f;
