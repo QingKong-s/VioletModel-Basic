@@ -8,6 +8,7 @@ Tag::Result VltGetMusicInfo(PCWSTR pszFile,
 	if (!mf.IsValid())
 		return Tag::Result::FileAccessDenied;
 	mi.Clear();
+	const auto uMask = mi.uMask;
 	if (mf.GetTagType() & Tag::TAG_FLAC)
 	{
 		Tag::CFlac x{ mf };
@@ -29,11 +30,12 @@ Tag::Result VltGetMusicInfo(PCWSTR pszFile,
 		x.SimpleGetSet(mi, Opt);
 		mi.uMask &= ~mi.uMaskChecked;
 	}
-	if (mi.rsTitle.IsEmpty())
+	if ((uMask & Tag::MIM_TITLE) && mi.rsTitle.IsEmpty())
 		mi.rsTitle.DupString(EckStrAndLen(L"未知标题"));
-	if (mi.slArtist.Str.IsEmpty())
+	if ((uMask & Tag::MIM_ARTIST) && mi.slArtist.Str.IsEmpty())
 		mi.slArtist.PushBackString(L"未知艺术家"sv, {});
-	if (mi.rsAlbum.IsEmpty())
+	if ((uMask & Tag::MIM_ALBUM) && mi.rsAlbum.IsEmpty())
 		mi.rsAlbum.DupString(EckStrAndLen(L"未知专辑"));
+	mi.uMask = uMask;
 	return Tag::Result::Ok;
 }

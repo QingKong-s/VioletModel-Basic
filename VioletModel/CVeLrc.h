@@ -118,7 +118,7 @@ private:
 	}
 
 	void MiBeginDetect();
-	EckInlineNdCe BOOL MiIsIdle() { return m_tMouseIdle > 0; }
+	EckInlineNdCe BOOL MiIsManualScroll() { return m_tMouseIdle > 0; }
 
 	void SeBeginExpand(BOOL bEnlarge);
 

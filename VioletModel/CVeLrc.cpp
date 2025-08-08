@@ -182,7 +182,7 @@ float CVeLrc::ItmPaint(int idx)
 	}
 	else
 	{
-		if (m_bScrollExpand || MiIsIdle())
+		if (m_bScrollExpand || MiIsManualScroll())
 		{
 			m_pDC->SetTransform(D2D1::Matrix3x2F::Scale(
 				m_kScrollExpand, m_kScrollExpand, ptScale) * Mat);
@@ -452,7 +452,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		ECK_DUILOCK;
 		if (m_vItem.empty())
 			break;
-		if (!MiIsIdle())
+		if (!MiIsManualScroll())
 			SeBeginExpand(TRUE);
 		ItmDelayComplete();
 		ScrManualScrolling();
@@ -538,9 +538,12 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		if (wParam == VK_ESCAPE)
 		{
-			m_tMouseIdle = 0;
-			KillTimer(IDT_MOUSEIDLE);
-			ScrAutoScrolling();
+			if (MiIsManualScroll())
+			{
+				m_tMouseIdle = 0;
+				KillTimer(IDT_MOUSEIDLE);
+				ScrAutoScrolling();
+			}
 		}
 	}
 	return 0;
@@ -554,7 +557,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			case Dui::EE_VSCROLL:
 			{
 				ECK_DUILOCK;
-				if (!MiIsIdle())
+				if (!MiIsManualScroll())
 					SeBeginExpand(TRUE);
 				ItmDelayComplete();
 				ScrManualScrolling();
@@ -601,7 +604,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_SB.SetRect(rc);
 		if (!IsEmpty())
 		{
-			if (MiIsIdle())
+			if (MiIsManualScroll())
 				ScrFixItemPosition();
 			else
 			{
@@ -708,7 +711,7 @@ HRESULT CVeLrc::LrcSetCurrentLine(int idxCurr)
 	ECK_DUILOCK;
 	const int idxPrev = m_idxCurr;
 	m_idxCurr = idxCurr;
-	if (MiIsIdle())
+	if (MiIsManualScroll())
 	{
 		if (idxPrev >= 0)
 			ItmInvalidate(idxPrev);

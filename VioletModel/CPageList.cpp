@@ -52,15 +52,21 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<CPlayList> pList,
 		const auto idxFlat = vIdx[i];
 		const auto& e = pList->FlAt(idxFlat);
 		auto& f = vTmp[i];
-		CBass Bass{};
-		const auto h = Bass.Open(e.rsFile.Data(), BASS_STREAM_DECODE,
-			BASS_STREAM_DECODE, BASS_STREAM_DECODE);
+		UINT uSecTime;
+		if (f.mi.uMask == Tag::MIM_COVER)
+			uSecTime = 0;
+		else
+		{
+			CBass Bass{};
+			const auto h = Bass.Open(e.rsFile.Data(), BASS_STREAM_DECODE,
+				BASS_STREAM_DECODE, BASS_STREAM_DECODE);
 #ifdef _DEBUG
-		if (!h)
-			EckDbgPrintFmt(L"%s打开失败", e.rsFile.Data());
+			if (!h)
+				EckDbgPrintFmt(L"%s打开失败", e.rsFile.Data());
 #endif
-		const auto uSecTime = h ? (UINT)round(Bass.GetLength()) : 0u;
-		Bass.Close();
+			uSecTime = h ? (UINT)round(Bass.GetLength()) : 0u;
+			Bass.Close();
+		}
 
 		VltGetMusicInfo(e.rsFile.Data(), f.mi, Opt);
 
@@ -97,16 +103,19 @@ eck::CoroTask<void> CPageList::TskLoadSongData(std::shared_ptr<CPlayList> pList,
 			if (idxImg >= 0)
 				e.idxIl = idxImg;
 		}
-		e.rsTitle = std::move(f.mi.rsTitle);
-		e.rsArtist = std::move(f.mi.slArtist.Str);
-		if (!e.rsArtist.IsEmpty())
-			e.rsArtist.Erase(0);
-		e.rsAlbum = std::move(f.mi.rsAlbum);
-		if (f.mi.uMaskChecked & Tag::MIM_TITLE)
-			e.rsName = e.rsTitle;
-		e.s.uSecTime = f.uSecTime;
-		e.s.bUpdated = TRUE;
-		m_GLList.InvalidateCache(vIdx[i]);
+		if (f.mi.uMask != Tag::MIM_COVER)
+		{
+			e.rsTitle = std::move(f.mi.rsTitle);
+			e.rsArtist = std::move(f.mi.slArtist.Str);
+			if (!e.rsArtist.IsEmpty())
+				e.rsArtist.Erase(0);
+			e.rsAlbum = std::move(f.mi.rsAlbum);
+			if (f.mi.uMaskChecked & Tag::MIM_TITLE)
+				e.rsName = e.rsTitle;
+			e.s.uSecTime = f.uSecTime;
+			e.s.bUpdated = TRUE;
+			m_GLList.InvalidateCache(vIdx[i]);
+		}
 	}
 	m_GLList.InvalidateRect();
 	pList->TskDecRef();
@@ -466,6 +475,8 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				ReCreateImageList(idx, TRUE);
 				const auto& e = App->GetListMgr().At(idx);
 				m_GLList.SetImageList(e.pImageList.Get());
+				m_GLList.InvalidateRect();
+				CheckVisibleItemMetaData(-1);
 			});
 	}
 	break;
