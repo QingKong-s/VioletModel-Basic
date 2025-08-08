@@ -340,6 +340,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_GLList.SetItemCount(pList->FlGetCount());
 				m_GLList.ReCalc();
 				m_GLList.InvalidateRect();
+				CheckVisibleItemMetaData(-1);
 			}
 			return 0;
 			}
