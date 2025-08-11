@@ -26,7 +26,6 @@
 #include "eck\CDWriteFontFactory.h"
 #include "eck\CEnumFile.h"
 #include "eck\CoroutineHelper.h"
-#include "eck\CTimeIdGenerator.h"
 #include "eck\ShellHelper.h"
 
 #if VIOLET_WINRT

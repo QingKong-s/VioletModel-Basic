@@ -86,7 +86,9 @@ void CPagePlaying::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		m_LAAlbum.SetText(mi.rsAlbum.Data());
 		m_LAArtist.SetText(mi.slArtist.FrontData());
 
-		m_Lrc.LrcInit(App->GetPlayer().GetLrc());
+		ComPtr<CLyric> pLyric;
+		App->GetPlayer().GetLrc(pLyric.RefOf());
+		m_Lrc.LrcInit(pLyric.Get());
 	}
 	break;
 	case PlayEvt::Stop:

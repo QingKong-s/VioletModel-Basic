@@ -197,6 +197,7 @@
     <ClInclude Include="CApp.h" />
     <ClInclude Include="CBass.h" />
     <ClInclude Include="CCompPlayPageAn.h" />
+    <ClInclude Include="CLyric.h" />
     <ClInclude Include="CMediaLib.h" />
     <ClInclude Include="CPlayListFile.h" />
     <ClInclude Include="CPlayListMgr.h" />
@@ -227,6 +228,7 @@
   <ItemGroup>
     <ClCompile Include="CApp.cpp" />
     <ClCompile Include="CBass.cpp" />
+    <ClCompile Include="CLyric.cpp" />
     <ClCompile Include="CMediaLib.cpp" />
     <ClCompile Include="CPlayListFile.cpp" />
     <ClCompile Include="CPlayListMgr.cpp" />
@@ -265,6 +267,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Skin\App.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

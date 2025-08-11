@@ -9,6 +9,7 @@ void CPlayer::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	{
 	case PlayEvt::CommTick:
 		m_lfCurrTime = m_Bass.GetPosition();
+		m_pLrc->LrcpSetCurrentTime((float)m_lfCurrTime);
 		LrcUpdatePosition();
 		break;
 	case PlayEvt::End:
@@ -82,17 +83,17 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 		m_pBmpCover->AddRef();
 	}
 
-	m_pvLrc = std::make_shared<std::vector<eck::LRCINFO>>();
-	m_pvLrcLabel = std::make_shared<std::vector<eck::LRCLABEL>>();
+	SafeRelease(m_pLrc);
+	m_pLrc = new CLyric{};
 
 	auto rsLrcPath{ e.rsFile };
 	rsLrcPath.PazRenameExtension(EckStrAndLen(L".lrc"));
-	eck::ParseLrc(rsLrcPath.Data(), 0u, *m_pvLrc, *m_pvLrcLabel,
-		eck::LrcEncoding::Auto, (float)m_lfTotalTime);
-	if (!m_pvLrc->size())
+	eck::ParseLrc(rsLrcPath.Data(), 0u, m_pLrc->LrcpGetLrc(),
+		m_pLrc->LrcpGetLabel(), eck::LrcEncoding::Auto, (float)m_lfTotalTime);
+	if (!m_pLrc->LrcGetCount())
 	{
 		eck::ParseLrc(m_MusicInfo.rsLrc.Data(), m_MusicInfo.rsLrc.ByteSize(),
-			*m_pvLrc, *m_pvLrcLabel,
+			m_pLrc->LrcpGetLrc(), m_pLrc->LrcpGetLabel(),
 			eck::LrcEncoding::UTF16LE, (float)m_Bass.GetLength());
 	}
 
@@ -279,10 +280,10 @@ AutoNextMode CPlayer::NextAutoNextMode()
 
 BOOL CPlayer::LrcUpdatePosition()
 {
-	if (!m_pvLrc || m_pvLrc->empty())
+	if (!m_pLrc || !m_pLrc->LrcGetCount())
 		return FALSE;
 	const auto fPos = (float)m_lfCurrTime;
-	const auto& vLrc = *m_pvLrc;
+	const auto& vLrc = m_pLrc->LrcpGetLrc();
 	const auto cLrc = (int)vLrc.size();
 	if (m_idxCurrLrc >= 0)// 尝试快速判断
 	{

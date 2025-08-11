@@ -733,10 +733,12 @@ HRESULT CVeLrc::LrcSetCurrentLine(int idxCurr)
 	return S_OK;
 }
 
-HRESULT CVeLrc::LrcInit(std::shared_ptr<std::vector<eck::LRCINFO>> pvLrc)
+HRESULT CVeLrc::LrcInit(CLyric* pLyric)
 {
 	ECK_DUILOCK;
-	m_pvLrc = pvLrc;
+	SafeRelease(m_pLrc);
+	if (m_pLrc = pLyric)
+		m_pLrc->AddRef();
 	m_idxCurr = -1;
 	ItmLayout();
 	ItmDelayComplete();
@@ -750,7 +752,7 @@ HRESULT CVeLrc::LrcInit(std::shared_ptr<std::vector<eck::LRCINFO>> pvLrc)
 void CVeLrc::LrcClear()
 {
 	ECK_DUILOCK;
-	m_pvLrc.reset();
+	SafeRelease(m_pLrc);
 	m_vItem.clear();
 	m_idxTop = -1;
 	m_idxHot = -1;
@@ -867,35 +869,37 @@ void CVeLrc::ItmLayout()
 		return;
 	}
 	m_vItem.clear();
-	if (!m_pvLrc || m_pvLrc->empty())
+	if (!m_pLrc || !m_pLrc->LrcGetCount())
 	{
 		m_SB.SetVisible(FALSE);
 		return;
 	}
-	const auto& vLrc = *m_pvLrc;
+	const auto cLrc = m_pLrc->LrcGetCount();
 
 	constexpr auto cyMainTransPadding = 5.f;
 
-	m_vItem.resize(vLrc.size());
+	m_vItem.resize(cLrc);
 	const float cxMax = (cx - m_cxyLineMargin * 2.f) / m_fPlayingItemScale;
 	DWRITE_TEXT_METRICS Metrics;
 	const auto yInit = (float)-m_psv->GetPos();
 	float y = yInit;
-	EckCounter(vLrc.size(), i)
+
+	LYRIC_LINE Lrc;
+	EckCounter(cLrc, i)
 	{
 		auto& e = m_vItem[i];
-		eck::g_pDwFactory->CreateTextLayout(vLrc[i].pszLrc, vLrc[i].cchLrc,
+		m_pLrc->LrcGetLyric(i, Lrc);
+		eck::g_pDwFactory->CreateTextLayout(Lrc.pszLrc, Lrc.cchLrc,
 			m_pTextFormat, cxMax, cy, &e.pLayout);
 		e.pLayout->GetMetrics(&Metrics);
 		e.y = e.yNoDelay = y;
 		e.cx = Metrics.width;
 		e.cy = Metrics.height;
 
-		if (vLrc[i].pszTranslation)
+		if (Lrc.pszTranslation)
 		{
-			eck::g_pDwFactory->CreateTextLayout(vLrc[i].pszTranslation,
-				vLrc[i].cchTotal - vLrc[i].cchLrc,
-				m_pTextFormatTrans, cxMax, cy, &e.pLayoutTrans);
+			eck::g_pDwFactory->CreateTextLayout(Lrc.pszTranslation,
+				Lrc.cchTranslation, m_pTextFormatTrans, cxMax, cy, &e.pLayoutTrans);
 			e.pLayoutTrans->GetMetrics(&Metrics);
 			e.cxTrans = Metrics.width;
 			e.cx = std::max(e.cx, Metrics.width);

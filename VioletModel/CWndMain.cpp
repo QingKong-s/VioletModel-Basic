@@ -579,6 +579,28 @@ void CWndMain::Tick(int iMs)
 	Redraw();
 }
 
+void CWndMain::LwShow(BOOL bShow)
+{
+	if (bShow)
+	{
+		if (m_WndLrc.IsValid())
+			m_WndLrc.Show(SW_SHOWNOACTIVATE);
+		else
+		{
+			m_WndLrc.SetPresentMode(Dui::PresentMode::UpdateLayeredWindow);
+			m_WndLrc.SetTransparent(TRUE);
+			m_WndLrc.SetUserDpi(GetUserDpiValue());
+			m_WndLrc.Create(L"VioletModel - Lyrics", WS_POPUP | WS_VISIBLE,
+				WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_TOPMOST,
+				300, 400, 500, 300, HWnd, nullptr);
+		}
+		m_WndLrc.Redraw();
+	}
+	else
+		if (m_WndLrc.IsValid())
+			m_WndLrc.Show(SW_HIDE);
+}
+
 void CWndMain::UpdateButtonImageSize()
 {
 	constexpr D2D1_SIZE_F Size{ CxyCircleButtonImage, CxyCircleButtonImage };

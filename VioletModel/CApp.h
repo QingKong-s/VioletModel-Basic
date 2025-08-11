@@ -115,6 +115,8 @@ enum :int
 	CyPlayPageLabelPadding = 4,
 	CyPlayPageLabel = 26,
 	CyFontPlayPageLabel = 18,
+	CxyLrcBtn = 30,
+	CxLrcPadding = 8,
 };
 
 enum class GPal
@@ -166,6 +168,7 @@ enum
 	ELEN_MINICOVER_CLICK,	// [CMiniCover]封面被单击时
 };
 
+class CWndMain;
 class CApp
 {
 private:
@@ -175,6 +178,7 @@ private:
 	CPlayListMgr m_ListMgr{};
 	eck::CDWriteFontFactory m_FontFactory{};
 	eck::THREADCTX* m_ptcUiThread{};
+	CWndMain* m_pWndMain{};
 
 	IWICBitmap* InvertSkin(IWICBitmap* pBmp);
 
@@ -195,8 +199,11 @@ public:
 	EckInlineNdCe auto& GetPlayer() { return m_Player; }
 	EckInlineNdCe auto& GetListMgr() { return m_ListMgr; }
 	EckInlineNdCe auto& GetFontFactory() { return m_FontFactory; }
+	EckInlineNdCe auto& GetMainWindow() { return *m_pWndMain; }
 
 	EckInlineNdCe auto UiThreadCtx() const { return m_ptcUiThread; }
+
+	EckInlineCe void SetMainWindow(CWndMain* pWnd) { m_pWndMain = pWnd; }
 };
 
 extern CApp* App;

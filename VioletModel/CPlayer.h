@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "CPlayList.h"
+#include "CLyric.h"
 
 enum class PlayEvt
 {
@@ -56,8 +57,8 @@ private:
 	CPlayList* m_pPlayList{};
 
 	Tag::MUSICINFO m_MusicInfo{};
-	std::shared_ptr<std::vector<eck::LRCINFO>> m_pvLrc{};
-	std::shared_ptr<std::vector<eck::LRCLABEL>> m_pvLrcLabel{};
+	CLyric* m_pLrc{};
+
 	int m_idxCurrLrc = -1;
 	int m_idxLastLrc = -1;
 
@@ -129,7 +130,7 @@ public:
 	EckInlineNdCe DWORD GetLastHrOrBassErr() const noexcept { return m_dwLastHrOrBassErr; }
 	EckInlineNdCe BOOL IsPaused() const noexcept { return m_bPaused; }
 	EckInlineNdCe int GetCurrLrcIdx() const noexcept { return m_idxCurrLrc; }
-	EckInlineNd auto GetLrc() const noexcept { return m_pvLrc; }
+	EckInlineNd void GetLrc(CLyric*& pLrc) const noexcept { pLrc = m_pLrc; }
 	EckInlineCe void SetAutoNextMode(AutoNextMode eMode) noexcept { m_eAutoNextMode = eMode; }
 	EckInlineNdCe AutoNextMode GetAutoNextMode() const noexcept { return m_eAutoNextMode; }
 	EckInlineNdCe BOOL IsDefaultCover() const noexcept { return m_bDefCover; }

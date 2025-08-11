@@ -51,6 +51,7 @@ Msg = %s)",
 //#endif
 
 	const auto pWnd = new CWndMain{};
+	App->SetMainWindow(pWnd);
 	const auto hMon = eck::GetOwnerMonitor(nullptr);
 	const auto iDpi = eck::GetMonitorDpi(hMon);
 	auto size = SIZE{ 910,620 };
@@ -64,6 +65,8 @@ Msg = %s)",
 		WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX, 0,
 		pt.x, pt.y, size.cx, size.cy, nullptr, 0);
 	pWnd->Visible = TRUE;
+
+	pWnd->LwShow(TRUE);
 
 	MSG msg;
 	while (GetMessageW(&msg, nullptr, 0, 0))
