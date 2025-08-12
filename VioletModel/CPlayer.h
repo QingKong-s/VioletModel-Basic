@@ -130,7 +130,11 @@ public:
 	EckInlineNdCe DWORD GetLastHrOrBassErr() const noexcept { return m_dwLastHrOrBassErr; }
 	EckInlineNdCe BOOL IsPaused() const noexcept { return m_bPaused; }
 	EckInlineNdCe int GetCurrLrcIdx() const noexcept { return m_idxCurrLrc; }
-	EckInlineNd void GetLrc(CLyric*& pLrc) const noexcept { pLrc = m_pLrc; }
+	EckInlineNd void GetLrc(CLyric*& pLrc) const noexcept
+	{
+		pLrc = m_pLrc;
+		pLrc->AddRef();
+	}
 	EckInlineCe void SetAutoNextMode(AutoNextMode eMode) noexcept { m_eAutoNextMode = eMode; }
 	EckInlineNdCe AutoNextMode GetAutoNextMode() const noexcept { return m_eAutoNextMode; }
 	EckInlineNdCe BOOL IsDefaultCover() const noexcept { return m_bDefCover; }

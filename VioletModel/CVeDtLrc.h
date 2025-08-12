@@ -1,7 +1,12 @@
 ﻿#pragma once
 #include "CLyric.h"
 
-class CVeDtLrc : public Dui::CElem
+struct NM_DTL_GET_TIME : Dui::DUINMHDR
+{
+	float fTime;
+};
+
+class CVeDtLrc : public Dui::CElem, public eck::CFixedTimeLine
 {
 public:
 	constexpr static int c_InvalidCacheIdx = std::numeric_limits<int>::min();
@@ -13,6 +18,7 @@ private:
 		BriMainHiLight,
 		BriTransHiLight,
 		BriBorder,
+		BriShadow,
 
 		BriMax
 	};
@@ -46,26 +52,43 @@ private:
 
 	ID2D1Brush* m_pBrush[BriMax]{};
 
-	LINE m_TextCache[2]{};
+	LINE m_Line[2]{};
 	STATIC_LINE m_StaticLine{};
+
+	float m_cxOutline{ 2.f };
+	float m_cyLinePadding{ 4.f };
+	float m_dxyShadow{ 3.f };
 
 	int m_idxCurr{ -1 };
 	BOOLEAN m_bStaticLine{};		// 绘制静态行，当无歌词时设置为TRUE
+	BOOLEAN m_bTooLong{};			// 歌词太长，需要滚动显示
+
 	BOOLEAN m_bAutoWrap{};			// 自动换行
 	BOOLEAN m_bShowTrans{ TRUE };	// 显示翻译
+	BOOLEAN m_bShadow{ TRUE };		// 显示阴影
+	eck::Align m_eAlign[2]{ eck::Align::Near,eck::Align::Far };
+
 
 	void InvalidateCache();
 
 	float DrawLrcLine(int idxLrc, float y, BOOL bSecondLine);
 
 	void DrawStaticLine(float y);
+
+	void DrawTextGeometry(ID2D1GeometryRealization* pGrS, ID2D1GeometryRealization* pGrF,
+		float dx, float dy, ID2D1Brush* pBrFill);
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void LrcSetCurrentLine(int idx);
+	void Tick(int iMs) override;
 
-	void SetTextFormatTranslation(IDWriteTextFormat* pTf);
-	EckInlineNdCe auto GetTextFormatTranslation() const { return m_pTfTranslation; }
+	BOOL IsValid() override { return m_bTooLong; }
+
+	HRESULT LrcSetCurrentLine(int idx);
+	void LrcSetEmptyText(std::wstring_view svEmptyText);
+
+	void SetTextFormatTrans(IDWriteTextFormat* pTf);
+	EckInlineNdCe auto GetTextFormatTrans() const { return m_pTfTranslation; }
 
 	void SetLyric(CLyric* pLrc);
 	EckInlineNdCe auto GetLyric() const { return m_pLrc; }

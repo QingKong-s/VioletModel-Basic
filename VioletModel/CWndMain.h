@@ -94,6 +94,8 @@ private:
 	ULONGLONG m_ullSmtcTimeLineLastUpdate{};	// 上次更新时间线的时间戳，5s一更新
 	winrt::event_token m_SmtcEvtTokenButtonPressed{};	// 反初始化时使用
 #endif
+
+	int m_msProgTimer{};
 private:
 	void ClearRes();
 

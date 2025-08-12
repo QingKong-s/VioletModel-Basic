@@ -9,7 +9,6 @@ enum class GImg
 	BigLogo,
 	Copy,
 	DefaultCover,
-	Delete,
 	File,
 	Folder,
 	Home,
@@ -40,6 +39,9 @@ enum class GImg
 	PrevSolid,
 	PauseSolid,
 	TriangleSolid,
+	LockSolid,
+	Cross,
+	CrossSolid,
 
 	Priv_InvertEnd,
 
@@ -116,7 +118,7 @@ enum :int
 	CyPlayPageLabel = 26,
 	CyFontPlayPageLabel = 18,
 	CxyLrcBtn = 30,
-	CxLrcPadding = 8,
+	CxyLrcPadding = 8,
 };
 
 enum class GPal
@@ -150,6 +152,8 @@ enum
 	VIOLET_ID_BEGIN = 0x514B,
 
 	IDT_COMM_TICK,
+	IDT_LRC_MOUSELEAVE,
+
 
 	IDTBB_PREV,
 	IDTBB_PLAY,
@@ -158,7 +162,10 @@ enum
 	ELEID_PLAYPAGE_BACK,
 	ELEID_VOLBAR_TRACK,
 
-	TE_COMM_TICK = 300,
+	TE_COMM_TICK = 200,
+	TE_PROG = TE_COMM_TICK * 2,
+	TE_LRC_MOUSELEAVE = 800,
+	TE_LRC_MOUSELEAVE_FIRST = 1600,
 };
 
 enum
@@ -166,6 +173,7 @@ enum
 	ELEN_PLACEHOLDER = Dui::EE_PRIVATE_BEGIN,
 	ELEN_PAGE_CHANGE,		// [CTabPanel]边栏被单击时(NMLTITEMINDEX*)
 	ELEN_MINICOVER_CLICK,	// [CMiniCover]封面被单击时
+	ELEN_DTLRC_GET_TIME,	// [CVeDtLrc]取当前播放器时间(NM_DTL_GET_TIME*)
 };
 
 class CWndMain;

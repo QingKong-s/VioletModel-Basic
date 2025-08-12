@@ -1,10 +1,11 @@
 ﻿#include "pch.h"
 #include "CVeDtLrc.h"
+#include "CApp.h"
 
 
 void CVeDtLrc::InvalidateCache()
 {
-	for (auto& e : m_TextCache)
+	for (auto& e : m_Line)
 		e.idxLrc = c_InvalidCacheIdx;
 }
 
@@ -12,195 +13,294 @@ float CVeDtLrc::DrawLrcLine(int idxLrc, float y, BOOL bSecondLine)
 {
 	EckAssert(bSecondLine == 1 || bSecondLine == 0);
 	const auto pLyric = GetLyric();
-	auto& Cache = m_TextCache[bSecondLine];
+	auto& e = m_Line[bSecondLine];
 	const BOOL bHiLight = (idxLrc == m_idxCurr);
 
 	const float cxMax = GetWidthF();
 	const float cyMax = GetHeightF();
 
-	if (Cache.idxLrc != idxLrc)// 更新缓存
+	if (e.idxLrc != idxLrc)// 更新缓存
 	{
+		const auto bOldTooLong = m_bTooLong;
 		LYRIC_LINE Lrc;
 		pLyric->LrcGetLyric(idxLrc, Lrc);
 		float xDpi, yDpi;
 		m_pDC1->GetDpi(&xDpi, &yDpi);
-
 		const float fTolerance = D2D1::ComputeFlatteningTolerance(
 			D2D1::Matrix3x2F::Identity(), xDpi, yDpi, 1.f);
 
-		const float cxStroke = 2.f;
+		e.idxLrc = idxLrc;
+		SafeRelease(e.pLayout);
+		SafeRelease(e.pLayoutTrans);
 
-		Cache.idxLrc = idxLrc;
-		SafeRelease(Cache.pLayout);
-		SafeRelease(Cache.pLayoutTrans);
-
-		if (!Lrc.pszLrc)
+		constexpr WCHAR EmptyText[]{ L"♪♪♪" };
+		if (!Lrc.cchLrc)
 		{
-			constexpr WCHAR EmptyText[]{ L"♪♪♪" };
 			Lrc.pszLrc = EmptyText;
 			Lrc.cchLrc = ARRAYSIZE(EmptyText) - 1;
 		}
-
 		//-----------重建文本布局
-		DWRITE_TEXT_METRICS tm;
 		eck::g_pDwFactory->CreateTextLayout(Lrc.pszLrc, Lrc.cchLrc,
-			GetTextFormat(), cxMax, cyMax, &Cache.pLayout);
-
-		Cache.pLayout->GetMetrics(&tm);
-		Cache.bTooLong = (tm.width > cxMax);
-		Cache.size = { tm.width,tm.height };
-
+			GetTextFormat(), cxMax, cyMax, &e.pLayout);
+		DWRITE_TEXT_METRICS tm;
+		e.pLayout->GetMetrics(&tm);
+		e.bTooLong = (tm.width > cxMax);
+		e.size = { tm.width,tm.height };
 		//-----------重建几何实现
 		ComPtr<ID2D1PathGeometry1> pPath;
-		eck::GetTextLayoutPathGeometry(Cache.pLayout, m_pDC1, 0, 0, pPath.RefOfClear());
-		SafeRelease(Cache.pGrF);
-		SafeRelease(Cache.pGrS);
-		m_pDC1->CreateFilledGeometryRealization(pPath.Get(), fTolerance, &Cache.pGrF);
+		eck::GetTextLayoutPathGeometry(e.pLayout, m_pDC1, 0, 0, pPath.RefOfClear());
+		SafeRelease(e.pGrF);
+		SafeRelease(e.pGrS);
+		m_pDC1->CreateFilledGeometryRealization(pPath.Get(), fTolerance, &e.pGrF);
 		m_pDC1->CreateStrokedGeometryRealization(pPath.Get(), fTolerance,
-			cxStroke, nullptr, &Cache.pGrS);
-
-		if (!Lrc.pszTranslation)
+			m_cxOutline, nullptr, &e.pGrS);
+		if (Lrc.cchTranslation)
 		{
 			//-----------重建文本布局
-			eck::g_pDwFactory->CreateTextLayout(Lrc.pszLrc, Lrc.cchLrc,
-				GetTextFormatTranslation(), cxMax, cyMax, &Cache.pLayoutTrans);
-			Cache.bTooLongTrans = (tm.width > cxMax);
-			Cache.sizeTrans = { tm.width,tm.height };
-
+			eck::g_pDwFactory->CreateTextLayout(Lrc.pszTranslation, Lrc.cchTranslation,
+				GetTextFormatTrans(), cxMax, cyMax, &e.pLayoutTrans);
+			e.pLayoutTrans->GetMetrics(&tm);
+			e.bTooLongTrans = (tm.width > cxMax);
+			e.sizeTrans = { tm.width,tm.height };
 			//-----------重建几何实现
-			eck::GetTextLayoutPathGeometry(Cache.pLayoutTrans, m_pDC1, 0, 0, pPath.RefOfClear());
-
-			SafeRelease(Cache.pGrFTrans);
-			SafeRelease(Cache.pGrSTrans);
-			m_pDC1->CreateFilledGeometryRealization(pPath.Get(), fTolerance, &Cache.pGrFTrans);
+			eck::GetTextLayoutPathGeometry(e.pLayoutTrans, m_pDC1, 0, 0, pPath.RefOfClear());
+			SafeRelease(e.pGrFTrans);
+			SafeRelease(e.pGrSTrans);
+			m_pDC1->CreateFilledGeometryRealization(pPath.Get(), fTolerance, &e.pGrFTrans);
 			m_pDC1->CreateStrokedGeometryRealization(pPath.Get(), fTolerance,
-				cxStroke, nullptr, &Cache.pGrSTrans);
+				m_cxOutline, nullptr, &e.pGrSTrans);
 		}
+		m_bTooLong = !!e.bTooLong || !!e.bTooLongTrans;
 	}
-
 	LYRIC_CURR_TIME CurrTime;
 	pLyric->LrcGetCurrentTimeInfo(idxLrc, CurrTime);
+	NM_DTL_GET_TIME nm{ ELEN_DTLRC_GET_TIME };
+	GenElemNotify(&nm);
+	CurrTime.fCurrTime = nm.fTime;
 
 	const float cxMaxHalf = cxMax / 2.f;
 	float dx;
-	if (Cache.bTooLong)
+	if (e.bTooLong)
 	{
 		dx = (CurrTime.fCurrTime - CurrTime.fLrcTime) *
-			Cache.size.width / CurrTime.fLrcDuration;
+			e.size.width / CurrTime.fLrcDuration;
 		if (dx < cxMaxHalf)
 			dx = 0.f;
-		else if (dx > Cache.size.width - cxMaxHalf)
-			dx = cxMax - Cache.size.width;
+		else if (dx > e.size.width - cxMaxHalf)
+			dx = cxMax - e.size.width;
 		else
 			dx = cxMaxHalf - dx;
 	}
 	else
-		dx = 0.f;
-
-	D2D1_MATRIX_3X2_F Mat;
-	m_pDC1->GetTransform(&Mat);
-	Mat.dx += dx;
-	Mat.dy += y;
-	m_pDC1->SetTransform(Mat);
-	m_pDC1->DrawGeometryRealization(Cache.pGrS, m_pBrush[BriBorder]);
-	m_pDC1->DrawGeometryRealization(Cache.pGrF,
+		switch (m_eAlign[bSecondLine])
+		{
+		case eck::Align::Near:	dx = 0.f; break;
+		case eck::Align::Center:dx = (cxMax - e.size.width) / 2.f; break;
+		case eck::Align::Far:	dx = cxMax - e.size.width; break;
+		default: ECK_UNREACHABLE;
+		}
+	DrawTextGeometry(e.pGrS, e.pGrF, dx, y,
 		m_pBrush[bHiLight ? BriMainHiLight : BriMain]);
-	m_pDC1->SetTransform(Mat);
 
-	float cy = Cache.size.height;
-	if (Cache.pLayoutTrans)
+	float cy = e.size.height;
+	if (e.pLayoutTrans)
 	{
 		const float yNew = y + cy;
-		if (Cache.bTooLongTrans)
+		if (e.bTooLongTrans)
 		{
 			dx = (CurrTime.fCurrTime - CurrTime.fLrcTime) *
-				Cache.sizeTrans.width / CurrTime.fLrcDuration;
+				e.sizeTrans.width / CurrTime.fLrcDuration;
 			if (dx < cxMaxHalf)
 				dx = 0;
-			else if (dx > Cache.sizeTrans.width - cxMaxHalf)
-				dx = cxMax - Cache.sizeTrans.width;
+			else if (dx > e.sizeTrans.width - cxMaxHalf)
+				dx = cxMax - e.sizeTrans.width;
 			else
 				dx = cxMaxHalf - dx;
 		}
 		else
-			dx = 0.f;
-
-		m_pDC1->GetTransform(&Mat);
-		Mat.dx += dx;
-		Mat.dy += yNew;
-		m_pDC1->DrawGeometryRealization(Cache.pGrSTrans, m_pBrush[BriBorder]);
-		m_pDC1->DrawGeometryRealization(Cache.pGrFTrans,
+			switch (m_eAlign[bSecondLine])
+			{
+			case eck::Align::Near:	dx = 0.f; break;
+			case eck::Align::Center:dx = (cxMax - e.sizeTrans.width) / 2.f; break;
+			case eck::Align::Far:	dx = cxMax - e.sizeTrans.width; break;
+			default: ECK_UNREACHABLE;
+			}
+		DrawTextGeometry(e.pGrSTrans, e.pGrFTrans, dx, yNew,
 			m_pBrush[bHiLight ? BriTransHiLight : BriTrans]);
-		m_pDC1->SetTransform(Mat);
-
-		cy += Cache.sizeTrans.height;
+		cy += e.sizeTrans.height;
 	}
-#pragma warning(pop)
 	return cy;
 }
 
 void CVeDtLrc::DrawStaticLine(float y)
 {
-	auto& Cache = m_StaticLine;
-	if (!Cache.bValid)
+	auto& e = m_StaticLine;
+	if (!e.bValid)
 	{
-		Cache.bValid = TRUE;
+		e.bValid = TRUE;
 		float xDpi, yDpi;
 		m_pDC1->GetDpi(&xDpi, &yDpi);
-
 		const float fTolerance = D2D1::ComputeFlatteningTolerance(
 			D2D1::Matrix3x2F::Identity(), xDpi, yDpi, 1.f);
-
-		const float cxStroke = 2.f;
-
+		//-----------重建文本布局
 		ComPtr<IDWriteTextLayout> pLayout;
-		eck::g_pDwFactory->CreateTextLayout(Cache.rsText.Data(),
-			Cache.rsText.Size(), GetTextFormat(),
+		eck::g_pDwFactory->CreateTextLayout(e.rsText.Data(),
+			e.rsText.Size(), GetTextFormat(),
 			GetWidthF(), GetHeightF(), &pLayout);
 		DWRITE_TEXT_METRICS tm;
 		pLayout->GetMetrics(&tm);
-		Cache.cx = tm.width;
+		e.cx = tm.width;
 		//-----------重建几何实现
 		ComPtr<ID2D1PathGeometry1> pPath;
 		eck::GetTextLayoutPathGeometry(pLayout.Get(), m_pDC1, 0, 0, pPath.RefOf());
-		SafeRelease(Cache.pGrF);
-		SafeRelease(Cache.pGrS);
-		m_pDC1->CreateFilledGeometryRealization(pPath.Get(), fTolerance, &Cache.pGrF);
+		SafeRelease(e.pGrF);
+		SafeRelease(e.pGrS);
+		m_pDC1->CreateFilledGeometryRealization(pPath.Get(), fTolerance, &e.pGrF);
 		m_pDC1->CreateStrokedGeometryRealization(pPath.Get(), fTolerance,
-			cxStroke, nullptr, &Cache.pGrS);
+			m_cxOutline, nullptr, &e.pGrS);
 	}
+	DrawTextGeometry(e.pGrS, e.pGrF,
+		(GetWidthF() - e.cx) / 2.f, y, m_pBrush[BriMain]);
+}
 
-	D2D1_MATRIX_3X2_F Mat;
-	m_pDC1->GetTransform(&Mat);
-	Mat.dx += 0;
-	Mat.dy += y;
+void CVeDtLrc::DrawTextGeometry(ID2D1GeometryRealization* pGrS,
+	ID2D1GeometryRealization* pGrF, float dx,float dy, ID2D1Brush* pBrFill)
+{
+	D2D1_MATRIX_3X2_F Mat0;
+	m_pDC1->GetTransform(&Mat0);
+	auto Mat{ Mat0 };
+	Mat.dx += dx;
+	Mat.dy += dy;
+	if (pGrF && m_bShadow)
+	{
+		Mat.dx += m_dxyShadow;
+		Mat.dy += m_dxyShadow;
+		m_pDC1->SetTransform(Mat);
+		m_pDC1->DrawGeometryRealization(pGrF, m_pBrush[BriShadow]);
+		Mat.dx -= m_dxyShadow;
+		Mat.dy -= m_dxyShadow;
+	}
 	m_pDC1->SetTransform(Mat);
-	m_pDC1->DrawGeometryRealization(Cache.pGrS, m_pBrush[BriBorder]);
-	m_pDC1->DrawGeometryRealization(Cache.pGrF, m_pBrush[BriMain]);
-	m_pDC1->SetTransform(Mat);
+	if (pGrS)
+		m_pDC1->DrawGeometryRealization(pGrS, m_pBrush[BriBorder]);
+	if (pGrF)
+		m_pDC1->DrawGeometryRealization(pGrF, pBrFill);
+	m_pDC1->SetTransform(Mat0);
 }
 
 LRESULT CVeDtLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+	case WM_PAINT:
+	{
+		Dui::ELEMPAINTSTRU ps;
+		BeginPaint(ps, wParam, lParam);
+		if (m_idxCurr >= 0)
+		{
+			float y{}, cy;
+			if (m_idxCurr % 2)
+			{
+				cy = DrawLrcLine(m_idxCurr, y, FALSE);
+				if (m_idxCurr + 1 < GetLyric()->LrcGetCount())
+					DrawLrcLine(m_idxCurr + 1, y + cy + m_cyLinePadding, TRUE);
+			}
+			else
+			{
+				int idx = m_idxCurr + 1;
+				if (idx >= GetLyric()->LrcGetCount())
+					idx = m_idxCurr - 1;
+
+				if (idx >= 0 && idx < GetLyric()->LrcGetCount())
+					cy = DrawLrcLine(idx, y, FALSE);
+				else
+					cy = 0.f;
+				DrawLrcLine(m_idxCurr, y + cy + m_cyLinePadding, TRUE);
+			}
+		}
+		else
+			DrawStaticLine(0.f);
+
+		ECK_DUI_DBG_DRAW_FRAME;
+		EndPaint(ps);
+	}
+	return 0;
 	case WM_CREATE:
 	{
+		GetWnd()->RegisterTimeLine(this);
+
 		m_pDC->QueryInterface(&m_pDC1);
 		InvalidateCache();
 
+		ComPtr<ID2D1SolidColorBrush> pBr;
+		m_pDC1->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &pBr);
+		m_pBrush[BriBorder] = pBr.Detach();
+
+		m_pDC1->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &pBr);
+		m_pBrush[BriMain] = pBr.Detach();
+
+		m_pDC1->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red), &pBr);
+		m_pBrush[BriMainHiLight] = pBr.Detach();
+
+		m_pDC1->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Green), &pBr);
+		m_pBrush[BriTrans] = pBr.Detach();
+
+		m_pDC1->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue), &pBr);
+		m_pBrush[BriTransHiLight] = pBr.Detach();
+
+		m_pDC1->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Gray, 0.4f), &pBr);
+		m_pBrush[BriShadow] = pBr.Detach();
+	}
+	break;
+	case WM_DESTROY:
+	{
+		for (auto& e : m_pBrush)
+			SafeRelease(e);
+		for (auto& e : m_Line)
+		{
+			SafeRelease(e.pGrS);
+			SafeRelease(e.pGrSTrans);
+			SafeRelease(e.pGrF);
+			SafeRelease(e.pGrFTrans);
+			SafeRelease(e.pLayout);
+			SafeRelease(e.pLayoutTrans);
+		}
+		SafeRelease(m_pDC1);
+		SafeRelease(m_StaticLine.pGrS);
+		SafeRelease(m_StaticLine.pGrF);
+		SafeRelease(m_pLrc);
 	}
 	break;
 	}
 	return __super::OnEvent(uMsg, wParam, lParam);
 }
 
-void CVeDtLrc::LrcSetCurrentLine(int idx)
+void CVeDtLrc::Tick(int iMs)
 {
-	m_idxCurr = idx;
+	if (m_bTooLong)
+	{
+		InvalidateRect();
+	}
 }
 
-void CVeDtLrc::SetTextFormatTranslation(IDWriteTextFormat* pTf)
+HRESULT CVeDtLrc::LrcSetCurrentLine(int idx)
+{
+	if (m_idxCurr == idx)
+		return S_FALSE;
+	m_idxCurr = idx;
+	InvalidateCache();
+	InvalidateRect();
+	return S_OK;
+}
+
+void CVeDtLrc::LrcSetEmptyText(std::wstring_view svEmptyText)
+{
+	ECK_DUILOCK;
+	m_StaticLine.rsText = svEmptyText;
+	m_StaticLine.bValid = FALSE;
+}
+
+void CVeDtLrc::SetTextFormatTrans(IDWriteTextFormat* pTf)
 {
 	ECK_DUILOCK;
 	std::swap(m_pTfTranslation, pTf);

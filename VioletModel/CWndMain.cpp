@@ -242,14 +242,20 @@ void CWndMain::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	{
 	case PlayEvt::CommTick:
 	{
-		m_TBProgress.SetTrackPos(float(App->GetPlayer().GetCurrTime() * ProgBarScale));
-		m_TBProgress.InvalidateRect();
+		m_msProgTimer += TE_COMM_TICK;
+		if (m_msProgTimer >= TE_PROG)
+		{
+			m_msProgTimer = 0;
+			m_TBProgress.SetTrackPos(float(App->GetPlayer().GetCurrTime() * ProgBarScale));
+			m_TBProgress.InvalidateRect();
+			TblUpdateProgress();
+		}
 		SmtcOnCommonTick();
-		TblUpdateProgress();
 	}
 	break;
 	case PlayEvt::Play:
 	{
+		m_msProgTimer = 0;
 		OnCoverUpdate();
 		SmtcUpdateTimeLineRange();
 		SmtcUpdateDisplay();

@@ -655,6 +655,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 	{
+		SafeRelease(m_pLrc);
 		SafeRelease(m_pBrush);
 		SafeRelease(m_pBrFade);
 		SafeRelease(m_pTextFormat);

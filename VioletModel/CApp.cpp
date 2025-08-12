@@ -8,7 +8,6 @@ constexpr PCWSTR ImgFile[]
 	LR"(BigLogo.png)",
 	LR"(Copy.png)",
 	LR"(DefaultCover.png)",
-	LR"(Delete.png)",
 	LR"(File.png)",
 	LR"(Folder.png)",
 	LR"(Home.png)",
@@ -39,6 +38,9 @@ constexpr PCWSTR ImgFile[]
 	LR"(PrevSolid.png)",
 	LR"(PauseSolid.png)",
 	LR"(TriangleSolid.png)",
+	LR"(LockSolid.png)",
+	LR"(Cross.png)",
+	LR"(CrossSolid.png)",
 
 	LR"(AboutBg.png)",
 	LR"(AboutLogo.png)",

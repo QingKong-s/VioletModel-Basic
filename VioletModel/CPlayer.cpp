@@ -21,6 +21,7 @@ void CPlayer::OnPlayEvent(const PLAY_EVT_PARAM& e)
 CPlayer::~CPlayer()
 {
 	SafeRelease(m_pBmpCover);
+	SafeRelease(m_pLrc);
 }
 
 void CPlayer::SetList(CPlayList* pPlayList) noexcept
