@@ -36,7 +36,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case 2:
 					p->pszText = L"效果";
 					p->cchText = 2;
-					p->pImage = pWnd->RealizeImage(GImg::Plugin);
+					p->pImage = pWnd->RealizeImage(GImg::Effect);
 					break;
 				case 3:
 					p->pszText = L"设置";
@@ -100,6 +100,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		m_TAB.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, 0, 0, this, GetWnd());
+		m_TAB.SetInterpolationMode(D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC);
 		m_TAB.SetItemCount(4);
 
 		OnColorSchemeChanged();

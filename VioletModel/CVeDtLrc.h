@@ -1,6 +1,4 @@
 ﻿#pragma once
-#include "CLyric.h"
-
 struct NM_DTL_GET_TIME : Dui::DUINMHDR
 {
 	float fTime;
@@ -46,7 +44,7 @@ private:
 		BOOL bValid;
 	};
 
-	CLyric* m_pLrc{};
+	Lyric::CLyric* m_pLrc{};
 	ID2D1DeviceContext1* m_pDC1{};
 	IDWriteTextFormat* m_pTfTranslation{};
 
@@ -90,6 +88,6 @@ public:
 	void SetTextFormatTrans(IDWriteTextFormat* pTf);
 	EckInlineNdCe auto GetTextFormatTrans() const { return m_pTfTranslation; }
 
-	void SetLyric(CLyric* pLrc);
+	void SetLyric(Lyric::CLyric* pLrc);
 	EckInlineNdCe auto GetLyric() const { return m_pLrc; }
 };

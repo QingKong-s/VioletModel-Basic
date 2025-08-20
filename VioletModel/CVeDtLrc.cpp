@@ -22,8 +22,7 @@ float CVeDtLrc::DrawLrcLine(int idxLrc, float y, BOOL bSecondLine)
 	if (e.idxLrc != idxLrc)// 更新缓存
 	{
 		const auto bOldTooLong = m_bTooLong;
-		LYRIC_LINE Lrc;
-		pLyric->LrcGetLyric(idxLrc, Lrc);
+		const auto& Lrc = pLyric->MgAtLine(idxLrc);
 		float xDpi, yDpi;
 		m_pDC1->GetDpi(&xDpi, &yDpi);
 		const float fTolerance = D2D1::ComputeFlatteningTolerance(
@@ -33,15 +32,13 @@ float CVeDtLrc::DrawLrcLine(int idxLrc, float y, BOOL bSecondLine)
 		SafeRelease(e.pLayout);
 		SafeRelease(e.pLayoutTrans);
 
-		constexpr WCHAR EmptyText[]{ L"♪♪♪" };
-		if (!Lrc.cchLrc)
-		{
-			Lrc.pszLrc = EmptyText;
-			Lrc.cchLrc = ARRAYSIZE(EmptyText) - 1;
-		}
 		//-----------重建文本布局
-		eck::g_pDwFactory->CreateTextLayout(Lrc.pszLrc, Lrc.cchLrc,
-			GetTextFormat(), cxMax, cyMax, &e.pLayout);
+		if (Lrc.cchLrc)
+			eck::g_pDwFactory->CreateTextLayout(Lrc.pszLrc, Lrc.cchLrc,
+				GetTextFormat(), cxMax, cyMax, &e.pLayout);
+		else
+			eck::g_pDwFactory->CreateTextLayout(EckStrAndLen(L"♪♪♪"),
+				GetTextFormat(), cxMax, cyMax, &e.pLayout);
 		DWRITE_TEXT_METRICS tm;
 		e.pLayout->GetMetrics(&tm);
 		e.bTooLong = (tm.width > cxMax);
@@ -72,18 +69,15 @@ float CVeDtLrc::DrawLrcLine(int idxLrc, float y, BOOL bSecondLine)
 		}
 		m_bTooLong = !!e.bTooLong || !!e.bTooLongTrans;
 	}
-	LYRIC_CURR_TIME CurrTime;
-	pLyric->LrcGetCurrentTimeInfo(idxLrc, CurrTime);
+	const auto& Lrc = pLyric->MgAtLine(idxLrc);
 	NM_DTL_GET_TIME nm{ ELEN_DTLRC_GET_TIME };
 	GenElemNotify(&nm);
-	CurrTime.fCurrTime = nm.fTime;
 
 	const float cxMaxHalf = cxMax / 2.f;
 	float dx;
 	if (e.bTooLong)
 	{
-		dx = (CurrTime.fCurrTime - CurrTime.fLrcTime) *
-			e.size.width / CurrTime.fLrcDuration;
+		dx = (nm.fTime - Lrc.fTime) * e.size.width / Lrc.fDuration;
 		if (dx < cxMaxHalf)
 			dx = 0.f;
 		else if (dx > e.size.width - cxMaxHalf)
@@ -108,8 +102,7 @@ float CVeDtLrc::DrawLrcLine(int idxLrc, float y, BOOL bSecondLine)
 		const float yNew = y + cy;
 		if (e.bTooLongTrans)
 		{
-			dx = (CurrTime.fCurrTime - CurrTime.fLrcTime) *
-				e.sizeTrans.width / CurrTime.fLrcDuration;
+			dx = (nm.fTime - Lrc.fTime) * e.sizeTrans.width / Lrc.fDuration;
 			if (dx < cxMaxHalf)
 				dx = 0;
 			else if (dx > e.sizeTrans.width - cxMaxHalf)
@@ -164,7 +157,7 @@ void CVeDtLrc::DrawStaticLine(float y)
 }
 
 void CVeDtLrc::DrawTextGeometry(ID2D1GeometryRealization* pGrS,
-	ID2D1GeometryRealization* pGrF, float dx,float dy, ID2D1Brush* pBrFill)
+	ID2D1GeometryRealization* pGrF, float dx, float dy, ID2D1Brush* pBrFill)
 {
 	D2D1_MATRIX_3X2_F Mat0;
 	m_pDC1->GetTransform(&Mat0);
@@ -202,16 +195,16 @@ LRESULT CVeDtLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (m_idxCurr % 2)
 			{
 				cy = DrawLrcLine(m_idxCurr, y, FALSE);
-				if (m_idxCurr + 1 < GetLyric()->LrcGetCount())
+				if (m_idxCurr + 1 < GetLyric()->MgGetLineCount())
 					DrawLrcLine(m_idxCurr + 1, y + cy + m_cyLinePadding, TRUE);
 			}
 			else
 			{
 				int idx = m_idxCurr + 1;
-				if (idx >= GetLyric()->LrcGetCount())
+				if (idx >= GetLyric()->MgGetLineCount())
 					idx = m_idxCurr - 1;
 
-				if (idx >= 0 && idx < GetLyric()->LrcGetCount())
+				if (idx >= 0 && idx < GetLyric()->MgGetLineCount())
 					cy = DrawLrcLine(idx, y, FALSE);
 				else
 					cy = 0.f;
@@ -310,7 +303,7 @@ void CVeDtLrc::SetTextFormatTrans(IDWriteTextFormat* pTf)
 		pTf->Release();
 }
 
-void CVeDtLrc::SetLyric(CLyric* pLrc)
+void CVeDtLrc::SetLyric(Lyric::CLyric* pLrc)
 {
 	ECK_DUILOCK;
 	std::swap(m_pLrc, pLrc);

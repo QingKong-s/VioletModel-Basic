@@ -86,7 +86,7 @@ void CPagePlaying::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		m_LAAlbum.SetText(mi.rsAlbum.Data());
 		m_LAArtist.SetText(mi.slArtist.FrontData());
 
-		ComPtr<CLyric> pLyric;
+		ComPtr<Lyric::CLyric> pLyric;
 		App->GetPlayer().GetLrc(pLyric.RefOf());
 		m_Lrc.LrcInit(pLyric.Get());
 	}

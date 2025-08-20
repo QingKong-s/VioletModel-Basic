@@ -734,7 +734,7 @@ HRESULT CVeLrc::LrcSetCurrentLine(int idxCurr)
 	return S_OK;
 }
 
-HRESULT CVeLrc::LrcInit(CLyric* pLyric)
+HRESULT CVeLrc::LrcInit(Lyric::CLyric* pLyric)
 {
 	ECK_DUILOCK;
 	SafeRelease(m_pLrc);
@@ -870,12 +870,12 @@ void CVeLrc::ItmLayout()
 		return;
 	}
 	m_vItem.clear();
-	if (!m_pLrc || !m_pLrc->LrcGetCount())
+	if (!m_pLrc || !m_pLrc->MgGetLineCount())
 	{
 		m_SB.SetVisible(FALSE);
 		return;
 	}
-	const auto cLrc = m_pLrc->LrcGetCount();
+	const auto cLrc = m_pLrc->MgGetLineCount();
 
 	constexpr auto cyMainTransPadding = 5.f;
 
@@ -885,11 +885,10 @@ void CVeLrc::ItmLayout()
 	const auto yInit = (float)-m_psv->GetPos();
 	float y = yInit;
 
-	LYRIC_LINE Lrc;
 	EckCounter(cLrc, i)
 	{
 		auto& e = m_vItem[i];
-		m_pLrc->LrcGetLyric(i, Lrc);
+		const auto& Lrc = m_pLrc->MgAtLine(i);
 		eck::g_pDwFactory->CreateTextLayout(Lrc.pszLrc, Lrc.cchLrc,
 			m_pTextFormat, cxMax, cy, &e.pLayout);
 		e.pLayout->GetMetrics(&Metrics);

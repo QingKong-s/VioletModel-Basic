@@ -9,7 +9,6 @@ void CPlayer::OnPlayEvent(const PLAY_EVT_PARAM& e)
 	{
 	case PlayEvt::CommTick:
 		m_lfCurrTime = m_Bass.GetPosition();
-		m_pLrc->LrcpSetCurrentTime((float)m_lfCurrTime);
 		LrcUpdatePosition();
 		break;
 	case PlayEvt::End:
@@ -85,17 +84,16 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 	}
 
 	SafeRelease(m_pLrc);
-	m_pLrc = new CLyric{};
+	m_pLrc = new Lyric::CLyric{};
 
 	auto rsLrcPath{ e.rsFile };
 	rsLrcPath.PazRenameExtension(EckStrAndLen(L".lrc"));
-	eck::ParseLrc(rsLrcPath.Data(), 0u, m_pLrc->LrcpGetLrc(),
-		m_pLrc->LrcpGetLabel(), eck::LrcEncoding::Auto, (float)m_lfTotalTime);
-	if (!m_pLrc->LrcGetCount())
+	m_pLrc->LoadTextFile(rsLrcPath.Data());
+	m_pLrc->ParseLrc();
+	if (!m_pLrc->MgGetLineCount())
 	{
-		eck::ParseLrc(m_MusicInfo.rsLrc.Data(), m_MusicInfo.rsLrc.ByteSize(),
-			m_pLrc->LrcpGetLrc(), m_pLrc->LrcpGetLabel(),
-			eck::LrcEncoding::UTF16LE, (float)m_Bass.GetLength());
+		m_pLrc->LoadTextMove(std::move(m_MusicInfo.rsLrc));
+		m_pLrc->ParseLrc();
 	}
 
 	GetSignal().Emit({ PlayEvt::Play });
@@ -281,46 +279,14 @@ AutoNextMode CPlayer::NextAutoNextMode()
 
 BOOL CPlayer::LrcUpdatePosition()
 {
-	if (!m_pLrc || !m_pLrc->LrcGetCount())
+	if (!m_pLrc)
 		return FALSE;
-	const auto fPos = (float)m_lfCurrTime;
-	const auto& vLrc = m_pLrc->LrcpGetLrc();
-	const auto cLrc = (int)vLrc.size();
-	if (m_idxCurrLrc >= 0)// 尝试快速判断
+	const auto idxNew = m_pLrc->MgTimeToLine((float)m_lfCurrTime, m_idxCurrLrc);
+	if (m_idxCurrLrc != idxNew)
 	{
-		if (m_idxCurrLrc + 1 < cLrc)
-		{
-			if (fPos >= vLrc[m_idxCurrLrc].fTime &&
-				fPos < vLrc[m_idxCurrLrc + 1].fTime)
-				return FALSE;
-			else if (m_idxCurrLrc + 2 < cLrc &&
-				fPos >= vLrc[m_idxCurrLrc + 1].fTime &&
-				fPos < vLrc[m_idxCurrLrc + 2].fTime)
-			{
-				++m_idxCurrLrc;
-				return TRUE;
-			}
-		}
-		else if (fPos >= vLrc[m_idxCurrLrc].fTime)
-			return FALSE;
-	}
-	const auto it = std::lower_bound(vLrc.begin(), vLrc.end(), fPos,
-		[](const eck::LRCINFO& Item, float fPos)->bool
-		{
-			return Item.fTime < fPos;
-		});
-	if (it == vLrc.end())
-		m_idxCurrLrc = (int)vLrc.size() - 1;
-	else if (it == vLrc.begin())
-		m_idxCurrLrc = -1;
-	else
-		m_idxCurrLrc = (int)std::distance(vLrc.begin(), it - 1);
-	EckAssert(m_idxCurrLrc >= -1 && m_idxCurrLrc < (int)vLrc.size());
-
-	if (m_idxCurrLrc != m_idxLastLrc)
-	{
-		m_idxLastLrc = m_idxCurrLrc;
+		m_idxCurrLrc = idxNew;
 		return TRUE;
 	}
-	return FALSE;
+	else
+		return FALSE;
 }

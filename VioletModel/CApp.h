@@ -42,6 +42,7 @@ enum class GImg
 	LockSolid,
 	Cross,
 	CrossSolid,
+	Effect,
 
 	Priv_InvertEnd,
 

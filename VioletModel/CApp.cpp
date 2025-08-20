@@ -41,6 +41,7 @@ constexpr PCWSTR ImgFile[]
 	LR"(LockSolid.png)",
 	LR"(Cross.png)",
 	LR"(CrossSolid.png)",
+	LR"(Effect.png)",
 
 	LR"(AboutBg.png)",
 	LR"(AboutLogo.png)",
@@ -130,12 +131,12 @@ IWICBitmap* CApp::InvertSkin(IWICBitmap* pBmp)
 	pDC->CreateEffect(CLSID_D2D1ColorMatrix, &pEffect);
 	EckAssert(pEffect);
 	pEffect->SetInput(0, pD2dBitmap);
-	auto mat = D2D1::Matrix5x4F(
-		-1, 0, 0, 0, 0,
-		-1, 0, 0, 0, 0,
-		-1, 0, 0, 0, 0,
-		1, 0.999f, 0.999f, 0.999f, 0);
-	pEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX, mat);
+	pEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX,
+		D2D1::Matrix5x4F(
+			-1, 0, 0, 0, 0,
+			-1, 0, 0, 0, 0,
+			-1, 0, 0, 0, 0,
+			1, 0.999f, 0.999f, 0.999f, 0));
 
 	pDC->BeginDraw();
 	pDC->Clear({});

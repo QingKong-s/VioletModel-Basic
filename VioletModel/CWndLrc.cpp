@@ -11,7 +11,7 @@ void CWndLrc::OnPlayEvent(const PLAY_EVT_PARAM& e)
 		break;
 	case PlayEvt::Play:
 	{
-		ComPtr<CLyric> pLyric;
+		ComPtr<Lyric::CLyric> pLyric;
 		App->GetPlayer().GetLrc(pLyric.RefOf());
 		m_Lrc.SetLyric(pLyric.Get());
 	}
@@ -200,12 +200,12 @@ LRESULT CWndLrc::OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e)
 	{
 		constexpr float MaxAlpha = 0.4f;
 		if (m_bAnFade)
-			GetBkgBrush()->SetColor({ .a = m_AnFade.K * MaxAlpha });
+			BbrGet()->SetColor({ .a = m_AnFade.K * MaxAlpha });
 		else if (m_bShowBk)
-			GetBkgBrush()->SetColor({ .a = MaxAlpha });
+			BbrGet()->SetColor({ .a = MaxAlpha });
 		else
 			return Dui::RER_NONE;
-		GetDeviceContext()->FillRectangle(e.FillBkg.rc, GetBkgBrush());
+		GetDeviceContext()->FillRectangle(e.FillBkg.rc, BbrGet());
 		return Dui::RER_NONE;
 	}
 	return __super::OnRenderEvent(uMsg, e);
@@ -215,7 +215,7 @@ void CWndLrc::Tick(int iMs)
 {
 	if (m_bAnFade)
 	{
-		m_bAnFade = m_AnFade.Tick(iMs, 200);
+		m_bAnFade = m_AnFade.Tick((float)iMs, 200);
 		Redraw(FALSE);
 	}
 }

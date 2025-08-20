@@ -1,6 +1,4 @@
 ﻿#pragma once
-#include "CLyric.h"
-
 class CVeLrc : public Dui::CElem, public eck::CFixedTimeLine
 {
 	// Isb = Item Select Background
@@ -56,7 +54,7 @@ private:
 
 	D2D1_COLOR_F m_Color[CriMax]{};
 
-	CLyric* m_pLrc{};
+	Lyric::CLyric* m_pLrc{};
 	std::vector<ITEM> m_vItem{};
 	int m_idxTop{ -1 };
 	int m_idxHot{ -1 };
@@ -143,7 +141,7 @@ public:
 	// 调用方启动定时器检查当前时间对应的歌词行，每次检查后将结果传递到此方法
 	HRESULT LrcSetCurrentLine(int idxCurr);
 
-	HRESULT LrcInit(CLyric* pLyric);
+	HRESULT LrcInit(Lyric::CLyric* pLyric);
 
 	void LrcClear();
 

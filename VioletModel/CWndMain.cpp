@@ -31,6 +31,8 @@ void CWndMain::ClearRes()
 
 BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 {
+	BbrDelete();
+
 	StSwitchStdThemeMode(ShouldAppsUseDarkMode());
 	App->SetDarkMode(ShouldAppsUseDarkMode());
 

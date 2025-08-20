@@ -43,9 +43,6 @@
     <Filter Include="UI\主题">
       <UniqueIdentifier>{a7bedadb-6b6b-4067-8919-08eb26c3e001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="逻辑\歌词">
-      <UniqueIdentifier>{f85f7e26-d82f-4126-ac6a-c0a05e6473fe}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -135,9 +132,6 @@
     <ClInclude Include="CVioletTheme.h">
       <Filter>UI\主题</Filter>
     </ClInclude>
-    <ClInclude Include="CLyric.h">
-      <Filter>逻辑\歌词</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MyEck.cpp">
@@ -226,9 +220,6 @@
     </ClCompile>
     <ClCompile Include="CVioletTheme.cpp">
       <Filter>UI\主题</Filter>
-    </ClCompile>
-    <ClCompile Include="CLyric.cpp">
-      <Filter>逻辑\歌词</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
