@@ -88,6 +88,7 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 
 	auto rsLrcPath{ e.rsFile };
 	rsLrcPath.PazRenameExtension(EckStrAndLen(L".lrc"));
+	m_pLrc->MgSetDuration((float)m_lfTotalTime);
 	m_pLrc->LoadTextFile(rsLrcPath.Data());
 	m_pLrc->ParseLrc();
 	if (!m_pLrc->MgGetLineCount())
