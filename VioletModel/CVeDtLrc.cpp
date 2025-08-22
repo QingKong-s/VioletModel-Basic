@@ -306,6 +306,7 @@ void CVeDtLrc::SetTextFormatTrans(IDWriteTextFormat* pTf)
 void CVeDtLrc::SetLyric(Lyric::CLyric* pLrc)
 {
 	ECK_DUILOCK;
+	m_idxCurr = -1;
 	std::swap(m_pLrc, pLrc);
 	if (m_pLrc)
 		m_pLrc->AddRef();

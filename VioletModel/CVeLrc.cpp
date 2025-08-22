@@ -10,7 +10,7 @@ enum
 
 constexpr inline float AnDurLrcSelBkg{ 100.f };			// 歌词选中背景动画时长
 constexpr inline float AnDurLrcScrollExpand{ 200.f };	// 滚动展开动画时长
-constexpr inline float AnDurLrcDelay{ 400.f };			// 每个项目的延迟动画时长
+constexpr inline float AnDurLrcDelay{ 600.f };			// 每个项目的延迟动画时长
 constexpr inline float DurMaxItemDelay{ 30.f };			// 延迟间隔
 
 static constexpr D2D1_COLOR_F InterpolateColor(
@@ -803,9 +803,9 @@ void CVeLrc::Tick(int iMs)
 			if (e.msDelay >= DurMaxItemDelay)
 			{
 				e.msAnDelay += iMs;
-				auto k = eck::Easing::OutCubic(
+				auto k = eck::Easing::OutExpo(
 					e.msAnDelay, 0.f, 1.f, AnDurLrcDelay);
-				if (e.msAnDelay >= AnDurLrcDelay)// 动画结束
+				if (k >= 1.f)// 动画结束
 				{
 					k = 1.f;
 					e.msDelay = 0.f;
