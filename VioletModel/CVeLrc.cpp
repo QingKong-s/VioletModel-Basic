@@ -805,6 +805,9 @@ void CVeLrc::Tick(int iMs)
 				e.msAnDelay += iMs;
 				auto k = eck::Easing::OutExpo(
 					e.msAnDelay, 0.f, 1.f, AnDurLrcDelay);
+				// VLTBUG 250822
+				// 缓动函数内部的钳位会导致某些曲线结束位置会产生较大的跳变，
+				// ECK已修改，取消了所有钳位，并且在外部应使用k作为终点条件
 				if (k >= 1.f)// 动画结束
 				{
 					k = 1.f;
