@@ -89,9 +89,10 @@ PlayErr CPlayer::PlayWorker(CPlayList::ITEM& e)
 	auto rsLrcPath{ e.rsFile };
 	rsLrcPath.PazRenameExtension(EckStrAndLen(L".lrc"));
 	m_pLrc->MgSetDuration((float)m_lfTotalTime);
-	m_pLrc->LoadTextFile(rsLrcPath.Data());
-	m_pLrc->ParseLrc();
-	if (!m_pLrc->MgGetLineCount())
+	if (NT_SUCCESS(m_pLrc->LoadTextFile(rsLrcPath.Data())) &&
+		!m_pLrc->IsTextEmpty())
+		m_pLrc->ParseLrc();
+	if (!m_pLrc->MgGetLineCount() && !m_MusicInfo.rsLrc.IsEmpty())
 	{
 		m_pLrc->LoadTextMove(std::move(m_MusicInfo.rsLrc));
 		m_pLrc->ParseLrc();
