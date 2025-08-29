@@ -353,6 +353,38 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			return 0;
 			}
+		else if (wParam == (WPARAM)&m_EDSearchItem)
+			switch (((Dui::DUINMHDR*)lParam)->uCode)
+			{
+			case Dui::EDE_TXNOTIFY:
+			{
+				const auto p = (Dui::NMEDTXNOTIFY*)lParam;
+				if (p->iNotify != EN_CHANGE)
+					break;
+				const auto pList = GetCurrPlayListShared();
+				if (!pList)
+					break;
+				GETTEXTLENGTHEX  gtl{};
+				gtl.codepage = eck::CP_UTF16LE;
+				gtl.flags = GTL_DEFAULT;
+				GETTEXTEX gte{};
+				gte.cb = m_EDSearchItem.GetTextLengthEx(&gtl);
+				gte.codepage = eck::CP_UTF16LE;
+				gte.flags = GT_DEFAULT;
+				eck::CRefStrW rsFilter{};
+				rsFilter.ReSize(gte.cb / sizeof(WCHAR));
+				gte.cb = (DWORD)rsFilter.ByteSize();
+
+				m_EDSearchItem.GetTextEx(&gte, rsFilter.Data());
+
+				//pList->SetFilter(rsFilter);
+				m_GLList.SetItemCount(pList->FlGetCount());
+				m_GLList.ReCalc();
+				m_GLList.InvalidateRect();
+				CheckVisibleItemMetaData(-1);
+			}
+			return 0;
+			}
 	}
 	return 0;
 
@@ -365,6 +397,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		m_TBLPlayList.SetTextFormat(GetTextFormat());
 		m_EDSearch.SetTextFormat(GetTextFormat());
+		m_EDSearchItem.SetTextFormat(GetTextFormat());
 		m_BTAddFile.SetTextFormat(GetTextFormat());
 	}
 	return 0;
@@ -414,7 +447,18 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			m_BTAddFile.Create(L"添加文件", Dui::DES_VISIBLE, 0,
 				0, 0, 100, 30, this);
-			m_LytList.Add(&m_BTAddFile, {}, eck::LF_FIX);
+			m_LytTopBar.Add(&m_BTAddFile, {}, eck::LF_FIX);
+
+			m_LytTopBar.Add(&m_TopBarDummySpace, {}, eck::LF_FILL, 1);
+
+			m_EDSearchItem.Create(nullptr, Dui::DES_VISIBLE, 0,
+				0, 0, 200, CyStdEdit, this);
+			m_EDSearchItem.SetEventMask(ENM_CHANGE);
+			m_LytTopBar.Add(&m_EDSearchItem, {}, eck::LF_FIX | eck::LF_ALIGN_FAR);
+
+			m_LytList.Add(&m_LytTopBar, { .cyBottomHeight = CxPageIntPadding },
+				eck::LF_FIX_HEIGHT | eck::LF_FILL_WIDTH);
+
 			m_GLList.Create(nullptr, Dui::DES_VISIBLE, 0,
 				0, 0, 0, 0, this);
 			m_GLList.SetView(Dui::CListTemplate::Type::Report);

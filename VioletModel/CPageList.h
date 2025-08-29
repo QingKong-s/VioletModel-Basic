@@ -13,6 +13,9 @@ private:
 	eck::CLinearLayoutV m_LytPlayList{};
 
 	Dui::CButton m_BTAddFile{};
+	eck::CLayoutDummy m_TopBarDummySpace{};
+	Dui::CEdit m_EDSearchItem{};
+	eck::CLinearLayoutH m_LytTopBar{};
 	Dui::CList m_GLList{};
 	eck::CLinearLayoutV m_LytList{};
 

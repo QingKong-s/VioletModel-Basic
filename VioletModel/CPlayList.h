@@ -41,6 +41,8 @@ private:
 	std::vector<ITEM> m_vFlat{};
 	std::vector<GROUP> m_vGroup{};
 
+	std::vector<int> m_vSearchResult{};// 搜索结果，存储平面列表索引
+
 	int m_idxCurrFlat{};
 	int m_idxCurrGroup{};
 	int m_idxCurrGroupItem{};
@@ -80,6 +82,9 @@ public:
 	int FlInsertEmpty(int idx = -1);
 
 	EckInlineNdCe int FlGetCount() const noexcept { return (int)m_vFlat.size(); }
+
+	void FlSchDoSearch(std::wstring_view svKeyWord);
+	EckInlineNdCe int FlSchGetCount() const noexcept { return (int)m_vSearchResult.size(); }
 
 	EckInlineNdCe auto& GrAtGroup(int idxGroup) noexcept { return m_vGroup[idxGroup]; }
 	EckInlineNdCe auto& GrAt(int idxGroup, int idxItem) noexcept { return m_vFlat[m_vGroup[idxGroup].vItem[idxItem].idxFlat]; }

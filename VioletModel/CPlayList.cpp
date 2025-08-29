@@ -67,6 +67,19 @@ int CPlayList::FlInsertEmpty(int idx)
 	return idx;
 }
 
+void CPlayList::FlSchDoSearch(std::wstring_view svKeyWord)
+{
+	m_vSearchResult.clear();
+	for (int i{}; const auto& e : m_vFlat)
+	{
+		if (e.rsName.FindI(svKeyWord) >= 0 ||
+			e.rsArtist.FindI(svKeyWord) >= 0 ||
+			e.rsAlbum.FindI(svKeyWord) >= 0)
+			m_vSearchResult.emplace_back(i);
+		++i;
+	}
+}
+
 int CPlayList::GrInsertGroup(const eck::CRefStrW& rsName, int idx)
 {
 	return 0;
