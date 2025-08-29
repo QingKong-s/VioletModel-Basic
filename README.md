@@ -1,8 +1,14 @@
 # VioletModel
 
+## 致谢
+
+排名不分先后
+
+[Redmountain](https://github.com/Redmountain2018)，[Flysoft](https://github.com/FlysoftBeta)，[WhatDamon](https://github.com/WhatDamon)，[nlmhc](https://github.com/nlmhc)，[Lonyou](https://github.com/Vkango)，[QingKong](https://github.com/QingKong-s)
+
 ## 使用的第三方库或参考的代码
 
-**[Bass](https://www.un4seen.com/)**
+**[BASS](https://www.un4seen.com/)**
 
 ```
 BASS is free for non-commercial use. If you are a non-commercial entity (eg. an individual) and you are not making any money from your product (through sales, advertising, etc) then you can use BASS in it for free. 

@@ -40,7 +40,7 @@
     <Filter Include="程序">
       <UniqueIdentifier>{f6ff8827-a3b2-4fbf-aeff-54be55dc2447}</UniqueIdentifier>
     </Filter>
-    <Filter Include="UI\主题">
+    <Filter Include="UI\其他">
       <UniqueIdentifier>{a7bedadb-6b6b-4067-8919-08eb26c3e001}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -130,7 +130,13 @@
       <Filter>程序</Filter>
     </ClInclude>
     <ClInclude Include="CVioletTheme.h">
-      <Filter>UI\主题</Filter>
+      <Filter>UI\其他</Filter>
+    </ClInclude>
+    <ClInclude Include="ILyricRenderer.h">
+      <Filter>UI\其他</Filter>
+    </ClInclude>
+    <ClInclude Include="CLrGeometryRealization.h">
+      <Filter>UI\其他</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -219,7 +225,10 @@
       <Filter>程序</Filter>
     </ClCompile>
     <ClCompile Include="CVioletTheme.cpp">
-      <Filter>UI\主题</Filter>
+      <Filter>UI\其他</Filter>
+    </ClCompile>
+    <ClCompile Include="CLrGeometryRealization.cpp">
+      <Filter>UI\其他</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
