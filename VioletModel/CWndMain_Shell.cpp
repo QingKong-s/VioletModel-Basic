@@ -178,7 +178,7 @@ HRESULT CWndMain::SmtcInit() noexcept
 	//////////TMPTMPTMP//////////
 	try
 	{
-		auto pSmtcInterop = winrt::get_activation_factory<
+		const auto pSmtcInterop = winrt::get_activation_factory<
 			WinMedia::SystemMediaTransportControls,
 			ISystemMediaTransportControlsInterop>();
 		hr = pSmtcInterop->GetForWindow(HWnd,

@@ -53,7 +53,8 @@ int CPlayList::FlInsert(const eck::CRefStrW& rsFile, int idx)
 	idx = FlInsertEmpty(idx);
 	auto& e = FlAt(idx);
 	e.rsFile = rsFile;
-	e.rsName = eck::GetFileNameFromPath(rsFile.Data(), rsFile.Size());
+	e.rsName.Clear();
+	rsFile.PazTrimToFileName(e.rsName);
 	return idx;
 }
 

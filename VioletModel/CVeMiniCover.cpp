@@ -102,7 +102,7 @@ LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ReleaseCapture();
 			POINT pt ECK_GET_PT_LPARAM(lParam);
 			ClientToElem(pt);
-			if (eck::PtInRect(GetViewRect(), pt))
+			if (eck::PtInRect(GetViewRectF(), pt))
 			{
 				VEN_MINICOVER_CLICK n{};
 				n.uCode = ELEN_MINICOVER_CLICK;

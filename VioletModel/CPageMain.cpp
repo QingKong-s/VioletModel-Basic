@@ -7,7 +7,7 @@ LRESULT CPageMain::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_SIZE:
 	{
-		m_Lyt.Arrange(GetWidth(), GetHeight());
+		m_Lyt.Arrange((int)GetWidthF(), (int)GetHeightF());
 	}
 	return 0;
 	case WM_SETFONT:
@@ -16,7 +16,7 @@ LRESULT CPageMain::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case WM_CREATE:
 	{
-		constexpr MARGINS Mar{ .cxRightWidth = CxPageIntPadding };
+		constexpr MARGINS Mar{ .cxRightWidth = (int)CxPageIntPadding };
 		const auto pWnd = (CWndMain*)GetWnd();
 		m_BTOpenFile.Create(L"打开文件", Dui::DES_VISIBLE, 0,
 			0, 0, 140, 40, this, GetWnd());

@@ -389,7 +389,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return 0;
 
 	case WM_SIZE:
-		m_Lyt.Arrange(0, 0, GetWidth(), GetHeight());
+		m_Lyt.Arrange((int)GetWidthF(), (int)GetHeightF());
 		CheckVisibleItemMetaData(-1);
 		break;
 
@@ -420,14 +420,14 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	break;
 	case WM_CREATE:
 	{
-		m_cxIl = Log2Phy(CxyListCover);
+		m_cxIl = (int)Log2PhyF(CxyListCover);
 		m_cyIl = m_cxIl;
 		UpdateDefCover();
 		{
 			m_EDSearch.TxSetProp(TXTBIT_MULTILINE, 0, FALSE);
 			m_EDSearch.Create(nullptr, Dui::DES_VISIBLE, 0,
 				0, 0, 0, CyStdEdit, this);
-			m_LytPlayList.Add(&m_EDSearch, { .cyBottomHeight = CxPageIntPadding }, eck::LF_FIX_HEIGHT | eck::LF_FILL_WIDTH);
+			m_LytPlayList.Add(&m_EDSearch, { .cyBottomHeight = (int)CxPageIntPadding }, eck::LF_FIX_HEIGHT | eck::LF_FILL_WIDTH);
 
 			m_TBLPlayList.Create(nullptr, Dui::DES_VISIBLE, 0,
 				0, 0, CxListFileList, 0, this, GetWnd());
@@ -436,7 +436,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_TBLPlayList.ReCalc();
 			m_LytPlayList.Add(&m_TBLPlayList, {}, eck::LF_FILL, 1);
 		}
-		m_Lyt.Add(&m_LytPlayList, { .cxRightWidth = CxPageIntPadding },
+		m_Lyt.Add(&m_LytPlayList, { .cxRightWidth = (int)CxPageIntPadding },
 			eck::LF_FIX_WIDTH | eck::LF_FILL_HEIGHT);
 
 		{
@@ -456,13 +456,13 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_EDSearchItem.SetEventMask(ENM_CHANGE);
 			m_LytTopBar.Add(&m_EDSearchItem, {}, eck::LF_FIX | eck::LF_ALIGN_FAR);
 
-			m_LytList.Add(&m_LytTopBar, { .cyBottomHeight = CxPageIntPadding },
+			m_LytList.Add(&m_LytTopBar, { .cyBottomHeight = (int)CxPageIntPadding },
 				eck::LF_FIX_HEIGHT | eck::LF_FILL_WIDTH);
 
 			m_GLList.Create(nullptr, Dui::DES_VISIBLE, 0,
 				0, 0, 0, 0, this);
 			m_GLList.SetView(Dui::CListTemplate::Type::Report);
-			constexpr int Width[]{ 270, 150, 150, 50 };
+			constexpr float Width[]{ 270, 150, 150, 50 };
 			m_GLList.SetColumnCount(4, Width);
 			m_GLList.SetTopExtraSpace(Dui::CListTemplate::CyDefHeader);
 			m_GLList.SetBottomExtraSpace(CyPlayPanel);
@@ -473,7 +473,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_GLList.SetDbgIndex(TRUE);
 			m_LytList.Add(&m_GLList, {}, eck::LF_FILL, 1);
 		}
-		m_Lyt.Add(&m_LytList, { .cxRightWidth = CxPageIntPadding }, eck::LF_FILL, 1);
+		m_Lyt.Add(&m_LytList, { .cxRightWidth = (int)CxPageIntPadding }, eck::LF_FILL, 1);
 
 		m_GLList.GetSignal().Connect(
 			[&](UINT uMsg, WPARAM wParam, LPARAM lParam, eck::SlotCtx& Ctx)
@@ -506,7 +506,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	break;
 	case WM_DPICHANGED:
 	{
-		m_cxIl = Log2Phy(CxyListCover);
+		m_cxIl = (int)Log2PhyF(CxyListCover);
 		m_cyIl = m_cxIl;
 		UpdateDefCover();
 		((CWndMain*)GetWnd())->ThreadCtx()->Callback.EnQueueCallback([this]

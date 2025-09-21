@@ -31,7 +31,7 @@ LRESULT CVeVolumeBar::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				const auto pThis = (CVeVolumeBar*)lParam;
 				pThis->m_pPageAn->Opacity = fCurrValue;
-				pThis->m_pPageAn->Dy = int((1.f - fCurrValue) * (float)DVolAn);
+				pThis->m_pPageAn->Dy = (1.f - fCurrValue) * (float)DVolAn;
 				pThis->CompReCalcCompositedRect();
 				pThis->InvalidateRect();
 				if (pThis->m_pecShowing->IsStop())
@@ -45,8 +45,8 @@ LRESULT CVeVolumeBar::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_pPageAn->InitAsTranslationOpacity();
 
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
-		const auto cx = GetWidth();
-		const auto cy = GetHeight();
+		const auto cx = GetWidthF();
+		const auto cy = GetHeightF();
 		m_LAVol.Create(L"100", Dui::DES_VISIBLE | Dui::DES_PARENT_COMP, 0,
 			CxVolBarPadding, 0, CxVolLabel, cy, this);
 		const auto x = CxVolBarPadding * 2 + CxVolLabel;

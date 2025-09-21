@@ -201,14 +201,14 @@ void CWndMain::ShowPage(Page ePage, BOOL bAnimate)
 			m_pecPage->SetCallBack([](float fCurrValue, float fOldValue, LPARAM lParam)
 				{
 					const auto p = (CWndMain*)lParam;
-					const auto x = p->m_pAnPage->GetRect().left;
-					constexpr int yNormal = CyPageTitle + DTopPageTitle + CxPageIntPadding;
+					const auto x = p->m_pAnPage->GetRectF().left;
+					constexpr float yNormal = CyPageTitle + DTopPageTitle + CxPageIntPadding;
 					if (p->m_bPageAnUpToDown)
 						p->m_pAnPage->SetPos(x, yNormal +
-							CyPageSwitchAnDelta - (int)fCurrValue);
+							CyPageSwitchAnDelta - fCurrValue);
 					else
 						p->m_pAnPage->SetPos(x, yNormal -
-							CyPageSwitchAnDelta + (int)fCurrValue);
+							CyPageSwitchAnDelta + fCurrValue);
 				});
 		}
 		m_pecPage->Begin(0, (float)CyPageSwitchAnDelta);
@@ -228,13 +228,9 @@ HWND CWndMain::Create(PCWSTR pszText, DWORD dwStyle, DWORD dwExStyle,
 	int x, int y, int cx, int cy, HWND hParent, HMENU hMenu, PCVOID pData)
 {
 	TblCreateGhostWindow(pszText);
-
+	TblCreateObjectAndInit();
 	const auto hWnd = __super::Create(pszText, dwStyle, dwExStyle,
 		x, y, cx, cy, hParent, hMenu, pData);
-
-	TblCreateObjectAndInit();
-	TblSetup();
-	m_WndTbGhost.SetIconicThumbnail();
 	return hWnd;
 }
 
@@ -308,6 +304,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (m_pTaskbarList.Get())
 		{
 			TblSetup();
+			m_WndTbGhost.SetIconicThumbnail();
 			TblUpdateToolBarIcon();
 			TblUpdateState();
 			TblUpdateProgress();
@@ -475,7 +472,7 @@ LRESULT CWndMain::OnElemEvent(Dui::CElem* pElem, UINT uMsg, WPARAM wParam, LPARA
 		else if (pElem == &m_BTVol)
 		{
 			const auto x = GetClientWidthLog() - CxVolBar - CxVolBarPadding;
-			const auto y = m_BTVol.GetRectInClient().top - CyVolBar;
+			const auto y = m_BTVol.GetRectInClientF().top - CyVolBar;
 			m_VolBar.SetPos(x, y);
 			m_VolBar.ShowAnimation();
 		}
@@ -643,15 +640,15 @@ void CWndMain::PreparePlayPageAnimation()
 
 void CWndMain::RePosButtonProgBar()
 {
-	constexpr int XCenterButtonLeftLimit = DLeftMiniCover + CxyMiniCover +
+	constexpr float XCenterButtonLeftLimit = DLeftMiniCover + CxyMiniCover +
 		CxPaddingPlayPanelText + CxMaxTitleAndArtist + CxPaddingPlayPanelText +
 		CxMaxTime + CxPaddingPlayPanelText;
 	const auto cxClient = GetClientWidthLog();
 	const auto cyClient = GetClientHeightLog();
 	// 移动右侧按钮
 	const auto y = cyClient - CyPlayPanel + (CyPlayPanel - CxyCircleButton) / 2;
-	int x = cxClient - CxyCircleButton - CxPaddingCircleButtonRightEdge;
-	x += int((x - (cxClient - CxPaddingCtrlBtnWithPlayPage)) * m_PlayPageAn.K);
+	float x = cxClient - CxyCircleButton - CxPaddingCircleButtonRightEdge;
+	x += (x - (cxClient - CxPaddingCtrlBtnWithPlayPage)) * m_PlayPageAn.K;
 
 	m_BTVol.SetPos(x, y);
 	x -= (CxyCircleButton + CxPaddingCircleButton);
@@ -663,7 +660,7 @@ void CWndMain::RePosButtonProgBar()
 		(CxyCircleButton * 2 + CxyCircleButtonBig + CxPaddingCircleButton * 2)) / 2;
 	const auto xCenter = (cxClient - (CxyCircleButton * 2 + CxyCircleButtonBig +
 		CxPaddingCircleButton * 2)) / 2;
-	x += int((xCenter - x) * m_PlayPageAn.K);
+	x += (xCenter - x) * m_PlayPageAn.K;
 	m_BTPrev.SetPos(x, y);
 	x += (CxyCircleButton + CxPaddingCircleButton);
 	m_BTPlay.SetPos(x, cyClient - CyPlayPanel + (CyPlayPanel - CxyCircleButtonBig) / 2);
@@ -672,11 +669,11 @@ void CWndMain::RePosButtonProgBar()
 	// 移动进度条
 	const auto yPlayPanel = cyClient - CyPlayPanel;
 	const auto dTrackSpacing = m_TBProgress.GetTrackSpacing();
-	const auto oxIndent = int((float)CxPaddingProgBarWithPlayPage * m_PlayPageAn.K);
+	const auto oxIndent = (float)CxPaddingProgBarWithPlayPage * m_PlayPageAn.K;
 	m_TBProgress.SetRect({
-		-(int)dTrackSpacing + oxIndent,
+		-dTrackSpacing + oxIndent,
 		yPlayPanel - CyProgress / 2,
-		cxClient + (int)dTrackSpacing - oxIndent,
+		cxClient + dTrackSpacing - oxIndent,
 		yPlayPanel + CyProgress / 2 });
 }
 

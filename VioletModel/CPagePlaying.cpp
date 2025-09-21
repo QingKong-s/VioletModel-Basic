@@ -161,23 +161,23 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetWnd()->BmpNewLogSize(cxF, cyF, m_pBmpBlurredCover);
 	Update:;
 		UpdateBlurredCover();
-		const auto cx = GetWidth();
-		const auto cy = GetHeight();
-		const auto cxMinGap = cx * 1 / 20;
-		const RECT rcLrc{ cx * 10 / 20, DLrcTop, cx * 18 / 20, cy - DLrcBottom };
+		const auto cx = GetWidthF();
+		const auto cy = GetHeightF();
+		const auto cxMinGap = cx * 1.f / 20.f;
+		const D2D1_RECT_F rcLrc{ cx * 10.f / 20.f,DLrcTop, cx * 18.f / 20.f, cy - DLrcBottom };
 		m_Lrc.SetRect(rcLrc);
 
-		RECT rcCover;
-		rcCover.left = cx * 1 / 10;
-		rcCover.top = cy * 15 / 100;
+		D2D1_RECT_F rcCover;
+		rcCover.left = cx * 1.f / 10.f;
+		rcCover.top = cy * 15.f / 100.f;
 		const auto cxyCover = std::min(
-			int(rcLrc.left - cxMinGap - rcCover.left),
-			cy * 4 / 10);
+			rcLrc.left - cxMinGap - rcCover.left,
+			cy * 4.f / 10.f);
 		rcCover.right = rcCover.left + cxyCover;
 		rcCover.bottom = rcCover.top + cxyCover;
 		m_Cover.SetRect(rcCover);
 
-		RECT rcLabel{ rcCover };
+		D2D1_RECT_F rcLabel{ rcCover };
 		rcLabel.top = rcCover.bottom + CyPlayPageLabelCoverPadding;
 		rcLabel.bottom = rcLabel.top + CyPlayPageLabel;
 		m_LATitle.SetRect(rcLabel);
@@ -189,7 +189,7 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_LAArtist.SetRect(rcLabel);
 
 		const auto dBackBtnMar = (CxyMiniCover - CxyBackBtn) / 2;
-		RECT rcBackBtn;
+		D2D1_RECT_F rcBackBtn;
 		rcBackBtn.left = DLeftMiniCover + dBackBtnMar;
 		rcBackBtn.top = cy - CyPlayPanel + DTopMiniCover + dBackBtnMar;
 		rcBackBtn.right = rcBackBtn.left + CxyBackBtn;

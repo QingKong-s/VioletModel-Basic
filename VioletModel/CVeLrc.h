@@ -89,12 +89,11 @@ private:
 	BOOLEAN m_bTopBtmFade{};		// 指示是否启用顶部和底部渐变
 
 
-	void ScrAnProc(int iPos, int iPrevPos);
+	void ScrAnProc(float fPos, float fPrevPos);
 
 	void ItmReCalcTop();
 	// 返回项目底边加行间距，WM_PAINT使用此值判断重画终止位置
 	float ItmPaint(int idx);
-	void ItmGetRect(int idx, _Out_ RECT& rc);
 	void ItmGetRect(int idx, _Out_ D2D1_RECT_F& rc);
 	int ItmIndexFromY(float y);
 	void ItmLayout();
@@ -105,7 +104,7 @@ private:
 
 	void ScrAutoScrolling();
 	void ScrManualScrolling();
-	void ScrDoItemScroll(int iPos);
+	void ScrDoItemScroll(float fPos);
 	void ScrFixItemPosition();
 
 	void IsbWakeRenderThread()

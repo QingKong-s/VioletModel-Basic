@@ -45,7 +45,8 @@ float CVeDtLrc::DrawLrcLine(int idxLrc, float y, BOOL bSecondLine)
 		e.size = { tm.width,tm.height };
 		//-----------重建几何实现
 		ComPtr<ID2D1PathGeometry1> pPath;
-		eck::GetTextLayoutPathGeometry(e.pLayout, m_pDC1, 0, 0, pPath.RefOfClear());
+		eck::GetTextLayoutPathGeometry(e.pLayout, 0, 0,
+			pPath.RefOfClear(), xDpi);
 		SafeRelease(e.pGrF);
 		SafeRelease(e.pGrS);
 		m_pDC1->CreateFilledGeometryRealization(pPath.Get(), fTolerance, &e.pGrF);
@@ -60,7 +61,8 @@ float CVeDtLrc::DrawLrcLine(int idxLrc, float y, BOOL bSecondLine)
 			e.bTooLongTrans = (tm.width > cxMax);
 			e.sizeTrans = { tm.width,tm.height };
 			//-----------重建几何实现
-			eck::GetTextLayoutPathGeometry(e.pLayoutTrans, m_pDC1, 0, 0, pPath.RefOfClear());
+			eck::GetTextLayoutPathGeometry(e.pLayoutTrans,
+				0, 0, pPath.RefOfClear(), xDpi);
 			SafeRelease(e.pGrFTrans);
 			SafeRelease(e.pGrSTrans);
 			m_pDC1->CreateFilledGeometryRealization(pPath.Get(), fTolerance, &e.pGrFTrans);
@@ -145,7 +147,8 @@ void CVeDtLrc::DrawStaticLine(float y)
 		e.cx = tm.width;
 		//-----------重建几何实现
 		ComPtr<ID2D1PathGeometry1> pPath;
-		eck::GetTextLayoutPathGeometry(pLayout.Get(), m_pDC1, 0, 0, pPath.RefOf());
+		eck::GetTextLayoutPathGeometry(pLayout.Get(),
+			0, 0, pPath.RefOf(), xDpi);
 		SafeRelease(e.pGrF);
 		SafeRelease(e.pGrS);
 		m_pDC1->CreateFilledGeometryRealization(pPath.Get(), fTolerance, &e.pGrF);

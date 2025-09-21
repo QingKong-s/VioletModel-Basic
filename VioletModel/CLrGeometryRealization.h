@@ -35,7 +35,7 @@ public:
 	void LrItmSetCount(int cItems) override;
 	HRESULT LrItmUpdateText(int idx, const Lyric::Line& Line,
 		_Out_ LYRIC_TEXT_METRICS& Met) override;
-	void LrItmDraw(const LYRIC_DRAW& Opt) override;
+	float LrItmDraw(const LYRIC_DRAW& Opt) override;
 	void LrSetTextColor(D2D1_COLOR_F cr) override;
 	void LrSetViewSize(float cx, float cy) override;
 	void LrSetMaxScale(float fScale) override;

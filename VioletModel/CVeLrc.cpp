@@ -11,7 +11,7 @@ enum
 constexpr inline float AnDurLrcSelBkg{ 100.f };			// 歌词选中背景动画时长
 constexpr inline float AnDurLrcScrollExpand{ 200.f };	// 滚动展开动画时长
 constexpr inline float AnDurLrcDelay{ 600.f };			// 每个项目的延迟动画时长
-constexpr inline float DurMaxItemDelay{ 30.f };			// 延迟间隔
+constexpr inline float DurMaxItemDelay{ 40.f };			// 延迟间隔
 
 static constexpr D2D1_COLOR_F InterpolateColor(
 	const D2D1_COLOR_F& c1, const D2D1_COLOR_F& c2, float k)
@@ -23,7 +23,7 @@ static constexpr D2D1_COLOR_F InterpolateColor(
 		c1.a + (c2.a - c1.a) * k };
 }
 
-void CVeLrc::ScrAnProc(int iPos, int iPrevPos)
+void CVeLrc::ScrAnProc(float fPos, float fPrevPos)
 {
 	if (IsEmpty())
 		return;
@@ -58,7 +58,7 @@ void CVeLrc::ScrAnProc(int iPos, int iPrevPos)
 		}
 	}
 
-	ScrDoItemScroll(iPos);
+	ScrDoItemScroll(fPos);
 
 	ItmReCalcTop();
 	InvalidateRect();
@@ -125,11 +125,11 @@ float CVeLrc::ItmPaint(int idx)
 			break;
 		}
 
-		ComPtr<ID2D1PathGeometry> pPathGeometry;
-		eck::GetTextLayoutPathGeometry(&Item.pLayout, 2, cyPadding,
-			m_pDC, x, 0.f, pPathGeometry.RefOf());
 		float xDpi, yDpi;
 		m_pDC->GetDpi(&xDpi, &yDpi);
+		ComPtr<ID2D1PathGeometry1> pPathGeometry;
+		eck::GetTextLayoutPathGeometry(2, &Item.pLayout, cyPadding, x,
+			0.f, pPathGeometry.RefOf(), xDpi, TRUE);
 		m_pDC1->CreateFilledGeometryRealization(
 			pPathGeometry.Get(),
 			D2D1::ComputeFlatteningTolerance(
@@ -214,25 +214,16 @@ void CVeLrc::MiBeginDetect()
 
 int CVeLrc::ItmHitTest(POINT pt)
 {
-	RECT rc;
+	D2D1_RECT_F rc;
 	for (int i = m_idxTop; i < (int)m_vItem.size(); ++i)
 	{
 		ItmGetRect(i, rc);
 		if (eck::PtInRect(rc, pt))
 			return i;
-		if (rc.top > GetHeight())
+		if (rc.top > GetHeightF())
 			break;
 	}
 	return -1;
-}
-
-void CVeLrc::ItmGetRect(int idx, _Out_ RECT& rc)
-{
-	const auto& e = m_vItem[idx];
-	rc.left = (long)e.x;
-	rc.top = (long)e.y;
-	rc.right = long(e.x + e.cx);
-	rc.bottom = long(rc.top + e.cy);
 }
 
 void CVeLrc::ItmGetRect(int idx, _Out_ D2D1_RECT_F& rc)
@@ -596,11 +587,11 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		ItmDelayComplete();
 		ItmLayout();
-		RECT rc;
-		rc.left = GetWidth() - m_SB.GetWidth();
+		D2D1_RECT_F rc;
+		rc.left = GetWidthF() - m_SB.GetWidthF();
 		rc.top = 0;
-		rc.right = rc.left + m_SB.GetWidth();
-		rc.bottom = rc.top + GetHeight();
+		rc.right = rc.left + m_SB.GetWidthF();
+		rc.bottom = rc.top + GetHeightF();
 		m_SB.SetRect(rc);
 		if (!IsEmpty())
 		{
@@ -618,7 +609,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					y -= (e.cy + m_cyLinePadding);
 					e.y = e.yNoDelay = y;
 				}
-				m_psv->SetPos(-(int)m_vItem.front().y);
+				m_psv->SetPos(-m_vItem.front().y);
 				y = CurrItem.yNoDelay + CurrItem.cy + m_cyLinePadding;
 				for (int i = idxCurr + 1; i < (int)m_vItem.size(); ++i)
 				{
@@ -640,14 +631,14 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 
 		m_SB.Create(nullptr, 0, 0,
-			0, 0, (int)GetTheme()->GetMetrics(Dui::Metrics::CxVScroll), 0,
+			0, 0, GetTheme()->GetMetrics(Dui::Metrics::CxVScroll), 0,
 			this);
 		m_psv = m_SB.GetScrollView();
 		m_psv->AddRef();
 		m_psv->SetMinThumbSize(Dui::CxyMinScrollThumb);
-		m_psv->SetCallBack([](int iPos, int iPrevPos, LPARAM lParam)
+		m_psv->SetCallBack([](float fPos, float fPrevPos, LPARAM lParam)
 			{
-				((CVeLrc*)lParam)->ScrAnProc(iPos, iPrevPos);
+				((CVeLrc*)lParam)->ScrAnProc(fPos, fPrevPos);
 			}, (LPARAM)this);
 		m_psv->SetDelta(80);
 	}
@@ -683,11 +674,12 @@ HRESULT CVeLrc::LrcUpdateEmptyText(std::wstring_view svEmptyText)
 	pLayout->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 	pLayout->SetWordWrapping(DWRITE_WORD_WRAPPING_WRAP);
 
-	ComPtr<ID2D1PathGeometry1> pPathGeometry;
-	eck::GetTextLayoutPathGeometry(pLayout.Get(), m_pDC,
-		0.f, 0.f, pPathGeometry.RefOf());
 	float xDpi, yDpi;
 	m_pDC->GetDpi(&xDpi, &yDpi);
+
+	ComPtr<ID2D1PathGeometry1> pPathGeometry;
+	eck::GetTextLayoutPathGeometry(pLayout.Get(),
+		0.f, 0.f, pPathGeometry.RefOf(), xDpi);
 
 	return m_pDC1->CreateFilledGeometryRealization(
 		pPathGeometry.Get(),
@@ -727,7 +719,7 @@ HRESULT CVeLrc::LrcSetCurrentLine(int idxCurr)
 		const auto& e = m_vItem[m_idxCurr];
 		const auto dy = (e.yNoDelay + e.cy / 2.f) - ItmGetCurrentItemTarget();
 		m_psv->InterruptAnimation();
-		m_psv->SmoothScrollDelta((int)dy);
+		m_psv->SmoothScrollDelta(dy);
 		ItmDelayPrepare(dy);
 		GetWnd()->WakeRenderThread();
 	}
@@ -808,8 +800,12 @@ void CVeLrc::Tick(int iMs)
 				// VLTBUG 250822
 				// 缓动函数内部的钳位会导致某些曲线结束位置会产生较大的跳变，
 				// ECK已修改，取消了所有钳位，并且在外部应使用k作为终点条件
-				if (k >= 1.f)// 动画结束
+				if (fabs(e.y - e.yAnDelayDst) < 0.4f &&// 动画结束
+					((m_bDelayScrollUp ? m_idxDelayBegin : m_idxDelayEnd) == i))
 				{
+					// VLTBUG 250916
+					// OutExpo本身平缓区域过大，在此裁去一部分防止动画空转浪费GPU资源
+					// 必须按顺序停止动画，仅当上一动画结束时才判定当前动画完成
 					k = 1.f;
 					e.msDelay = 0.f;
 					e.msAnDelay = 0.f;
@@ -857,7 +853,7 @@ void CVeLrc::ScrAutoScrolling()
 	const auto& CurrItem = m_idxCurr < 0 ? m_vItem.front() : m_vItem[m_idxCurr];
 	const auto dy = (CurrItem.yNoDelay + CurrItem.cy / 2.f) - ItmGetCurrentItemTarget();
 	m_psv->InterruptAnimation();
-	m_psv->SmoothScrollDelta((int)dy);
+	m_psv->SmoothScrollDelta(dy);
 	SeBeginExpand(FALSE);
 	if (m_idxCurr >= 0)
 		ItmDelayPrepare(dy);
@@ -925,10 +921,10 @@ void CVeLrc::ItmLayout()
 		y += (e.cy + m_cyLinePadding);
 	}
 
-	m_psv->SetMin(int(-cy / 3.f - m_vItem.front().cy));
-	m_psv->SetMax(int(y - yInit - m_cyLinePadding + cy / 3.f * 2.f));
-	m_psv->SetPage((int)cy);
-	m_psv->SetViewSize((int)cy);
+	m_psv->SetMin(-cy / 3.f - m_vItem.front().cy);
+	m_psv->SetMax(y - yInit - m_cyLinePadding + cy / 3.f * 2.f);
+	m_psv->SetPage(cy);
+	m_psv->SetViewSize(cy);
 	m_SB.SetVisible(m_psv->IsVisible());
 }
 
@@ -940,9 +936,9 @@ void CVeLrc::ScrManualScrolling()
 	m_fAnValue = m_fPlayingItemScale;
 }
 
-void CVeLrc::ScrDoItemScroll(int iPos)
+void CVeLrc::ScrDoItemScroll(float fPos)
 {
-	float y = (float)-iPos;
+	float y = -fPos;
 	auto& Front = m_vItem.front();
 	Front.yNoDelay = y;
 	if (!(m_bItemAnDelay && ItmInDelayRange(0)))

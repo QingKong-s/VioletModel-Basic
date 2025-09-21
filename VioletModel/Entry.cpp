@@ -66,7 +66,7 @@ Msg = %s)",
 		pt.x, pt.y, size.cx, size.cy, nullptr, 0);
 	pWnd->Visible = TRUE;
 
-	pWnd->LwShow(TRUE);
+	//pWnd->LwShow(TRUE);
 
 	MSG msg;
 	while (GetMessageW(&msg, nullptr, 0, 0))

@@ -75,14 +75,14 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SIZE:
 	{
-		RECT rc;
-		rc.left = rc.top = (GetWidth() - CxyWndLogo) / 2;
+		D2D1_RECT_F rc;
+		rc.left = rc.top = (GetWidthF() - CxyWndLogo) / 2;
 		rc.right = rc.left + CxyWndLogo;
 		rc.bottom = rc.top + CxyWndLogo;
 		m_LAIcon.SetRect(rc);
 
-		const int Padding = (int)GetTheme()->GetMetrics(Dui::Metrics::SmallPadding);
-		m_TAB.SetRect({ Padding, rc.bottom + 30, GetWidth() - Padding, GetHeight() - Padding });
+		const auto Padding = GetTheme()->GetMetrics(Dui::Metrics::SmallPadding);
+		m_TAB.SetRect({ Padding,rc.bottom + 30.f,GetWidthF() - Padding,GetHeightF() - Padding });
 	}
 	break;
 
@@ -93,7 +93,7 @@ LRESULT CTabPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 		m_pDC->CreateSolidColorBrush({}, &m_pBrush);
 		m_LAIcon.Create(nullptr, Dui::DES_VISIBLE, 0,
-			0, 0, GetWidth(), GetWidth(), this, GetWnd());
+			0, 0, GetWidthF(), GetWidthF(), this, GetWnd());
 		m_LAIcon.SetOnlyBitmap(TRUE);
 		m_LAIcon.SetBkImgMode(eck::BkImgMode::StretchKeepAspectRatio);
 		m_LAIcon.SetFullElem(TRUE);

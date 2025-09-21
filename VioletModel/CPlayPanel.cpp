@@ -42,7 +42,7 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return 0;
 
 	case WM_SIZE:
-		m_LAWatermark.SetRect({ GetWidth() / 2,0,GetWidth() - 10,GetHeight() - 10 });
+		m_LAWatermark.SetRect({ GetWidthF() / 2.f,0,GetWidthF() - 10.f,GetHeightF() - 10.f });
 		return 0;
 
 	case WM_SETFONT:
@@ -82,14 +82,14 @@ LRESULT CPlayPanel::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_LAWatermark.SetColor(App->GetColor(GPal::PlayPanelWatermark));
 		m_LAWatermark.SetTextFormat(pTfWatermark.Get());
 
-		int x = DLeftMiniCover;
+		float x = DLeftMiniCover;
 		m_Cover.Create(nullptr, Dui::DES_VISIBLE | Dui::DES_NOTIFY_TO_WND, 0,
 			x, DTopMiniCover, CxyMiniCover, CxyMiniCover, this, pWnd);
 		x += (CxyMiniCover + CxPaddingPlayPanelText);
 
 		D2D1_COLOR_F crText;
 		GetTheme()->GetSysColor(Dui::SysColor::Text, crText);
-		int y = DTopTitle;
+		float y = DTopTitle;
 		m_LATitle.Create(L"Violet", Dui::DES_VISIBLE, 0,
 			x, y, CxMaxTitleAndArtist, CyPlayPanelText, this, pWnd);
 		m_LATitle.SetColor(crText);

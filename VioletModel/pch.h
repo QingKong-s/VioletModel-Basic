@@ -27,6 +27,7 @@
 #include "eck\CEnumFile.h"
 #include "eck\CoroutineHelper.h"
 #include "eck\ShellHelper.h"
+#include "eck\DwLayoutPath.h"
 
 #if VIOLET_WINRT
 //#include "eck\WinRtDCompInterop.h"

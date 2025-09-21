@@ -58,11 +58,13 @@ LRESULT CWndLrc::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		const auto lResult = __super::OnMsg(hWnd, uMsg, wParam, lParam);
 		const auto cxLyt = m_Layout.LoGetSize().cx;
-		m_Layout.Arrange((GetClientWidthLog() - cxLyt) / 2, CxyLrcPadding,
-			cxLyt, CxyLrcBtn);
+		m_Layout.Arrange(
+			int((GetClientWidthLog() - cxLyt) / 2),
+			(int)CxyLrcPadding,
+			(int)cxLyt, (int)CxyLrcBtn);
 		m_Lrc.SetRect({
 			CxyLrcPadding,
-			m_Layout.LoGetPos().y + m_Layout.LoGetSize().cy + CxyLrcPadding,
+			float(m_Layout.LoGetPos().y + m_Layout.LoGetSize().cy + CxyLrcPadding),
 			GetClientWidthLog() - CxyLrcPadding,
 			GetClientHeightLog() - CxyLrcPadding });
 		return lResult;
@@ -110,29 +112,30 @@ LRESULT CWndLrc::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_pVioletTheme = new CVioletTheme{};
 		m_pVioletTheme->Init(GetDeviceContext(), GetStdTheme());
 
+		constexpr MARGINS Mar{ .cxRightWidth = (int)CxyLrcPadding };
 		m_BTPrev.Create(nullptr, Dui::DES_VISIBLE, 0,
 			0, 0, CxyLrcBtn, CxyLrcBtn, nullptr, this);
 		m_BTPrev.SetBitmap(App->GetMainWindow().RealizeImage(GImg::PrevSolid));
 		m_BTPrev.SetTheme(m_pVioletTheme);
-		m_Layout.Add(&m_BTPrev, { .cxRightWidth = CxyLrcPadding }, eck::LF_FIX);
+		m_Layout.Add(&m_BTPrev, Mar, eck::LF_FIX);
 
 		m_BTPlay.Create(nullptr, Dui::DES_VISIBLE, 0,
 			CxyLrcBtn, 0, CxyLrcBtn, CxyLrcBtn, nullptr, this);
 		m_BTPlay.SetBitmap(App->GetMainWindow().RealizeImage(GImg::TriangleSolid));
 		m_BTPlay.SetTheme(m_pVioletTheme);
-		m_Layout.Add(&m_BTPlay, { .cxRightWidth = CxyLrcPadding }, eck::LF_FIX);
+		m_Layout.Add(&m_BTPlay, Mar, eck::LF_FIX);
 
 		m_BTNext.Create(nullptr, Dui::DES_VISIBLE, 0,
 			CxyLrcBtn * 2, 0, CxyLrcBtn, CxyLrcBtn, nullptr, this);
 		m_BTNext.SetBitmap(App->GetMainWindow().RealizeImage(GImg::NextSolid));
 		m_BTNext.SetTheme(m_pVioletTheme);
-		m_Layout.Add(&m_BTNext, { .cxRightWidth = CxyLrcPadding }, eck::LF_FIX);
+		m_Layout.Add(&m_BTNext, Mar, eck::LF_FIX);
 
 		m_BTLock.Create(nullptr, Dui::DES_VISIBLE, 0,
 			CxyLrcBtn * 3, 0, CxyLrcBtn, CxyLrcBtn, nullptr, this);
 		m_BTLock.SetBitmap(App->GetMainWindow().RealizeImage(GImg::LockSolid));
 		m_BTLock.SetTheme(m_pVioletTheme);
-		m_Layout.Add(&m_BTLock, { .cxRightWidth = CxyLrcPadding }, eck::LF_FIX);
+		m_Layout.Add(&m_BTLock, Mar, eck::LF_FIX);
 
 		m_BTClose.Create(nullptr, Dui::DES_VISIBLE, 0,
 			CxyLrcBtn * 4, 0, CxyLrcBtn, CxyLrcBtn, nullptr, this);
