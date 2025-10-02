@@ -1,6 +1,14 @@
 ﻿#pragma once
 class CPlayList
 {
+    // Im = Item Management
+    // Fl = Flat List
+    // FlSch = Flat List Search
+    // Gr = Group List
+    // Ply = Player
+
+    // 所有索引如无特别说明，均为真实平面列表索引（而不是搜索列表等的索引）
+
     friend class CPlayer;
     friend class CPlayListMgr;
 public:
@@ -35,17 +43,17 @@ private:
         std::vector<GROUPSUB> vItem{};
     };
 
-    eck::CRefStrW m_rsListFile{};		// 对应列表文件路径
-    eck::CRefStrW m_rsName{};			// 列表名称
+    eck::CRefStrW m_rsListFile{};	// 对应列表文件路径
+    eck::CRefStrW m_rsName{};		// 列表名称
 
     std::vector<ITEM> m_vFlat{};
     std::vector<GROUP> m_vGroup{};
 
     std::vector<int> m_vSearchResult{};	// 搜索结果，存储平面列表索引
 
-    int m_idxCurrFlat{};
-    int m_idxCurrGroup{};
-    int m_idxCurrGroupItem{};
+    int m_idxCurrFlat{ -1 };
+    int m_idxCurrGroup{ -1 };
+    int m_idxCurrGroupItem{ -1 };
 
     BITBOOL m_bGroup : 1{};
     BITBOOL m_bSort : 1{};
@@ -71,13 +79,6 @@ public:
     EckInlineNdCe auto& FlAtAbs(int idx) noexcept { return m_vFlat[idx]; }
     EckInlineNdCe ITEM& FlAt(int idx) noexcept { return FlSchIsActive() ? FlAtAbs(FlSchAt(idx)) : FlAtAbs(idx); }
 
-    /// <summary>
-    /// 插入项目。
-    /// 主操作列表为平面列表
-    /// </summary>
-    /// <param name="rsFile">文件全路径</param>
-    /// <param name="idx">插入位置，-1表示末尾</param>
-    /// <returns>索引</returns>
     int FlInsert(const eck::CRefStrW& rsFile, int idx = -1);
     int FlInsertEmpty(int idx = -1);
 
@@ -88,6 +89,7 @@ public:
     EckInlineNdCe BOOL FlSchIsActive() const noexcept { return !m_vSearchResult.empty(); }
     EckInlineNdCe int FlSchAt(int idx) noexcept { return m_vSearchResult[idx]; }
     EckInlineCe void FlSchCancel() noexcept { m_vSearchResult.clear(); }
+    EckInlineNdCe int FlSchGetRealIndex(int idx) noexcept { return FlSchIsActive() ? FlSchAt(idx) : idx; }
 
     EckInlineNdCe auto& GrAtGroup(int idxGroup) noexcept { return m_vGroup[idxGroup]; }
     EckInlineNdCe auto& GrAt(int idxGroup, int idxItem) noexcept { return m_vFlat[m_vGroup[idxGroup].vItem[idxItem].idxFlat]; }

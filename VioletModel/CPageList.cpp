@@ -490,6 +490,7 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             m_LytTopBar.Add(&m_TopBarDummySpace, {}, eck::LF_FILL, 1);
 
+            m_EDSearchItem.TxSetProp(TXTBIT_MULTILINE, 0, FALSE);
             m_EDSearchItem.Create(nullptr, Dui::DES_VISIBLE, 0,
                 0, 0, 200, CyStdEdit, this);
             m_EDSearchItem.SetEventMask(ENM_CHANGE);
@@ -531,8 +532,9 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     const auto idx = m_GLList.HitTest(ht);
                     if (idx < 0)
                         break;
-                    App->GetPlayer().SetList(GetCurrPlayList());
-                    App->GetPlayer().Play(idx);
+                    const auto pList = GetCurrPlayList();
+                    App->GetPlayer().SetList(pList);
+                    App->GetPlayer().Play(pList->FlSchGetRealIndex(idx));
                 }
                 break;
                 }

@@ -50,7 +50,6 @@ BOOL CWndMain::OnCreate(HWND hWnd, CREATESTRUCT* pcs)
 
 	RegisterTimeLine(this);
 
-	eck::GetThreadCtx()->UpdateDefColor();
 	MARGINS m{};// 不能使用-1，否则会绘制标准标题栏
 	m.cxLeftWidth = 65536 * 4;
 	DwmExtendFrameIntoClientArea(hWnd, &m);

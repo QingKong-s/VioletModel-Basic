@@ -108,7 +108,7 @@ PlayErr CPlayer::Play(int idx)
 		return PlayErr::NoPlayList;
 	Stop(TRUE);
 	GetList()->PlySetCurrentItem(idx);
-	return PlayWorker(GetList()->FlAt(idx));
+	return PlayWorker(GetList()->FlAtAbs(idx));
 }
 
 PlayErr CPlayer::Play(int idxGroup, int idxItem)

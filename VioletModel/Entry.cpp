@@ -44,6 +44,8 @@ Msg = %s)",
 		return 0;
 	}
 
+	eck::GetThreadCtx()->UpdateDefColor();
+
 	App = new CApp{};
 	CApp::Init();
 //#ifdef _DEBUG

@@ -163,7 +163,8 @@ void CApp::LoadSkin(BOOL bLoadAll)
 		SafeRelease(m_Img[i]);
 		if (FAILED(eck::CreateWicBitmap(m_Img[i], rsPath.Data())))
 		{
-			eck::MsgBox(eck::Format(L"缺少资源文件：%s", ImgFile[i]));
+            eck::MsgBox(eck::Format(L"缺少资源文件：%s", ImgFile[i]),
+				L"VioletModel", MB_ICONERROR);
 			abort();
 		}
 	}
