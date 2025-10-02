@@ -27,7 +27,7 @@ void CPlayList::ImEnsureLoaded()
 	}
 }
 
-BOOL CPlayList::IsActive() noexcept
+BOOL CPlayList::IsSelectedByPlayer() noexcept
 {
 	return App->GetPlayer().GetList() == this;
 }
@@ -71,6 +71,8 @@ int CPlayList::FlInsertEmpty(int idx)
 void CPlayList::FlSchDoSearch(std::wstring_view svKeyWord)
 {
 	m_vSearchResult.clear();
+	if (svKeyWord.empty())
+		return;
 	for (int i{}; const auto& e : m_vFlat)
 	{
 		if (e.rsName.FindI(svKeyWord) >= 0 ||

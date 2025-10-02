@@ -8,6 +8,15 @@ private:
 		ComPtr<eck::CD2DImageList> pIl;
 	};
 
+	struct TSKPARAM_LOAD_META_DATA
+	{
+		std::shared_ptr<CPlayList> pList;
+		int idxBeginDisplay{};
+		int idxEndDisplay{};
+		ComPtr<eck::CD2DImageList> pIl;
+		std::vector<int> vItem;
+    };;
+
 	Dui::CEdit m_EDSearch{};
 	Dui::CTabList m_TBLPlayList{};
 	eck::CLinearLayoutV m_LytPlayList{};
@@ -27,13 +36,7 @@ private:
 	ID2D1Bitmap1* m_pBmpDefCover{};
 	std::vector<LIST_INFO> m_vListInfo{};
 
-	/// <summary>
-	/// 加载歌曲数据
-	/// </summary>
-	/// <param name="pList">列表</param>
-	/// <param name="vItem">待加载的歌曲索引，协程移动此参数使自己拥有所有权</param>
-	eck::CoroTask<void> TskLoadSongData(std::shared_ptr<CPlayList> pList,
-		ComPtr<eck::CD2DImageList> pIl, std::vector<int>&& vItem);
+    eck::CoroTask<void> TskLoadSongData(TSKPARAM_LOAD_META_DATA&& Param);
 
 	CPlayList* GetCurrPlayList();
 	std::shared_ptr<CPlayList> GetCurrPlayListShared();
