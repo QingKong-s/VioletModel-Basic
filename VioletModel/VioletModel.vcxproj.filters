@@ -132,10 +132,10 @@
     <ClInclude Include="CVioletTheme.h">
       <Filter>UI\其他</Filter>
     </ClInclude>
-    <ClInclude Include="ILyricRenderer.h">
+    <ClInclude Include="CLrGeometryRealization.h">
       <Filter>UI\其他</Filter>
     </ClInclude>
-    <ClInclude Include="CLrGeometryRealization.h">
+    <ClInclude Include="CLyricRendererBase.h">
       <Filter>UI\其他</Filter>
     </ClInclude>
   </ItemGroup>

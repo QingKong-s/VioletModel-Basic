@@ -126,6 +126,7 @@ private:
 	BOOL TblOnCommand(WPARAM wParam);
 	HRESULT TblUpdateState();
 	HRESULT TblUpdateProgress();
+	HRESULT TblOnTaskbarButtonCreated();
 
 	HRESULT SmtcInit() noexcept;
 #if VIOLET_WINRT

@@ -102,7 +102,7 @@
       <ForcedIncludeFiles>
       </ForcedIncludeFiles>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,7 +156,7 @@
       <ForcedIncludeFiles>
       </ForcedIncludeFiles>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -200,6 +200,7 @@
     <ClInclude Include="CApp.h" />
     <ClInclude Include="CBass.h" />
     <ClInclude Include="CCompPlayPageAn.h" />
+    <ClInclude Include="CLyricRendererBase.h" />
     <ClInclude Include="CLrGeometryRealization.h" />
     <ClInclude Include="CMediaLib.h" />
     <ClInclude Include="CPlayListFile.h" />
@@ -223,7 +224,6 @@
     <ClInclude Include="CVeCover.h" />
     <ClInclude Include="CVeLrc.h" />
     <ClInclude Include="CWndMain.h" />
-    <ClInclude Include="ILyricRenderer.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />

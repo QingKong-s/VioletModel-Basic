@@ -1,171 +1,155 @@
 ﻿#pragma once
+#include "CLyricRendererBase.h"
+
 class CVeLrc : public Dui::CElem, public eck::CFixedTimeLine
 {
-	// Isb = Item Select Background
-	// Mi = Mouse Idle
-	// Se = Scroll Expand
-	// Itm = Item
-	// Scr = Scroll
+    // Isb = Item Select Background
+    // Mi = Mouse Idle
+    // Se = Scroll Expand
+    // Itm = Item
+    // Scr = Scroll
 public:
-	enum : size_t
-	{
-		CriNormal,
-		CriHiLight,
-		CriMax
-	};
+    enum : size_t
+    {
+        CriNormal,
+        CriHiLight,
+        CriMax
+    };
 private:
-	struct ITEM
-	{
-		// 不要修改前两个字段的位置
-		ComPtr<IDWriteTextLayout> pLayout{};
-		ComPtr<IDWriteTextLayout> pLayoutTrans{};
-		ComPtr<ID2D1GeometryRealization> pGr{};
-		float x{};
-		float y{};
-		float cy{};
-		float cx{};
-		float cxTrans{};
-		float yNoDelay{};	// 没有延迟的情况下歌词行的Y坐标
+    struct ITEM
+    {
+        // 不要修改前两个字段的位置
+        ComPtr<IDWriteTextLayout> pLayout{};
+        ComPtr<IDWriteTextLayout> pLayoutTrans{};
+        ComPtr<ID2D1GeometryRealization> pGr{};
+        float x{};
+        float y{};
+        float cy{};
+        float cx{};
+        float cxTrans{};
+        float yNoDelay{};	// 没有延迟的情况下歌词行的Y坐标
 
-		float kAnSelBkg{};	// 0~1
-		float msAnSelBkg{};	// 0~AnDurLrcSelBkg
-		float yAnDelayDst{};// 目标位置
-		float yAnDelaySrc{};// 起始位置
-		float msAnDelay{};	// 0~AnDurLrcDelay，延迟动画曲线用
-		float msDelay{};	// 0~DurMaxItemDelay，已延迟时间，达到最大值时开始进行移动动画
-		BITBOOL bSel : 1{};				// 选中
-		BITBOOL bCacheValid : 1{};		// 前三个字段是否有效
-		BITBOOL bAnSelBkg : 1{};		// 正在运行项目热点背景动画
-		BITBOOL bAnSelBkgEnlarge : 1{};	// 正在扩大，即鼠标已移入
+        float kAnSelBkg{};	// 0~1
+        float msAnSelBkg{};	// 0~AnDurLrcSelBkg
+        float yAnDelayDst{};// 目标位置
+        float yAnDelaySrc{};// 起始位置
+        float msAnDelay{};	// 0~AnDurLrcDelay，延迟动画曲线用
+        float msDelay{};	// 0~DurMaxItemDelay，已延迟时间，达到最大值时开始进行移动动画
+        BITBOOL bSel : 1{};				// 选中
+        BITBOOL bCacheValid : 1{};		// 前三个字段是否有效
+        BITBOOL bAnSelBkg : 1{};		// 正在运行项目热点背景动画
+        BITBOOL bAnSelBkgEnlarge : 1{};	// 正在扩大，即鼠标已移入
 
-		void OnSetHot();
-		void OnKillHot();
-	};
+        void OnSetHot();
+        void OnKillHot();
+    };
 
-	ID2D1DeviceContext1* m_pDC1{};
-	ID2D1SolidColorBrush* m_pBrush{};
-	ID2D1GeometryRealization* m_pGrEmptyText{};
-	ID2D1LinearGradientBrush* m_pBrFade{};
+    Dui::CScrollBar m_SB{};
+    eck::CInertialScrollView* m_psv{};
 
-	IDWriteTextFormat* m_pTextFormatTrans{};
+    CLyricRendererBase* m_pRenderer{};
 
-	Dui::CScrollBar m_SB{};
-	eck::CInertialScrollView* m_psv{};
+    Lyric::CLyric* m_pLrc{};
+    std::vector<ITEM> m_vItem{};
+    int m_idxTop{ -1 };
+    int m_idxHot{ -1 };
+    int m_idxMark{ -1 };
+    int m_idxCurr{ -1 };
 
-	D2D1_COLOR_F m_Color[CriMax]{};
+    int m_idxPrevAnItem{ -1 },
+        m_idxCurrAnItem{ -1 };
+    float m_fAnValue{ 1.f };
 
-	Lyric::CLyric* m_pLrc{};
-	std::vector<ITEM> m_vItem{};
-	int m_idxTop{ -1 };
-	int m_idxHot{ -1 };
-	int m_idxMark{ -1 };
-	int m_idxCurr{ -1 };
+    float m_msScrollExpand{};
+    float m_kScrollExpand{};
 
-	int m_idxPrevAnItem{ -1 },
-		m_idxCurrAnItem{ -1 };
-	float m_fAnValue{ 1.f };
+    int m_tMouseIdle{};
 
-	float m_msScrollExpand{};
-	float m_kScrollExpand{};
+    int m_idxDelayBegin{ -1 };
+    int m_idxDelayEnd{ -1 };
 
-	int m_tMouseIdle{};
+    float m_msItemAnDelay{ 200.f };		// 当前行发生更改时歌词行之间开始动画的延迟
+    float m_cyLinePadding{ 10.f };		// 项目间距
+    eck::Align m_eAlignH{ eck::Align::Near };	// 水平对齐
 
-	int m_idxDelayBegin{ -1 };
-	int m_idxDelayEnd{ -1 };
-
-	float m_msItemAnDelay{ 200.f };		// 当前行发生更改时歌词行之间开始动画的延迟
-	float m_cyLinePadding{ 10.f };		// 项目间距
-	float m_fPlayingItemScale{ 1.1f };	// 正在播放的歌词行缩放比例
-	float m_cxyLineMargin{ 14.f };		// 项目内容边距
-	eck::Align m_eAlignH{ eck::Align::Near };	// 水平对齐
-
-	BOOLEAN m_bAnSelBkg{};		// 正在运行项目热点背景动画
-	BOOLEAN m_bEnlarging{};		// 正在放大当前歌词行
-	BOOLEAN m_bScrollExpand{};	// 由于用户滚动操作，所有歌词行都正在放大或缩小
-	BOOLEAN m_bSeEnlarging{};	// 指示ScrollExpand的操作是否为放大
-	BOOLEAN m_bEnableItemAnDelay{};	// 启用项目动画延迟
-	BOOLEAN m_bItemAnDelay{};		// 当前正在运行项目动画延迟
-	BOOLEAN m_bDelayScrollUp{};		// 指示项目是否向上运动
-	BOOLEAN m_bTopBtmFade{};		// 指示是否启用顶部和底部渐变
+    BOOLEAN m_bAnSelBkg{};		// 正在运行项目热点背景动画
+    BOOLEAN m_bEnlarging{};		// 正在放大当前歌词行
+    BOOLEAN m_bScrollExpand{};	// 由于用户滚动操作，所有歌词行都正在放大或缩小
+    BOOLEAN m_bSeEnlarging{};	// 指示ScrollExpand的操作是否为放大
+    BOOLEAN m_bEnableItemAnDelay{};	// 启用项目动画延迟
+    BOOLEAN m_bItemAnDelay{};		// 当前正在运行项目动画延迟
+    BOOLEAN m_bDelayScrollUp{};		// 指示项目是否向上运动
 
 
-	void ScrAnProc(float fPos, float fPrevPos);
+    void ScrAnProc(float fPos, float fPrevPos);
 
-	void ItmReCalcTop();
-	// 返回项目底边加行间距，WM_PAINT使用此值判断重画终止位置
-	float ItmPaint(int idx);
-	void ItmGetRect(int idx, _Out_ D2D1_RECT_F& rc);
-	int ItmIndexFromY(float y);
-	void ItmLayout();
-	// 取当前项目中线应该在的坐标
-	EckInlineNdCe float ItmGetCurrentItemTarget() const { return GetHeightF() / 3.f; }
+    void ItmReCalcTop();
+    // 返回项目底边加行间距，WM_PAINT使用此值判断重画终止位置
+    float ItmPaint(int idx);
+    void ItmGetRect(int idx, _Out_ D2D1_RECT_F& rc);
+    int ItmIndexFromY(float y);
+    void ItmLayout();
+    // 取当前项目中线应该在的坐标
+    EckInlineNdCe float ItmGetCurrentItemTarget() const { return GetHeightF() / 3.f; }
 
-	void ItmInvalidate(int idx);
+    void ItmInvalidate(int idx);
 
-	void ScrAutoScrolling();
-	void ScrManualScrolling();
-	void ScrDoItemScroll(float fPos);
-	void ScrFixItemPosition();
+    void ScrAutoScrolling();
+    void ScrManualScrolling();
+    void ScrDoItemScroll(float fPos);
+    void ScrFixItemPosition();
 
-	void IsbWakeRenderThread()
-	{
-		if (!m_bAnSelBkg)
-		{
-			m_bAnSelBkg = TRUE;
-			GetWnd()->WakeRenderThread();
-		}
-	}
+    void IsbWakeRenderThread()
+    {
+        if (!m_bAnSelBkg)
+        {
+            m_bAnSelBkg = TRUE;
+            GetWnd()->WakeRenderThread();
+        }
+    }
 
-	void MiBeginDetect();
-	EckInlineNdCe BOOL MiIsManualScroll() { return m_tMouseIdle > 0; }
+    void MiBeginDetect();
+    EckInlineNdCe BOOL MiIsManualScroll() { return m_tMouseIdle > 0; }
 
-	void SeBeginExpand(BOOL bEnlarge);
+    void SeBeginExpand(BOOL bEnlarge);
 
-	void ItmDelayPrepare(float dy);
-	void ItmDelayComplete();
-	EckInlineNdCe int ItmInDelayRange(int idx) const { return idx >= m_idxDelayBegin && idx <= m_idxDelayEnd; }
-	EckInlineNdCe BOOL ItmIsDelaying() const
-	{
-		return m_bItemAnDelay && m_idxDelayBegin >= 0 &&
-			m_idxDelayEnd >= m_idxDelayBegin;
-	}
-
-	void ReCreateFadeBrush();
+    void ItmDelayPrepare(float dy);
+    void ItmDelayComplete();
+    EckInlineNdCe int ItmInDelayRange(int idx) const { return idx >= m_idxDelayBegin && idx <= m_idxDelayEnd; }
+    EckInlineNdCe BOOL ItmIsDelaying() const
+    {
+        return m_bItemAnDelay && m_idxDelayBegin >= 0 &&
+            m_idxDelayEnd >= m_idxDelayBegin;
+    }
 public:
-	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	// 调用方检查歌词内容，若为空则调用此函数设置空提示文本
-	HRESULT LrcUpdateEmptyText(std::wstring_view svEmptyText);
+    // 仅在创建控件前调用一次
+    void LrcSetRenderer(CLyricRendererBase* pRenderer)
+    {
+        EckAssert(!CElem::IsValid() && !m_pRenderer);
+        m_pRenderer = pRenderer;
+        m_pRenderer->AddRef();
+    }
 
-	// 调用方启动定时器检查当前时间对应的歌词行，每次检查后将结果传递到此方法
-	HRESULT LrcSetCurrentLine(int idxCurr);
+    void LrcSetColor(_In_reads_(CriMax) const D2D1_COLOR_F* pcr) { m_pRenderer->SetColor(pcr); }
 
-	HRESULT LrcInit(Lyric::CLyric* pLyric);
+    // 调用方启动定时器检查当前时间对应的歌词行，每次检查后将结果传递到此方法
+    HRESULT LrcSetCurrentLine(int idxCurr);
 
-	void LrcClear();
+    HRESULT LrcInit(Lyric::CLyric* pLyric);
 
-	void SetTextFormatTrans(IDWriteTextFormat* pTf);
+    void LrcClear();
 
-	EckInlineCe void SetColor(size_t idx, const D2D1_COLOR_F& cr)
-	{
-		if (idx >= CriMax)
-			return;
-		m_Color[idx] = cr;
-	}
+    void SetTextFormatTrans(IDWriteTextFormat* pTf);
 
-	EckInlineCe void SetColor(_In_reads_(CriMax) const D2D1_COLOR_F* pcr)
-	{
-		for (size_t i = 0; i < CriMax; ++i)
-			m_Color[i] = pcr[i];
-	}
+    int ItmHitTest(POINT pt);
 
-	int ItmHitTest(POINT pt);
+    void Tick(int iMs) override;
 
-	void Tick(int iMs) override;
+    BOOL IsValid() override { return m_bAnSelBkg || m_bItemAnDelay; }
 
-	BOOL IsValid() override { return m_bAnSelBkg || m_bItemAnDelay; }
+    EckInlineNdCe BOOL IsEmpty() const { return m_vItem.empty(); }
 
-	EckInlineNdCe BOOL IsEmpty() const { return m_vItem.empty(); }
-
-	EckInlineNdCe auto& GetScrollBar() { return m_SB; }
+    EckInlineNdCe auto& GetScrollBar() { return m_SB; }
 };

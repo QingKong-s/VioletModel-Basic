@@ -2,7 +2,7 @@
 #include "CPagePlaying.h"
 #include "CApp.h"
 #include "CWndMain.h"
-
+#include "CLrGeometryRealization.h"
 
 void CPagePlaying::UpdateBlurredCover()
 {
@@ -105,7 +105,6 @@ void CPagePlaying::SetEmptyText()
 	m_LATitle.SetText(L"Violet Model");
 	m_LAArtist.SetText(L"AuroraStudio");
 	m_LAAlbum.SetText(L"VC++/Win32");
-	m_Lrc.LrcUpdateEmptyText(L"Violet Model");
 }
 
 void CPagePlaying::OnColorSchemeChanged()
@@ -127,7 +126,7 @@ void CPagePlaying::OnColorSchemeChanged()
 		App->GetColor(GPal::LrcTextNormal),
 		App->GetColor(GPal::LrcTextHighlight),
 	};
-	m_Lrc.SetColor(crLrc);
+	m_Lrc.LrcSetColor(crLrc);
 }
 
 LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -227,6 +226,9 @@ LRESULT CPagePlaying::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		m_Cover.Create(nullptr, Dui::DES_VISIBLE, 0,
 			50, 50, 200, 200, this);
+		const auto pLrcRenderer = new CLrGeometryRealization{};
+        m_Lrc.LrcSetRenderer(pLrcRenderer);
+		pLrcRenderer->Release();
 		m_Lrc.Create(nullptr, Dui::DES_VISIBLE, 0,
 			50, 260, 200, 100, this);
 

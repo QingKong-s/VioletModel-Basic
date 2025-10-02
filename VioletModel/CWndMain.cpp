@@ -231,6 +231,7 @@ HWND CWndMain::Create(PCWSTR pszText, DWORD dwStyle, DWORD dwExStyle,
 	TblCreateObjectAndInit();
 	const auto hWnd = __super::Create(pszText, dwStyle, dwExStyle,
 		x, y, cx, cy, hParent, hMenu, pData);
+	TblOnTaskbarButtonCreated();
 	return hWnd;
 }
 
@@ -302,13 +303,7 @@ LRESULT CWndMain::OnMsg(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	if (uMsg == MsgTaskbarButtonCreated)
 	{
 		if (m_pTaskbarList.Get())
-		{
-			TblSetup();
-			m_WndTbGhost.SetIconicThumbnail();
-			TblUpdateToolBarIcon();
-			TblUpdateState();
-			TblUpdateProgress();
-		}
+			TblOnTaskbarButtonCreated();
 		return 0;
 	}
 	switch (uMsg)

@@ -158,6 +158,21 @@ HRESULT CWndMain::TblUpdateProgress()
 		ULONGLONG(Player.GetTotalTime() * 1000.));
 }
 
+HRESULT CWndMain::TblOnTaskbarButtonCreated()
+{
+	HRESULT hr;
+	if (FAILED(hr = TblSetup()))
+		return hr;
+	m_WndTbGhost.SetIconicThumbnail();
+	if (FAILED(hr = TblUpdateToolBarIcon()))
+		return hr;
+	if (FAILED(hr = TblUpdateState()))
+		return hr;
+	if (FAILED(hr = TblUpdateProgress()))
+		return hr;
+	return S_OK;
+}
+
 HRESULT CWndMain::SmtcInit() noexcept
 {
 #if VIOLET_WINRT
