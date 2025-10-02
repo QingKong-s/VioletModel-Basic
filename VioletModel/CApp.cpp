@@ -42,6 +42,7 @@ constexpr PCWSTR ImgFile[]
 	LR"(Cross.png)",
 	LR"(CrossSolid.png)",
 	LR"(Effect.png)",
+    LR"(Locate.png)",
 
 	LR"(AboutBg.png)",
 	LR"(AboutLogo.png)",

@@ -365,6 +365,18 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             return 0;
             }
+        else if (wParam == (WPARAM)&m_BTLocate)
+            switch (((Dui::DUINMHDR*)lParam)->uCode)
+            {
+            case Dui::EE_COMMAND:
+            {
+                const auto pList = GetCurrPlayList();
+                if (!pList)
+                    break;
+                m_GLList.EnsureVisible(TRUE, pList->PlyGetCurrentItem());
+            }
+            return 0;
+            }
         else if (wParam == (WPARAM)&m_EDSearchItem)
             switch (((Dui::DUINMHDR*)lParam)->uCode)
             {
@@ -418,7 +430,6 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
         m_TBLPlayList.SetTextFormat(GetTextFormat());
         m_EDSearch.SetTextFormat(GetTextFormat());
         m_EDSearchItem.SetTextFormat(GetTextFormat());
-        m_BTAddFile.SetTextFormat(GetTextFormat());
     }
     return 0;
 
@@ -461,13 +472,21 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         {
             ComPtr<IDWriteTextFormat> pTextFormat;
-            App->GetFontFactory().NewFont(pTextFormat.RefOf(), eck::Align::Near,
-                eck::Align::Center, (float)CyFontNormal, 400, TRUE);
+            App->GetFontFactory().NewFont(pTextFormat.RefOfClear(), eck::Align::Center,
+                eck::Align::Center, (float)CyFontNormal, 400);
             pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
             m_BTAddFile.Create(L"添加文件", Dui::DES_VISIBLE, 0,
-                0, 0, 100, 30, this);
+                0, 0, 100, CyStdEdit, this);
+            m_BTAddFile.SetTextFormat(pTextFormat.Get());
+            m_BTAddFile.SetBitmap(((CWndMain*)GetWnd())->RealizeImage(GImg::Add));
             m_LytTopBar.Add(&m_BTAddFile, {}, eck::LF_FIX);
+
+            m_BTLocate.Create(L"定位当前", Dui::DES_VISIBLE, 0,
+                0, 0, 100, CyStdEdit, this);
+            m_BTLocate.SetTextFormat(pTextFormat.Get());
+            m_BTLocate.SetBitmap(((CWndMain*)GetWnd())->RealizeImage(GImg::Locate));
+            m_LytTopBar.Add(&m_BTLocate, { .cxLeftWidth = (int)CxPageIntPadding }, eck::LF_FIX);
 
             m_LytTopBar.Add(&m_TopBarDummySpace, {}, eck::LF_FILL, 1);
 
@@ -478,6 +497,10 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             m_LytList.Add(&m_LytTopBar, { .cyBottomHeight = (int)CxPageIntPadding },
                 eck::LF_FIX_HEIGHT | eck::LF_FILL_WIDTH);
+
+            App->GetFontFactory().NewFont(pTextFormat.RefOfClear(), eck::Align::Near,
+                eck::Align::Center, (float)CyFontNormal, 400, TRUE);
+            pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
             m_GLList.Create(nullptr, Dui::DES_VISIBLE, 0,
                 0, 0, 0, 0, this);

@@ -43,6 +43,7 @@ enum class GImg
 	Cross,
 	CrossSolid,
 	Effect,
+	Locate,
 
 	Priv_InvertEnd,
 

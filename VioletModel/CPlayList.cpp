@@ -27,7 +27,7 @@ void CPlayList::ImEnsureLoaded()
 	}
 }
 
-BOOL CPlayList::IsSelectedByPlayer() noexcept
+BOOL CPlayList::PlyIsSelected() noexcept
 {
 	return App->GetPlayer().GetList() == this;
 }

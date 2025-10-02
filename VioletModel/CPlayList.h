@@ -112,9 +112,7 @@ public:
 
     EckInlineNdCe int GrGetGroupCount() const noexcept { return (int)m_vGroup.size(); }
 
-    BOOL IsSelectedByPlayer() noexcept;
-
-    // ---下列方法仅供播放器使用---
+    BOOL PlyIsSelected() noexcept;
 
     EckInlineCe void PlySetCurrentItem(int idx) noexcept { m_idxCurrFlat = idx; }
     EckInlineCe void PlySetCurrentItem(int idxGroup, int idxItem) noexcept
@@ -129,7 +127,6 @@ public:
         idxGroup = m_idxCurrGroup;
         return m_idxCurrGroupItem;
     }
-    // -------------------------
 
     EckInlineCe void EnableGroup(BOOL b) noexcept { m_bGroup = b; }
     EckInlineNdCe BOOL IsGroupEnabled() const noexcept { return m_bGroup; }
