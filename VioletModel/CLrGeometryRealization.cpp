@@ -33,14 +33,32 @@ void CLrGeometryRealization::ReCreateFadeBrush()
     m_pDC->CreateLinearGradientBrush(Prop, pStopCollection.Get(), &m_pBrFade);
 }
 
-HRESULT CLrGeometryRealization::LrBindDeviceContext(ID2D1DeviceContext* pDC)
+HRESULT CLrGeometryRealization::LrInit(const LRD_INIT& Opt)
 {
-    if (SUCCEEDED(pDC->QueryInterface(m_pDC.AddrOfClear())))
+    if (SUCCEEDED(Opt.pD2DContext->QueryInterface(m_pDC.AddrOfClear())))
     {
-        pDC->CreateSolidColorBrush({}, m_pBrush.AddrOfClear());
+        m_pDC->CreateSolidColorBrush({}, m_pBrush.AddrOfClear());
         return S_OK;
     }
     return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+}
+
+void CLrGeometryRealization::LrBeginDraw()
+{
+    // 可以优化为不使用图层，但是太麻烦了不做了
+    if (m_bTopBtmFade)
+    {
+        D2D1_LAYER_PARAMETERS1 LyParam{ D2D1::LayerParameters1() };
+        LyParam.contentBounds = { 0.f,0.f,m_cxView,m_cyView };
+        LyParam.opacityBrush = m_pBrFade.Get();
+        m_pDC->PushLayer(LyParam, nullptr);
+    }
+}
+
+void CLrGeometryRealization::LrEndDraw()
+{
+    if (m_bTopBtmFade)
+        m_pDC->PopLayer();
 }
 
 void CLrGeometryRealization::LrItmSetCount(int cItems)
@@ -50,7 +68,7 @@ void CLrGeometryRealization::LrItmSetCount(int cItems)
 }
 
 HRESULT CLrGeometryRealization::LrItmUpdateText(int idx,
-    const Lyric::Line& Line, _Out_ LYRIC_TEXT_METRICS& Met)
+    const Lyric::Line& Line, _Out_ LRD_TEXT_METRICS& Met)
 {
     EckAssert(idx >= 0 && idx < (int)m_vItem.size());
     DWRITE_TEXT_METRICS Metrics{};
@@ -75,11 +93,14 @@ HRESULT CLrGeometryRealization::LrItmUpdateText(int idx,
         Met.cyTrans = Metrics.height;
     }
     else
+    {
         e.pLayoutTrans.Clear();
+        Met.cxTrans = e.cxTrans = 0.f;
+    }
     return S_OK;
 }
 
-void CLrGeometryRealization::LrItmDraw(const LYRIC_DRAW& Opt)
+void CLrGeometryRealization::LrItmDraw(const LRD_DRAW& Opt)
 {
     EckAssert(Opt.idx >= 0 && Opt.idx < (int)m_vItem.size());
     const auto& Item = m_vItem[Opt.idx];
@@ -182,7 +203,7 @@ void CLrGeometryRealization::LrItmDraw(const LYRIC_DRAW& Opt)
     m_pDC->SetTransform(Mat0);
 }
 
-HRESULT CLrGeometryRealization::LrUpdateEmptyText(const LYRIC_EMTRY_TEXT& Opt)
+HRESULT CLrGeometryRealization::LrUpdateEmptyText(const LRD_EMTRY_TEXT& Opt)
 {
     m_pGrEmptyText.Clear();
     m_cxEmptyText = m_cyEmptyText = 0.f;

@@ -1,5 +1,11 @@
 #pragma once
-struct LYRIC_TEXT_METRICS
+struct LRD_INIT
+{
+    ID2D1DeviceContext* pD2DContext{};
+    ID3D11DeviceContext* pD3DContext{};
+};
+
+struct LRD_TEXT_METRICS
 {
     float cxMain{};
     float cyMain{};
@@ -15,7 +21,7 @@ enum : BYTE
     LRIF_CURR_AN = 1 << 2,
     LRIF_SCROLL_EXPAND = 1 << 3,
 };
-struct LYRIC_DRAW
+struct LRD_DRAW
 {
     int idx;
 
@@ -33,7 +39,7 @@ struct LYRIC_DRAW
     float kScrollExpand;	// 0~1，指定LRIF_SCROLL_EXPAND时有效
 };
 
-struct LYRIC_EMTRY_TEXT
+struct LRD_EMTRY_TEXT
 {
     std::wstring_view svText;
 };
@@ -83,13 +89,14 @@ public:
     void SetMainToTransDistance(float f) { m_dMainToTrans = f; }
     float GetMainToTransDistance() const { return m_dMainToTrans; }
 
-    virtual HRESULT LrBindDeviceContext(ID2D1DeviceContext* pDC) = 0;
-    virtual HRESULT LrBindDeviceContext(ID3D11DeviceContext* pDC) = 0;
+    virtual HRESULT LrInit(const LRD_INIT& Opt) = 0;
+    virtual void LrBeginDraw() = 0;
+    virtual void LrEndDraw() = 0;
     virtual void LrItmSetCount(int cItems) = 0;
     virtual HRESULT LrItmUpdateText(int idx, const Lyric::Line& Line,
-        _Out_ LYRIC_TEXT_METRICS& Met) = 0;
-    virtual void LrItmDraw(const LYRIC_DRAW& Opt) = 0;
-    virtual HRESULT LrUpdateEmptyText(const LYRIC_EMTRY_TEXT& Opt) = 0;
+        _Out_ LRD_TEXT_METRICS& Met) = 0;
+    virtual void LrItmDraw(const LRD_DRAW& Opt) = 0;
+    virtual HRESULT LrUpdateEmptyText(const LRD_EMTRY_TEXT& Opt) = 0;
     virtual void LrSetViewSize(float cx, float cy) = 0;
     virtual void LrDpiChanged(float fNewDpi) = 0;
     virtual void LrInvalidate() = 0;

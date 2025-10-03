@@ -29,16 +29,14 @@ private:
 
     void ReCreateFadeBrush();
 public:
-    HRESULT LrBindDeviceContext(ID2D1DeviceContext* pDC) override;
-    HRESULT LrBindDeviceContext(ID3D11DeviceContext* pDC) override
-    {
-        return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
-    }
+    HRESULT LrInit(const LRD_INIT& Opt) override;
+    void LrBeginDraw() override;
+    void LrEndDraw() override;
     void LrItmSetCount(int cItems) override;
     HRESULT LrItmUpdateText(int idx, const Lyric::Line& Line,
-        _Out_ LYRIC_TEXT_METRICS& Met) override;
-    void LrItmDraw(const LYRIC_DRAW& Opt) override;
-    HRESULT LrUpdateEmptyText(const LYRIC_EMTRY_TEXT& Opt) override;
+        _Out_ LRD_TEXT_METRICS& Met) override;
+    void LrItmDraw(const LRD_DRAW& Opt) override;
+    HRESULT LrUpdateEmptyText(const LRD_EMTRY_TEXT& Opt) override;
     void LrSetViewSize(float cx, float cy) override;
     void LrDpiChanged(float fNewDpi) override;
     void LrInvalidate() override;

@@ -95,7 +95,7 @@ int CVeLrc::ItmHitTest(POINT pt)
 float CVeLrc::ItmPaint(int idx)
 {
     const auto& e = m_vItem[idx];
-    LYRIC_DRAW Opt
+    LRD_DRAW Opt
     {
         .idx = idx,
         .eAlignH = m_eAlignH,
@@ -257,11 +257,13 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         Dui::ELEMPAINTSTRU ps;
         BeginPaint(ps, wParam, lParam);
+        m_pRenderer->LrBeginDraw();
         for (int i = m_idxTop; i < (int)m_vItem.size(); ++i)
         {
             if (ItmPaint(i) > GetHeightF())
                 break;
         }
+        m_pRenderer->LrEndDraw();
         ECK_DUI_DBG_DRAW_FRAME;
         EndPaint(ps);
     }
@@ -516,7 +518,8 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         GetWnd()->RegisterTimeLine(this);
 
-        m_pRenderer->LrBindDeviceContext(m_pDC);
+        const LRD_INIT InitOpt{ .pD2DContext = m_pDC, };
+        m_pRenderer->LrInit(InitOpt);
         m_pRenderer->SetTheme(GetTheme());
 
         m_SB.Create(nullptr, 0, 0,
@@ -731,7 +734,7 @@ void CVeLrc::ItmLayout()
     const auto cLrc = m_pLrc->MgGetLineCount();
     const auto yInit = (float)-m_psv->GetPos();
     float y = yInit;
-    LYRIC_TEXT_METRICS Metrics;
+    LRD_TEXT_METRICS Metrics;
 
     m_vItem.resize(cLrc);
 
