@@ -145,9 +145,8 @@ public:
 
     int ItmHitTest(POINT pt);
 
-    void Tick(int iMs) override;
-
-    BOOL IsValid() override { return m_bAnSelBkg || m_bItemAnDelay; }
+    void TlTick(int iMs) override;
+    BOOL TlIsValid() override { return m_bAnSelBkg || m_bItemAnDelay; }
 
     EckInlineNdCe BOOL IsEmpty() const { return m_vItem.empty(); }
 

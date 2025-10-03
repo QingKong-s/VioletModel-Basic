@@ -17,7 +17,7 @@ void CVeLrc::ScrAnProc(float fPos, float fPrevPos)
 {
     if (IsEmpty())
         return;
-    const auto iMs = m_psv->GetCurrTickInterval();
+    const auto iMs = m_psv->TlGetCurrentInterval();
     if (m_bEnlarging)
     {
         m_fAnValue = eck::Easing::OutCubic(m_psv->GetCurrTime(),
@@ -182,7 +182,6 @@ void CVeLrc::ItmInvalidate(int idx)
 {
     D2D1_RECT_F rc;
     ItmGetRect(idx, rc);
-    ElemToClient(rc);
     InvalidateRect(rc);
 }
 
@@ -274,9 +273,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
         ECK_DUILOCK;
         if (m_vItem.empty())
             break;
-        POINT pt ECK_GET_PT_LPARAM(lParam);
-        ClientToElem(pt);
-
+        const POINT pt ECK_GET_PT_LPARAM(lParam);
         int idx = ItmHitTest(pt);
         if (idx != m_idxHot)
         {
@@ -333,9 +330,7 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
         SetFocus();
         if (m_vItem.empty())
             break;
-        POINT pt ECK_GET_PT_LPARAM(lParam);
-        ClientToElem(pt);
-
+        const POINT pt ECK_GET_PT_LPARAM(lParam);
         int idx = ItmHitTest(pt);
         if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
         {
@@ -539,7 +534,6 @@ LRESULT CVeLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
     {
         SafeRelease(m_pLrc);
-        SafeRelease(m_pTextFormat);
         SafeRelease(m_psv);
         SafeRelease(m_pRenderer);
         m_vItem.clear();
@@ -627,7 +621,7 @@ void CVeLrc::SetTextFormatTrans(IDWriteTextFormat* pTf)
     m_pRenderer->SetTextFormatTrans(pTf);
 }
 
-void CVeLrc::Tick(int iMs)
+void CVeLrc::TlTick(int iMs)
 {
     BOOL bAn{}, bDelay{};
     int i = (m_bDelayScrollUp ? 0 : (int)m_vItem.size() - 1);
@@ -684,8 +678,6 @@ void CVeLrc::Tick(int iMs)
                 e.y = e.yAnDelaySrc + (e.yAnDelayDst - e.yAnDelaySrc) * k;
                 rc.top = std::min(rc.top, e.y);
                 rc.bottom = std::max(rc.bottom, e.y + e.cy);
-
-                ElemToClient(rc);
                 InvalidateRect(rc);
             }
             else

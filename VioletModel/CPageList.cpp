@@ -527,7 +527,6 @@ LRESULT CPageList::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case WM_LBUTTONDBLCLK:
                 {
                     POINT pt ECK_GET_PT_LPARAM(lParam);
-                    m_GLList.ClientToElem(pt);
                     Dui::LE_HITTEST ht{ pt };
                     const auto idx = m_GLList.HitTest(ht);
                     if (idx < 0)

@@ -494,7 +494,7 @@ ID2D1Bitmap1* CWndMain::RealizeImage(GImg n)
 	return m_vBmpRealization[(size_t)n];
 }
 
-void CWndMain::Tick(int iMs)
+void CWndMain::TlTick(int iMs)
 {
 	constexpr float MaxPPAnDuration = 700.f;
 	constexpr float DurOverlayOpacity = 150.f;
@@ -588,7 +588,7 @@ void CWndMain::LwShow(BOOL bShow)
 		{
 			m_WndLrc.SetPresentMode(Dui::PresentMode::UpdateLayeredWindow);
 			m_WndLrc.SetTransparent(TRUE);
-			m_WndLrc.SetUserDpi(GetUserDpiValue());
+			m_WndLrc.SetUserDpi(GetUserDpi());
 			m_WndLrc.Create(L"VioletModel - Lyrics", WS_POPUP | WS_VISIBLE,
 				WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_TOPMOST,
 				300, 400, 500, 300, HWnd, nullptr);

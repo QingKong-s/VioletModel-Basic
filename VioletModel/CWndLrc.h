@@ -27,7 +27,6 @@ public:
 
 	LRESULT OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e) override;
 
-	void Tick(int iMs) override;
-
-	BOOL IsValid() override { return m_bAnFade; }
+	void TlTick(int iMs) override;
+	BOOL TlIsValid() override { return m_bAnFade; }
 };

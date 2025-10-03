@@ -214,7 +214,7 @@ LRESULT CWndLrc::OnRenderEvent(UINT uMsg, Dui::RENDER_EVENT& e)
 	return __super::OnRenderEvent(uMsg, e);
 }
 
-void CWndLrc::Tick(int iMs)
+void CWndLrc::TlTick(int iMs)
 {
 	if (m_bAnFade)
 	{

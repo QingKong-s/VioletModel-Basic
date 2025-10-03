@@ -78,9 +78,8 @@ private:
 public:
 	LRESULT OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	void Tick(int iMs) override;
-
-	BOOL IsValid() override { return m_bTooLong; }
+	void TlTick(int iMs) override;
+	BOOL TlIsValid() override { return m_bTooLong; }
 
 	HRESULT LrcSetCurrentLine(int idx);
 	void LrcSetEmptyText(std::wstring_view svEmptyText);

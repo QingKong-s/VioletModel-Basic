@@ -271,7 +271,7 @@ LRESULT CVeDtLrc::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return __super::OnEvent(uMsg, wParam, lParam);
 }
 
-void CVeDtLrc::Tick(int iMs)
+void CVeDtLrc::TlTick(int iMs)
 {
 	if (m_bTooLong)
 	{

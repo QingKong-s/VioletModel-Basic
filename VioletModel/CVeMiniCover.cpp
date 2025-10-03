@@ -100,8 +100,7 @@ LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			m_bLBtnDown = FALSE;
 			ReleaseCapture();
-			POINT pt ECK_GET_PT_LPARAM(lParam);
-			ClientToElem(pt);
+			const POINT pt ECK_GET_PT_LPARAM(lParam);
 			if (eck::PtInRect(GetViewRectF(), pt))
 			{
 				VEN_MINICOVER_CLICK n{};
@@ -125,7 +124,6 @@ LRESULT CVeMiniCover::OnEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				const auto p = (CVeMiniCover*)lParam;
 				p->InvalidateRect();
 			});
-
 		OnColorSchemeChanged(TRUE);
 	}
 	break;
